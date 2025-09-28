@@ -11,7 +11,8 @@
     "deploy": "dfx deploy",
     "dfx:start": "dfx start",
     "dfx:stop": "dfx stop",
-    "deploy:render": "npm run build && npm run start"
+    "deploy:render": "npm run build && npm run start",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@dfinity/agent": "^3.2.4",
