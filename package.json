@@ -11,7 +11,8 @@
     "deploy": "dfx deploy",
     "dfx:start": "dfx start",
     "dfx:stop": "dfx stop",
-    "deploy:render": "npm run build && npm run start"
+    "deploy:render": "npm run build && npm run start",
+    "install:retry": "npm install --no-optional --legacy-peer-deps --fetch-retries=5 --fetch-retry-factor=2 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000"
   },
   "dependencies": {
     "@dfinity/agent": "^3.2.4",
