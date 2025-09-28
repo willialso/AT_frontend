@@ -11,8 +11,7 @@
     "deploy": "dfx deploy",
     "dfx:start": "dfx start",
     "dfx:stop": "dfx stop",
-    "deploy:render": "npm run build && npm run start",
-    "postinstall": "npm run build"
+    "deploy:render": "npm run build && npm run start"
   },
   "dependencies": {
     "@dfinity/agent": "^3.2.4",
@@ -39,6 +38,7 @@
     "secp256k1": "^5.0.1",
     "styled-components": "^6.1.6",
     "tiny-secp256k1": "^2.2.4",
+    "vite": "^5.0.8",
     "ws": "^8.18.3"
   },
   "devDependencies": {
@@ -52,7 +52,6 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
-    "vite": "^5.0.8",
     "vite-plugin-top-level-await": "^1.6.0",
     "vite-plugin-wasm": "^3.5.0"
   }

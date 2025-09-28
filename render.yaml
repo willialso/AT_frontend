@@ -5,7 +5,7 @@ services:
   - type: web
     name: AT_frontend
     env: node
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: npm run start
     envVars:
       - key: ATTICUS_CORE_CANISTER_ID
