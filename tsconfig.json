@@ -40,13 +40,14 @@
       "@/types/*": ["types/*"],
       "@/contexts/*": ["contexts/*"]
     },
-    "types": ["vite/client", "node"]
+    "types": ["node"]
   },
   "include": [
     "src/**/*",
     "src/**/*.json",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "src/vite-env.d.ts",
     "**/*.d.ts"
   ],
   "exclude": [
