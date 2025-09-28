@@ -1,0 +1,21 @@
+# ✅ RENDER DEPLOYMENT CONFIGURATION
+# Following odin.fun pattern: Off-chain frontend deployment
+
+services:
+  - type: web
+    name: AT_frontend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: ATTICUS_CORE_CANISTER_ID
+        value: tl44y-waaaa-aaaam-qd4dq-cai
+      - key: ICP_NETWORK
+        value: ic
+      - key: ICP_HOST
+        value: https://ic0.app
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /
+    autoDeploy: true
+    plan: starter

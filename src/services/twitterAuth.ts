@@ -1,0 +1,329 @@
+import { Principal } from '@dfinity/principal';
+
+export interface TwitterUser {
+  principal: Principal;
+  twitterId: string;
+  username: string;
+  name?: string;
+  email?: string;
+  avatar?: string;
+  isAuthenticated: boolean;
+}
+
+export class TwitterAuth {
+  private user: TwitterUser | null = null;
+
+  /**
+   * Check for mobile OAuth callback in URL parameters
+   */
+  async checkMobileCallback(): Promise<TwitterUser | null> {
+    const urlParams = new URLSearchParams(window.location.search);
+    const twitterAuth = urlParams.get('twitter_auth');
+    
+    console.log('🔍 Checking for mobile callback, URL params:', window.location.search);
+    console.log('🔍 Current URL:', window.location.href);
+    console.log('🔍 Twitter auth param:', twitterAuth);
+    
+    if (twitterAuth) {
+      try {
+        const authData = JSON.parse(decodeURIComponent(twitterAuth));
+        console.log('📱 Mobile Twitter OAuth callback detected:', authData);
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Handle the callback
+        const result = await this.handleTwitterCallback(authData.code, authData.state);
+        console.log('✅ Twitter OAuth callback completed successfully:', result);
+        return result;
+      } catch (error) {
+        console.error('❌ Mobile callback handling failed:', error);
+        return null;
+      }
+    }
+    
+    console.log('🔍 No Twitter OAuth callback found');
+    return null;
+  }
+
+  /**
+   * Sign in with Twitter/X OAuth using OAuth 2.0 PKCE flow
+   */
+  async signInWithTwitter(): Promise<TwitterUser> {
+    try {
+      console.log('🐦 Starting Twitter OAuth 2.0 PKCE flow via proxy server...');
+      
+      // Get auth URL from our proxy server
+      const proxyUrl = 'https://twitter-oauth-8z0l.onrender.com/twitter/auth';
+      const response = await fetch(proxyUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to get auth URL: ${response.status} - ${JSON.stringify(errorData)}`);
+      }
+
+      const authData = await response.json();
+      console.log('🔧 Twitter OAuth Config from proxy:', authData);
+
+      // Detect mobile devices
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // For mobile, open Twitter OAuth in new tab (like desktop)
+        console.log('📱 Mobile detected, opening OAuth in new tab');
+        
+        // Store root URL for redirect back (always go to main app after auth)
+        const mainAppUrl = `${window.location.origin}/`;
+        sessionStorage.setItem('twitter_oauth_return_url', mainAppUrl);
+        
+        // Open Twitter OAuth in new tab (works better on mobile)
+        const popup = window.open(
+          authData.authUrl,
+          'twitter-oauth',
+          'width=600,height=700,scrollbars=yes,resizable=yes'
+        );
+
+        if (!popup) {
+          throw new Error('Failed to open Twitter OAuth popup. Please allow popups for this site.');
+        }
+
+        // Wait for popup to complete OAuth (same as desktop)
+        return new Promise<TwitterUser>((resolve, reject) => {
+          let isCompleted = false;
+          
+          const messageHandler = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+
+            if (event.data.type === 'TWITTER_OAUTH_CALLBACK') {
+              isCompleted = true;
+              window.removeEventListener('message', messageHandler);
+              clearInterval(checkClosed);
+              
+              // Handle the callback
+              this.handleTwitterCallback(event.data.code, event.data.state)
+                .then(resolve)
+                .catch(reject);
+            } else if (event.data.type === 'TWITTER_OAUTH_ERROR') {
+              isCompleted = true;
+              window.removeEventListener('message', messageHandler);
+              clearInterval(checkClosed);
+              reject(new Error(event.data.error));
+            }
+          };
+
+          window.addEventListener('message', messageHandler);
+
+          // Handle popup closed manually (only if not completed)
+          const checkClosed = setInterval(() => {
+            if (popup.closed && !isCompleted) {
+              clearInterval(checkClosed);
+              window.removeEventListener('message', messageHandler);
+              reject(new Error('Twitter OAuth cancelled by user'));
+            }
+          }, 1000);
+        });
+      }
+
+      // Open Twitter OAuth in popup window (desktop)
+      const popup = window.open(
+        authData.authUrl,
+        'twitter-oauth',
+        'width=600,height=700,scrollbars=yes,resizable=yes'
+      );
+
+      if (!popup) {
+        throw new Error('Failed to open Twitter OAuth popup. Please allow popups for this site.');
+      }
+
+      // Wait for popup to complete OAuth
+      return new Promise<TwitterUser>((resolve, reject) => {
+        let isCompleted = false;
+        
+        const messageHandler = (event: MessageEvent) => {
+          if (event.origin !== window.location.origin) return;
+
+          if (event.data.type === 'TWITTER_OAUTH_CALLBACK') {
+            isCompleted = true;
+            window.removeEventListener('message', messageHandler);
+            clearInterval(checkClosed);
+            
+            // Handle the callback
+            this.handleTwitterCallback(event.data.code, event.data.state)
+              .then(resolve)
+              .catch(reject);
+          } else if (event.data.type === 'TWITTER_OAUTH_ERROR') {
+            isCompleted = true;
+            window.removeEventListener('message', messageHandler);
+            clearInterval(checkClosed);
+            reject(new Error(event.data.error));
+          }
+        };
+
+        window.addEventListener('message', messageHandler);
+
+        // Handle popup closed manually (only if not completed)
+        const checkClosed = setInterval(() => {
+          if (popup.closed && !isCompleted) {
+            clearInterval(checkClosed);
+            window.removeEventListener('message', messageHandler);
+            reject(new Error('Twitter OAuth cancelled by user'));
+          }
+        }, 1000);
+      });
+      
+    } catch (error) {
+      console.error('❌ Twitter OAuth initiation failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle Twitter OAuth callback (called after redirect)
+   */
+  async handleTwitterCallback(code: string, state: string): Promise<TwitterUser> {
+    try {
+      console.log('🐦 Handling Twitter OAuth callback...');
+      
+      // Exchange authorization code for access token via proxy server
+      const tokenData = await this.exchangeCodeForToken(code, state);
+      
+      // Generate deterministic Principal from Twitter ID
+      const principal = this.generatePrincipalFromTwitterId(tokenData.user.id);
+
+      this.user = {
+        principal,
+        twitterId: tokenData.user.id,
+        username: tokenData.user.username,
+        name: tokenData.user.name,
+        avatar: tokenData.user.profile_image_url,
+        isAuthenticated: true
+      };
+
+      console.log('✅ Real Twitter authentication successful:', {
+        principal: principal.toString(),
+        twitterId: tokenData.user.id,
+        username: tokenData.user.username
+      });
+
+      return this.user;
+    } catch (error) {
+      console.error('❌ Twitter OAuth callback failed:', error);
+      throw error;
+    }
+  }
+
+
+  /**
+   * Exchange authorization code for access token via our proxy server
+   */
+  private async exchangeCodeForToken(code: string, state: string): Promise<{ access_token: string; user: any }> {
+    console.log('🔄 Exchanging code for token via proxy server...', {
+      codeLength: code.length,
+      state
+    });
+    
+    try {
+      // Use our Node.js proxy server
+      const proxyUrl = 'https://twitter-oauth-8z0l.onrender.com/twitter/token';
+      
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          code,
+          state
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ Token exchange failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(`Token exchange failed: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Token exchange successful via proxy server:', data);
+      
+      // Validate that we have an access_token and user data
+      if (!data || !data.access_token) {
+        console.error('❌ No access_token in response:', data);
+        throw new Error('No access_token received from proxy server');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('❌ Token exchange error:', error);
+      throw error;
+    }
+  }
+
+
+  /**
+   * Generate deterministic Principal from Twitter ID (using shorter 8-byte approach)
+   */
+  private generatePrincipalFromTwitterId(twitterId: string): Principal {
+    // Create a deterministic seed from Twitter ID
+    const seed = `twitter:${twitterId}:icp-derivation-mainnet`;
+    const seedHash = this.hashString(seed);
+    
+    // Convert hash to a shorter byte array (8 bytes for shorter Principal)
+    const seedBytes = new Uint8Array(8);
+    for (let i = 0; i < 8; i++) {
+      seedBytes[i] = (seedHash >> (i * 8)) & 0xFF;
+    }
+    
+    // Generate Principal from shorter bytes
+    return Principal.fromUint8Array(seedBytes);
+  }
+
+  /**
+   * Simple string hash function
+   */
+  private hashString(str: string): number {
+    let hash = 0;
+    if (str.length === 0) return hash;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+  }
+
+  /**
+   * Get current Twitter user
+   */
+  getCurrentUser(): TwitterUser | null {
+    return this.user;
+  }
+
+  /**
+   * Check if user is authenticated
+   */
+  isAuthenticated(): boolean {
+    return this.user?.isAuthenticated || false;
+  }
+
+  /**
+   * Logout Twitter user
+   */
+  logout(): void {
+    this.user = null;
+    console.log('🔌 Twitter user logged out');
+  }
+}
+
+// Export singleton instance
+export const twitterAuth = new TwitterAuth();

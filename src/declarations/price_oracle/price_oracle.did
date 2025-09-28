@@ -1,0 +1,44 @@
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+type PriceData = 
+ record {
+   price: float64;
+   source: text;
+   timestamp: int;
+ };
+service : {
+  get_btc_price: () ->
+   (record {
+      age_seconds: int;
+      price: float64;
+      rejected_updates: nat;
+      source: text;
+      timestamp: int;
+    }) query;
+  get_price_history: (limit: opt nat) -> (vec record {
+                                                int;
+                                                float64;
+                                              }) query;
+  get_price_stats: () ->
+   (record {
+      current_price: float64;
+      history_size: nat;
+      is_fresh: bool;
+      last_update: int;
+      rejected_updates: nat;
+      source: text;
+      subscribers: nat;
+      update_frequency: text;
+    }) query;
+  get_recent_prices: (minutes: nat) -> (vec record {
+                                              int;
+                                              float64;
+                                            }) query;
+  is_price_fresh: (max_age_seconds: int) -> (bool) query;
+  set_btc_price: (price: float64) -> (Result);
+  subscribe_to_price_updates: (callback: func (PriceData) -> ()) -> ();
+  unsubscribe_from_price_updates: ("principal": principal) -> ();
+}
