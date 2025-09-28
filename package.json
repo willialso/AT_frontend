@@ -7,11 +7,11 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview --port 3000 --host 0.0.0.0",
-    "start": "npm run preview",
+    "start": "vite preview --port 3000 --host 0.0.0.0",
     "deploy": "dfx deploy",
     "dfx:start": "dfx start",
     "dfx:stop": "dfx stop",
-    "deploy:render": "npm run build && npm run preview"
+    "deploy:render": "npm run build && npm run start"
   },
   "dependencies": {
     "@dfinity/agent": "^3.2.4",
