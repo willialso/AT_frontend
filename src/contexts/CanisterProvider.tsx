@@ -38,7 +38,7 @@ export const CanisterProvider: React.FC<{ children: ReactNode }> = React.memo(({
         });
 
         // ✅ ATTICUS CORE CANISTER ID (Your Mainnet Canister)
-        const ATTICUS_CORE_CANISTER_ID = process.env.ATTICUS_CORE_CANISTER_ID || 'tl44y-waaaa-aaaam-qd4dq-cai';
+        const ATTICUS_CORE_CANISTER_ID = process.env.ATTICUS_CORE_CANISTER_ID || 'q4oqk-hyaaa-aaaam-qd4la-cai';
 
         // ✅ INITIALIZE ATTICUS SERVICE (Single Canister)
         await atticusService.initialize(ATTICUS_CORE_CANISTER_ID);
