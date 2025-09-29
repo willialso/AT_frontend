@@ -80,14 +80,8 @@ export default defineConfig(({ mode }) => {
       },
       // ✅ ADDED: Force sourcemap generation for debugging
       sourcemap: true,
-      // ✅ ADDED: Minify options
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: false,
-          drop_debugger: false
-        }
-      }
+      // ✅ ADDED: Use esbuild minification (default)
+      minify: 'esbuild'
     }
   }
 })
