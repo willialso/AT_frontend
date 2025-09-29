@@ -177,57 +177,9 @@ export class TradingService {
   async autoSettleTrade(tradeId: string, finalPrice: number, tradeData?: { optionType: 'call' | 'put', strikeOffset: number, expiry?: string }, isDemoMode: boolean = false, userPrincipal?: string): Promise<SettlementResult> {
     console.warn('⚠️ DEPRECATED: autoSettleTrade is deprecated. Use atticusService.settleTrade instead.');
     throw new Error('This method is deprecated. Use atticusService.settleTrade instead.');
-      
-      // ✅ ADD: Price validation
-      if (finalPrice <= 0) {
-        throw new Error('Invalid final price: must be positive');
-      }
-      
-      if (tradeData && tradeData.strikeOffset <= 0) {
-        throw new Error('Invalid strike offset: must be positive');
-      }
-      
-      // ✅ ADD: Price sanity check - calculate strike price from offset
-      if (tradeData) {
-        const entryPrice = finalPrice; // Use current price as entry price for demo
-        const strikePrice = tradeData.optionType === 'call' 
-          ? entryPrice + tradeData.strikeOffset 
-          : entryPrice - tradeData.strikeOffset;
-        
-        if (Math.abs(finalPrice - strikePrice) > 10000) {
-          console.warn('⚠️ Large price difference detected:', {
-            finalPrice,
-            strikePrice,
-            difference: Math.abs(finalPrice - strikePrice)
-          });
-        }
-      }
-      
-      console.log('🔄 Settling trade:', tradeId, 'at price:', finalPrice);
-      
-      // ✅ DEMO SETTLEMENT LOGIC: Handle demo mode separately
-      if (isDemoMode || this.canister === null) {
-        console.log('🎮 Demo settlement simulation:', tradeId, 'at price:', finalPrice);
-        
-        // Simulate settlement processing delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // ✅ REALISTIC DEMO OUTCOME: Use actual price-based logic if trade data available
-        let outcome: 'win' | 'loss' | 'tie' = 'loss';
-        let profit = -1; // Default to losing the $1 entry premium
-        let payout = 0;
-        
-        if (tradeData) {
-          // ✅ FIXED: Calculate strike price from entry price and offset
-          const entryPrice = finalPrice; // Use current price as entry price for demo
-          const strikePrice = tradeData.optionType === 'call' 
-            ? entryPrice + tradeData.strikeOffset 
-            : entryPrice - tradeData.strikeOffset;
-          
-          // ✅ ENHANCED DEBUG: Comprehensive logging for troubleshooting
-          console.log('🎮 Demo settlement debug:', {
-            optionType: tradeData.optionType,
-            finalPrice,
+  }
+
+  // ✅ DEPRECATED: This method is no longer used
             entryPrice,
             strikeOffset: tradeData.strikeOffset,
             calculatedStrikePrice: strikePrice,
