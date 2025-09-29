@@ -223,7 +223,7 @@ const BalanceLabel = styled.div`
 
 export const WalletConnection: React.FC = () => {
   const { user, isAuthenticated, walletGenerating, completeWalletGeneration } = useAuth();
-  const { atticusService, isConnected: canisterConnected } = useCanister();
+  const { atticusService, treasuryService, isConnected: canisterConnected } = useCanister();
   const [copySuccess, setCopySuccess] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawAddress, setWithdrawAddress] = useState('');

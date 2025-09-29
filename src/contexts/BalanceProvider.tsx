@@ -83,7 +83,7 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
       console.log('🔍 Using principal for backend call:', userPrincipal.toString());
       
       // Get user data from backend with properly extracted principal
-      const userData = await atticusService.getUser(userPrincipal);
+      const userData = await atticusService.getUser(userPrincipal.toString());
       console.log('🔍 Raw userData from backend:', userData);
       
       // Handle both array and object responses for backward compatibility
