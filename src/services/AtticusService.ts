@@ -89,7 +89,7 @@ export class AtticusService {
             total_losses: IDL.Float64,
             net_pnl: IDL.Float64,
             created_at: IDL.Int
-          }), err: IDL.Text })], []),
+          }), err: IDL.Text })], ['query']),
           
           // Trading functions
           place_trade_simple: IDL.Func([

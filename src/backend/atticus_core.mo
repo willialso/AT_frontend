@@ -69,6 +69,54 @@ persistent actor AtticusCore {
     };
     private stable var admin_logs: [Text] = [];
 
+    // Migration function for stable variables
+    system func preupgrade() {
+        // Migration for positions - add current_value field
+        let migrated_positions = Array.map<(Nat, Position), (Nat, Position)>(
+            positions,
+            func((id, pos)) = (
+                id,
+                {
+                    id = pos.id;
+                    user = pos.user;
+                    option_type = pos.option_type;
+                    strike_price = pos.strike_price;
+                    entry_price = pos.entry_price;
+                    expiry = pos.expiry;
+                    size = pos.size;
+                    entry_premium = pos.entry_premium;
+                    current_value = 0.0; // Initialize to 0
+                    pnl = pos.pnl;
+                    status = pos.status;
+                    opened_at = pos.opened_at;
+                    settled_at = pos.settled_at;
+                    settlement_price = pos.settlement_price;
+                }
+            )
+        );
+        positions := migrated_positions;
+        
+        // Migration for users - add net_pnl field
+        let migrated_users = Array.map<(Principal, UserData), (Principal, UserData)>(
+            users,
+            func((principal, user_data)) = (
+                principal,
+                {
+                    balance = user_data.balance;
+                    total_wins = user_data.total_wins;
+                    total_losses = user_data.total_losses;
+                    net_pnl = 0.0; // Initialize to 0
+                    created_at = user_data.created_at;
+                }
+            )
+        );
+        users := migrated_users;
+    };
+
+    system func postupgrade() {
+        // Post-upgrade initialization if needed
+    };
+
     // ✅ CREATE USER
     public func create_user(user: Principal) : async Result.Result<UserData, Text> {
         switch (Array.find(users, func((p, _)) = p == user)) {
@@ -90,7 +138,7 @@ persistent actor AtticusCore {
     };
 
     // ✅ GET USER
-    public func get_user(user: Principal) : async Result.Result<UserData, Text> {
+    public query func get_user(user: Principal) : async Result.Result<UserData, Text> {
         switch (Array.find(users, func((p, _)) = p == user)) {
             case (?user_data) {
                 #ok(user_data.1);

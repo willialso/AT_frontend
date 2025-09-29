@@ -9,7 +9,7 @@ services:
     startCommand: npm run start
     envVars:
       - key: ATTICUS_CORE_CANISTER_ID
-        value: q4oqk-hyaaa-aaaam-qd4la-cai
+        value: rraue-iqaaa-aaaam-qd4mq-cai
       - key: ATTICUS_TREASURY_CANISTER_ID
         value: rwbsq-fiaaa-aaaam-qd4ma-cai
       - key: ICP_NETWORK
@@ -21,7 +21,7 @@ services:
       - key: RENDER
         value: true
       - key: FORCE_REBUILD
-        value: "1759179500"
+        value: "1759179600"
       - key: VITE_GOOGLE_CLIENT_ID
         value: 255794166358-poj0rbu2bqtd663m9nsu6hfam6hd0661.apps.googleusercontent.com
       - key: VITE_TWITTER_CLIENT_ID
