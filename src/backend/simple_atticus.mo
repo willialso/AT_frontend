@@ -137,4 +137,13 @@ persistent actor SimpleAtticus {
         let user_positions = Array.filter(positions, func((_, pos)) = pos.user == user);
         Array.map(user_positions, func((_, pos)) = pos);
     };
+
+    // ✅ GET USER TRADE SUMMARY (for frontend history menu)
+    public func get_user_trade_summary(user: Principal) : async Result.Result<{ total_trades: Nat; wins: Nat; losses: Nat }, Text> {
+        let user_positions = Array.filter(positions, func((_, pos)) = pos.user == user);
+        let total_trades = user_positions.size();
+        let wins = Array.filter(user_positions, func((_, pos)) = pos.status == #Settled).size();
+        let losses = total_trades - wins;
+        #ok({ total_trades; wins; losses });
+    };
 }
