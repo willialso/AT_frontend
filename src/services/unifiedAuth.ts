@@ -94,6 +94,8 @@ export class UnifiedAuth {
           identityProvider: process.env['NODE_ENV'] === 'production'
             ? 'https://identity.ic0.app'
             : 'http://localhost:4943',
+          maxTimeToLive: BigInt(24 * 60 * 60 * 1000 * 1000 * 1000), // 24 hours
+          windowOpenerFeatures: 'width=500,height=600,scrollbars=yes,resizable=yes',
 
           onSuccess: async () => {
             try {
@@ -137,6 +139,8 @@ export class UnifiedAuth {
               reject(new Error('Authentication was cancelled. Please make sure popup blockers are disabled and try again.'));
             } else if (error.message && error.message.includes('popup')) {
               reject(new Error('Popup was blocked. Please allow popups for this site and try again.'));
+            } else if (error.message && error.message.includes('Missing request')) {
+              reject(new Error('Authentication request failed. Please try again or use a different browser.'));
             } else {
               reject(error);
             }
