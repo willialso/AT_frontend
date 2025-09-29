@@ -179,47 +179,8 @@ export class TradingService {
     throw new Error('This method is deprecated. Use atticusService.settleTrade instead.');
   }
 
-  // ✅ DEPRECATED: This method is no longer used
-            entryPrice,
-            strikeOffset: tradeData.strikeOffset,
-            calculatedStrikePrice: strikePrice,
-            finalPriceVsStrike: finalPrice > strikePrice ? 'finalPrice > strikePrice' : 'finalPrice <= strikePrice',
-            difference: Math.abs(finalPrice - strikePrice),
-            // ✅ ADD THESE DEBUG FIELDS:
-            currentTime: Date.now(),
-            pricePrecision: {
-              finalPriceDecimal: finalPrice.toString().split('.')[1]?.length || 0,
-              strikePriceDecimal: strikePrice.toString().split('.')[1]?.length || 0
-            }
-          });
-          
-          // ✅ ENHANCED: More robust win/loss calculation
-          const priceDifference = finalPrice - strikePrice;
-          const isTie = Math.abs(priceDifference) < 0.005; // 0.5 cent tolerance
 
-          let isWin = false;
-          if (!isTie) {
-            if (tradeData.optionType === 'call') {
-              isWin = priceDifference > 0; // finalPrice > strikePrice
-            } else {
-              isWin = priceDifference < 0; // finalPrice < strikePrice
-            }
-          }
-
-          // ✅ ADD: Detailed outcome logging
-          console.log('🎯 Settlement calculation:', {
-            optionType: tradeData.optionType,
-            finalPrice,
-            strikePrice,
-            priceDifference,
-            isTie,
-            isWin,
-            expectedOutcome: tradeData.optionType === 'call' ? 'finalPrice > strikePrice' : 'finalPrice < strikePrice'
-          });
-          
-          if (isTie) {
-            outcome = 'tie';
-            profit = 0; // Refund entry premium
+  // ✅ ALL YOUR ADMIN PANEL METHODS
             payout = 1;
           } else if (isWin) {
             outcome = 'win';
