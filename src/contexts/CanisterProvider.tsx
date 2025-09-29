@@ -11,6 +11,7 @@ interface CanisterContextType {
   atticusService: typeof atticusService;
   treasuryService: TreasuryService;
   pricingEngine: typeof pricingEngine;
+  tradingCanister: any; // ✅ ADDED: For backward compatibility
   agent: HttpAgent | null;
   principal: Principal | null;
 }
@@ -74,6 +75,7 @@ export const CanisterProvider: React.FC<{ children: ReactNode }> = React.memo(({
     atticusService,
     treasuryService,
     pricingEngine,
+    tradingCanister: atticusService, // ✅ ADDED: For backward compatibility
     agent,
     principal
   };
