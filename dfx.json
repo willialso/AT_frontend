@@ -1,12 +1,8 @@
 {
   "version": 1,
   "canisters": {
-    "backend": {
-      "main": "src/backend/simple_backend.mo",
-      "type": "motoko"
-    },
     "atticus_core": {
-      "main": "src/backend/simple_atticus.mo",
+      "main": "src/backend/atticus_core.mo",
       "type": "motoko"
     }
   },
