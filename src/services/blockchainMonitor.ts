@@ -558,7 +558,7 @@ export class BlockchainMonitor {
   private async findUserByDepositId(depositId: string): Promise<string | null> {
     try {
       // Query the backend to find the user by deposit ID
-      const { tradingService } = await import('./tradingService');
+      // const { tradingService } = await import('./tradingService'); // ✅ REMOVED: Using AtticusService instead
       
       if (!tradingService.canister) {
         console.error('❌ Trading service not initialized');
@@ -602,7 +602,7 @@ export class BlockchainMonitor {
       }
       
       // Call the backend to credit the user's account
-      const { tradingService } = await import('./tradingService');
+      // const { tradingService } = await import('./tradingService'); // ✅ REMOVED: Using AtticusService instead
       const result = await tradingService.depositBitcoin(userPrincipal, amountSatoshis);
       
       if (result.status === 'success') {
