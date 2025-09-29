@@ -62,6 +62,7 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: true,
       // ✅ ADDED: Target ES2020 to avoid asm.js issues
       target: 'es2020',
+      // ✅ ADDED: Force cache busting with timestamp
       rollupOptions: {
         input: {
           main: './index.html',
@@ -71,9 +72,9 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             'dfinity': ['@dfinity/auth-client', '@dfinity/agent', '@dfinity/principal', '@dfinity/identity']
           },
-          // ✅ ADDED: Force new hash for cache busting
-          entryFileNames: `assets/[name]-[hash].js`,
-          chunkFileNames: `assets/[name]-[hash].js`
+          // ✅ ADDED: Force new hash for cache busting with timestamp
+          entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+          chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`
         }
       }
     }
