@@ -77,6 +77,16 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
           assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`
         }
+      },
+      // ✅ ADDED: Force sourcemap generation for debugging
+      sourcemap: true,
+      // ✅ ADDED: Minify options
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: false,
+          drop_debugger: false
+        }
       }
     }
   }
