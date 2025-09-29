@@ -25,6 +25,12 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0', // ✅ ADDED: Allow external connections for Render
+      allowedHosts: [
+        'at-frontend.onrender.com',
+        'localhost',
+        '127.0.0.1',
+        '0.0.0.0'
+      ],
       // ✅ ADDED: Headers for WebAssembly
       headers: {
         'Cross-Origin-Embedder-Policy': 'require-corp',
@@ -40,6 +46,12 @@ export default defineConfig(({ mode }) => {
     preview: {
       port: 3000,
       host: '0.0.0.0', // ✅ ADDED: Allow external connections for Render
+      allowedHosts: [
+        'at-frontend.onrender.com',
+        'localhost',
+        '127.0.0.1',
+        '0.0.0.0'
+      ],
       headers: {
         'Cross-Origin-Embedder-Policy': 'require-corp',
         'Cross-Origin-Opener-Policy': 'same-origin'
