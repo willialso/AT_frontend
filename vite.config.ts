@@ -74,7 +74,8 @@ export default defineConfig(({ mode }) => {
           },
           // ✅ ADDED: Force new hash for cache busting with timestamp
           entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-          chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`
+          chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+          assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`
         }
       }
     }
