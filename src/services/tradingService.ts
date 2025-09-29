@@ -173,11 +173,7 @@ export class TradingService {
   }
 
 
-  // ✅ DEPRECATED: Use atticusService.settleTrade instead
-  async autoSettleTrade(tradeId: string, finalPrice: number, tradeData?: { optionType: 'call' | 'put', strikeOffset: number, expiry?: string }, isDemoMode: boolean = false, userPrincipal?: string): Promise<SettlementResult> {
-    console.warn('⚠️ DEPRECATED: autoSettleTrade is deprecated. Use atticusService.settleTrade instead.');
-    throw new Error('This method is deprecated. Use atticusService.settleTrade instead.');
-  }
+  // ✅ REMOVED: autoSettleTrade method completely removed - use off-chain settlement instead
 
 
   
