@@ -5,7 +5,7 @@ services:
   - type: web
     name: AT_frontend
     env: node
-           buildCommand: ./build.sh
+    buildCommand: ./build.sh
     startCommand: npm run start
     envVars:
       - key: ATTICUS_CORE_CANISTER_ID
@@ -16,6 +16,8 @@ services:
         value: https://ic0.app
       - key: NODE_ENV
         value: production
+      - key: RENDER
+        value: true
     healthCheckPath: /
     autoDeploy: true
     plan: starter
