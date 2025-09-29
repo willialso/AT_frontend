@@ -74,7 +74,16 @@ export class UnifiedAuth {
       throw new Error('Auth client not initialized');
     }
 
+    console.log('🔧 Starting ICP authentication...');
+    console.log('🔧 Identity provider:', process.env['NODE_ENV'] === 'production' ? 'https://identity.ic0.app' : 'http://localhost:4943');
+
     return new Promise((resolve, reject) => {
+      // Add timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        console.error('❌ ICP authentication timeout');
+        reject(new Error('Authentication timeout - please try again'));
+      }, 60000); // 60 second timeout
+
       this.authClient!.login({
         identityProvider: process.env['NODE_ENV'] === 'production'
           ? 'https://identity.ic0.app'
@@ -82,6 +91,9 @@ export class UnifiedAuth {
 
         onSuccess: async () => {
           try {
+            clearTimeout(timeout);
+            console.log('✅ ICP authentication popup completed successfully');
+            
             const identity = this.authClient!.getIdentity();
             const principal = identity.getPrincipal();
 
@@ -106,8 +118,15 @@ export class UnifiedAuth {
         },
 
         onError: (error: any) => {
+          clearTimeout(timeout);
           console.error('❌ ICP login failed:', error);
-          reject(error);
+          
+          // Provide more helpful error messages
+          if (error.name === 'UserInterrupt') {
+            reject(new Error('Authentication was cancelled. Please make sure popup blockers are disabled and try again.'));
+          } else {
+            reject(error);
+          }
         }
       });
     });
