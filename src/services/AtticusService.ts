@@ -286,8 +286,8 @@ export class AtticusService {
   }
 
   /**
-   * ✅ SETTLE TRADE (OFF-CHAIN SETTLEMENT)
-   * All settlement logic handled off-chain, only store settlement event on-chain
+   * ✅ SETTLE TRADE (ON-CHAIN SETTLEMENT)
+   * Use backend settlement with correct payout tables
    */
   public async settleTrade(tradeId: number, finalPrice: number): Promise<SettlementResult> {
     if (!this.isInitialized) {
@@ -295,35 +295,24 @@ export class AtticusService {
     }
 
     try {
-      // Get all trades to find the specific trade
-      const allTrades = await this.coreCanister.get_all_trades();
-      const trade = allTrades.find((t: any) => Number(t.id) === tradeId);
+      // Convert final price to cents (backend expects Nat64)
+      const finalPriceCents = Math.round(finalPrice * 100);
       
-      if (!trade) {
-        throw new Error('Trade not found');
-      }
-
-      // Calculate settlement off-chain
-      const optionType = trade.option_type.Call ? 'call' : 'put';
-      const settlement = pricingEngine.calculateSettlement(
-        optionType,
-        Number(trade.strike_price),
-        finalPrice
+      // Use backend settlement with correct payout tables
+      const result = await this.coreCanister.settleTrade(
+        BigInt(tradeId), 
+        BigInt(finalPriceCents),
+        Principal.anonymous() // User principal not needed for settlement
       );
-
-      // Create settlement event
-      const settlementEvent = {
-        final_price: finalPrice,
-        outcome: settlement.outcome,
-        payout: settlement.payout,
-        profit: settlement.profit
-      };
-
-      // Store settlement event on-chain
-      const result = await this.coreCanister.settle_trade_event(BigInt(tradeId), settlementEvent);
       
       if ('ok' in result) {
-        return settlement;
+        const settlement = result.ok;
+        return {
+          outcome: settlement.outcome,
+          payout: Number(settlement.payout),
+          profit: Number(settlement.profit),
+          finalPrice: finalPrice
+        };
       } else {
         throw new Error(result.err);
       }
