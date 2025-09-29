@@ -315,11 +315,11 @@ export const WalletConnection: React.FC = () => {
     };
 
     autoGenerateWallet();
-  }, [isAuthenticated, user, canisterConnected, walletGenerating, depositAddress, isGeneratingWallet, tradingCanister, completeWalletGeneration]);
+  }, [isAuthenticated, user, canisterConnected, walletGenerating, depositAddress, isGeneratingWallet, treasuryService, completeWalletGeneration]);
 
   // ✅ MANUAL WALLET GENERATION
   const handleManualWalletGeneration = async () => {
-    if (!user || !tradingCanister) {
+    if (!user || !treasuryService) {
       setOperationStatus('❌ User or canister not ready');
       return;
     }
@@ -327,7 +327,7 @@ export const WalletConnection: React.FC = () => {
     try {
       setIsGeneratingWallet(true);
       setOperationStatus('🔧 Generating custodial wallet...');
-      const result = await tradingCanister.generate_user_wallet(user) as any;
+      const result = await treasuryService.generateUniqueDepositAddress(user.principal.toString());
 
       if (result && 'ok' in result) {
         const userDepositAddress = result.ok;

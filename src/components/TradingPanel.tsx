@@ -522,7 +522,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         await pricingEngine.recordSettlement(
           positionId,
           result,
-          tradingCanister
+          atticusService
         );
         console.log('✅ Settlement recorded to backend');
       } catch (error) {

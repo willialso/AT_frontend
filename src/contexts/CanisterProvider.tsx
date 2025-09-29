@@ -11,6 +11,7 @@ interface CanisterContextType {
   atticusService: typeof atticusService; // ✅ User signup/authentication only
   treasuryService: TreasuryService; // ✅ Wallet generation only
   pricingEngine: typeof pricingEngine; // ✅ All trading logic off-chain
+  tradingCanister: any; // ✅ BACKWARD COMPATIBILITY: Points to atticusService
   agent: HttpAgent | null;
   principal: Principal | null;
 }
@@ -74,6 +75,7 @@ export const CanisterProvider: React.FC<{ children: ReactNode }> = React.memo(({
     atticusService, // ✅ User signup/authentication only
     treasuryService, // ✅ Wallet generation only
     pricingEngine, // ✅ All trading logic off-chain
+    tradingCanister: atticusService, // ✅ BACKWARD COMPATIBILITY: Points to atticusService
     agent,
     principal
   };

@@ -125,21 +125,21 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
     } finally {
       setIsLoading(false);
     }
-  }, [user, tradingCanister, isConnected]);
+  }, [user, atticusService, isConnected]);
 
   // ✅ CRITICAL: Auto-initialize balance when user/canister becomes available
   useEffect(() => {
-    if (user && tradingCanister && isConnected && userBalance === 0) {
+    if (user && atticusService && isConnected && userBalance === 0) {
       console.log('🔄 Auto-initializing balance on mount...');
       refreshBalance().catch(error => {
         console.warn('⚠️ Auto-balance refresh failed:', error);
       });
     }
-  }, [user, tradingCanister, isConnected, userBalance, refreshBalance]);
+  }, [user, atticusService, isConnected, userBalance, refreshBalance]);
 
   // ✅ PHASE 4: Auto-refresh balance every 30 seconds when connected
   useEffect(() => {
-    if (!user || !tradingCanister || !isConnected) return;
+    if (!user || !atticusService || !isConnected) return;
     
     console.log('🔄 Starting auto-refresh for balance updates...');
     const interval = setInterval(() => {
@@ -152,7 +152,7 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
       console.log('🔄 Stopping auto-refresh for balance updates...');
       clearInterval(interval);
     };
-  }, [user, tradingCanister, isConnected, refreshBalance]);
+  }, [user, atticusService, isConnected, refreshBalance]);
 
   /**
    * Validate trade balance
