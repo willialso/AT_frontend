@@ -73,9 +73,9 @@ export default defineConfig(({ mode }) => {
             'dfinity': ['@dfinity/auth-client', '@dfinity/agent', '@dfinity/principal', '@dfinity/identity']
           },
           // ✅ ADDED: Force new hash for cache busting with timestamp
-          entryFileNames: `assets/[name]-[hash]-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.js`,
-          chunkFileNames: `assets/[name]-[hash]-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.js`,
-          assetFileNames: `assets/[name]-[hash]-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.[ext]`
+            entryFileNames: `assets/[name]-[hash]-${Date.now()}-v3-${Math.random().toString(36).substr(2, 9)}.js`,
+            chunkFileNames: `assets/[name]-[hash]-${Date.now()}-v3-${Math.random().toString(36).substr(2, 9)}.js`,
+            assetFileNames: `assets/[name]-[hash]-${Date.now()}-v3-${Math.random().toString(36).substr(2, 9)}.[ext]`
         }
       },
       // ✅ ADDED: Force sourcemap generation for debugging
