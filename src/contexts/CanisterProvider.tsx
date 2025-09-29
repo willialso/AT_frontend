@@ -75,10 +75,17 @@ export const CanisterProvider: React.FC<{ children: ReactNode }> = React.memo(({
     atticusService,
     treasuryService,
     pricingEngine,
-    tradingCanister: atticusService, // ✅ ADDED: For backward compatibility
+    tradingCanister: atticusService, // ✅ ADDED: Always available
     agent,
     principal
   };
+
+  // ✅ DEBUG: Log context value
+  console.log('🔍 CanisterProvider context value:', {
+    isConnected,
+    hasAtticusService: !!atticusService,
+    hasTradingCanister: !!contextValue.tradingCanister
+  });
 
   return (
     <CanisterContext.Provider value={contextValue}>
