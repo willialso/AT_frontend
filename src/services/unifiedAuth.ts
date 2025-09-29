@@ -39,25 +39,30 @@ export class UnifiedAuth {
       // Configure auth client for off-chain frontend
       this.authClient = await AuthClient.create();
       
-      // Check for mobile Twitter OAuth callback
-      console.log('🔍 Checking for mobile Twitter OAuth callback...');
-      const mobileCallbackUser = await twitterAuth.checkMobileCallback();
-      if (mobileCallbackUser) {
-        console.log('📱 Mobile callback user found:', mobileCallbackUser);
+      // Check for mobile OAuth callbacks
+      console.log('🔍 Checking for mobile OAuth callbacks...');
+      
+      // Check Twitter OAuth callback
+      const mobileTwitterCallback = await twitterAuth.checkMobileCallback();
+      if (mobileTwitterCallback) {
+        console.log('📱 Mobile Twitter callback user found:', mobileTwitterCallback);
         this.user = {
-          principal: mobileCallbackUser.principal,
+          principal: mobileTwitterCallback.principal,
           authMethod: 'twitter',
           isAuthenticated: true,
-          twitterId: mobileCallbackUser.twitterId,
-          username: mobileCallbackUser.username,
-          name: mobileCallbackUser.name || '',
-          avatar: mobileCallbackUser.avatar || ''
+          twitterId: mobileTwitterCallback.twitterId,
+          username: mobileTwitterCallback.username,
+          name: mobileTwitterCallback.name || '',
+          avatar: mobileTwitterCallback.avatar || ''
         };
         this.currentAuthMethod = 'twitter';
         console.log('✅ Mobile Twitter OAuth callback processed, user set:', this.user);
       } else {
         console.log('🔍 No mobile Twitter OAuth callback found');
       }
+      
+      // Note: Google OAuth doesn't need callback handling as it uses @react-oauth/google
+      // which handles OAuth flow in popup/iframe automatically
       
       this.isInitialized = true;
       console.log('✅ Unified auth initialized');

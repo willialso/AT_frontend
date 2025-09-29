@@ -55,7 +55,14 @@ export class GoogleAuth {
       return this.user;
     } catch (error) {
       console.error('❌ Google authentication failed:', error);
-      throw error;
+      // Provide more specific error messages
+      if (error.message.includes('Invalid JWT token')) {
+        throw new Error('Google OAuth token is invalid or expired. Please try again.');
+      } else if (error.message.includes('No credential received')) {
+        throw new Error('Google OAuth was cancelled or failed. Please try again.');
+      } else {
+        throw new Error(`Google authentication failed: ${error.message}`);
+      }
     }
   }
 

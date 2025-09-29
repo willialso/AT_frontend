@@ -18,29 +18,50 @@ export class TwitterAuth {
    */
   async checkMobileCallback(): Promise<TwitterUser | null> {
     const urlParams = new URLSearchParams(window.location.search);
+    const twitterAuth = urlParams.get('twitter_auth');
     const code = urlParams.get('code');
     const state = urlParams.get('state');
     const error = urlParams.get('error');
     
     console.log('🔍 Checking for mobile callback, URL params:', window.location.search);
     console.log('🔍 Current URL:', window.location.href);
-    console.log('🔍 Twitter OAuth params:', { code, state, error });
+    console.log('🔍 Twitter OAuth params:', { twitterAuth, code, state, error });
     
     if (error) {
       console.error('❌ Twitter OAuth error:', error);
       return null;
     }
     
-    if (code && state) {
+    // Handle both direct callback and twitter_auth parameter
+    let authCode: string | null = null;
+    let authState: string | null = null;
+    
+    if (twitterAuth) {
+      try {
+        const authData = JSON.parse(decodeURIComponent(twitterAuth));
+        console.log('📱 Twitter OAuth callback via twitter_auth parameter:', authData);
+        authCode = authData.code;
+        authState = authData.state;
+      } catch (error) {
+        console.error('❌ Failed to parse twitter_auth parameter:', error);
+        return null;
+      }
+    } else if (code && state) {
+      console.log('📱 Twitter OAuth callback via direct parameters:', { code, state });
+      authCode = code;
+      authState = state;
+    }
+    
+    if (authCode && authState) {
       try {
         // Verify state matches what we stored
         const storedState = sessionStorage.getItem('twitter_oauth_state');
-        if (state !== storedState) {
+        if (authState !== storedState) {
           console.error('❌ Twitter OAuth state mismatch');
           return null;
         }
         
-        console.log('📱 Mobile Twitter OAuth callback detected:', { code, state });
+        console.log('📱 Mobile Twitter OAuth callback detected:', { code: authCode, state: authState });
         
         // Clean up URL and session storage
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -48,7 +69,7 @@ export class TwitterAuth {
         sessionStorage.removeItem('twitter_oauth_code_challenge');
         
         // Handle the callback
-        const result = await this.handleTwitterCallback(code, state);
+        const result = await this.handleTwitterCallback(authCode, authState);
         console.log('✅ Twitter OAuth callback completed successfully:', result);
         return result;
       } catch (error) {
