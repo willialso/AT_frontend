@@ -180,64 +180,21 @@ export class TradingService {
   }
 
 
-  // ✅ ALL YOUR ADMIN PANEL METHODS
-            payout = 1;
-          } else if (isWin) {
-            outcome = 'win';
-            profit = 1; // Simple $1 profit for demo
-            payout = 2; // $2 total payout ($1 profit + $1 refund)
-          } else {
-            outcome = 'loss';
-            profit = -1; // Lose entry premium
-            payout = 0;
-          }
-        } else {
-          // Fallback to random if no trade data (shouldn't happen)
-          const isWin = Math.random() > 0.5;
-          outcome = isWin ? 'win' : 'loss';
-          profit = isWin ? 1 : -1;
-          payout = isWin ? 2 : 0;
-        }
-        
-        // ✅ ADD: Settlement result verification
-        const settlementResult = {
-          outcome,
-          finalPrice,
-          profit,
-          payout
-        };
+  
+  getStatus(): { canister: boolean; platformWallet: boolean; liquidityPool: boolean } {
+    return {
+      canister: this.canister !== null,
+      platformWallet: this.isInitialized,
+      liquidityPool: this.isInitialized
+    };
 
-        // ✅ VERIFY: Settlement logic correctness
-        if (tradeData) {
-          // Calculate strike price from offset for verification
-          const entryPrice = finalPrice; // Use current price as entry price for demo
-          const strikePrice = tradeData.optionType === 'call' 
-            ? entryPrice + tradeData.strikeOffset 
-            : entryPrice - tradeData.strikeOffset;
-            
-          console.log('✅ Settlement verification:', {
-            positionId: tradeId,
-            expectedWin: tradeData.optionType === 'call' ? finalPrice > strikePrice : finalPrice < strikePrice,
-            actualOutcome: outcome,
-            isCorrect: (tradeData.optionType === 'call' ? finalPrice > strikePrice : finalPrice < strikePrice) === (outcome === 'win')
-          });
-        }
-
-        console.log('✅ Demo settlement successful:', { 
-          positionId: tradeId, 
-          finalPrice, 
-          outcome, 
-          profit, 
-          payout 
-        });
-        
-        // ✅ FIX: Apply correction to demo mode as well
-        console.log('🔧 DEMO MODE: Before correction:', settlementResult);
-        const correctedSettlement = this.correctSettlementResult(settlementResult, tradeData);
-        console.log('🔧 DEMO MODE: After correction:', correctedSettlement);
-        
-        return correctedSettlement;
-      }
+  async getPlatformWallet(): Promise<{ address: string; balance: number; totalDeposits: number; totalWithdrawals: number } | null> {
+    try {
+      if (!this.canister) return null;
+      const wallet = await this.canister.get_platform_wallet() as any;
+      if (!wallet) return null;
+      
+      const address = wallet.address || '';
 
       // Live settlement logic continues...
       if (!this.canister) throw new Error('Trading service not initialized');
