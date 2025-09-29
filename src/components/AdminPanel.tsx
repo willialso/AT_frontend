@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
-import { tradingService } from '../services/tradingService';
+// import { tradingService } from '../services/tradingService'; // ✅ REMOVED: Using AtticusService instead
 import { blockchainMonitor } from '../services/blockchainMonitor';
 import { useCanister } from '../contexts/CanisterProvider';
 import { UserTradeAnalytics } from './UserTradeAnalytics';

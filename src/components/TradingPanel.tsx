@@ -10,7 +10,7 @@ import { OnboardingModal } from './OnboardingModal';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useCanister } from '../contexts/CanisterProvider';
 import { useBalance } from '../contexts/BalanceProvider';
-import { tradingService, TradeRequest } from '../services/tradingService'; // ✅ FIXED: Added TradeRequest import
+// import { tradingService, TradeRequest } from '../services/tradingService'; // ✅ REMOVED: Using AtticusService instead
 import { pricingEngine } from '../services/OffChainPricingEngine'; // ✅ NEW: Off-chain settlement
 // import { useAuth } from '../hooks/useAuth'; // ✅ REMOVED: Using useUnifiedAuth
 import { useAuth } from '../contexts/AuthProvider';
@@ -442,13 +442,9 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
   // ✅ FIXED: Initialize trading service when canister is available (or in demo mode)
   useEffect(() => {
     if (isDemoMode) {
-      // ✅ FIXED: Initialize trading service in demo mode
-      if (!tradingService.isReady()) {
-        tradingService.initializeDemoMode();
-      }
-      console.log('🎮 Demo mode: Initialized demo trading service');
-    } else if (tradingCanister && !tradingService.isReady()) {
-      tradingService.initialize(tradingCanister).catch(console.error);
+      console.log('🎮 Demo mode: Using demo trading service');
+    } else if (tradingCanister) {
+      console.log('✅ Trading canister available:', tradingCanister);
     }
   }, [tradingCanister, isDemoMode]);
 
@@ -673,13 +669,13 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         statusMessage: 'Preparing trade...'
       }));
       
-      // ✅ FIXED: Check trading service instead of canister (skip in demo mode)
-      if (!tradingService.isReady()) {
-        console.error('Trading service not ready');
+      // ✅ FIXED: Check if we have the necessary services (skip in demo mode)
+      if (!isDemoMode && !atticusService) {
+        console.error('Atticus service not available');
         setTradeState(prev => ({
           ...prev,
           isInProgress: false,
-          statusMessage: 'Trading service not ready'
+          statusMessage: 'Trading service not available'
         }));
         return;
       }
@@ -712,7 +708,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
 
       console.log('🕐 Trade request with expiry:', selectedExpiry);
 
-      console.log('🔍 Debug - Calling tradingService.placeTrade with:', {
+      console.log('🔍 Debug - Calling pricingEngine.placeTrade with:', {
         userPrincipal: isDemoMode ? 'demo-user' : user?.principal.toString(),
         userObject: user,
         userPrincipalFromUser: user?.principal?.toString(),
