@@ -83,6 +83,13 @@ export class UnifiedAuth {
       language: navigator.language,
       platform: navigator.platform
     });
+    
+    // Check if mobile Safari
+    const isMobileSafari = /iPhone|iPad|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
+    if (isMobileSafari) {
+      console.log('📱 Mobile Safari detected - authentication may be restricted');
+      throw new Error('ICP authentication is not supported on mobile Safari. Please use a desktop browser or try Google/Twitter authentication.');
+    }
 
     return new Promise((resolve, reject) => {
       // Add timeout to prevent hanging
