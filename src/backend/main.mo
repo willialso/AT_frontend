@@ -330,6 +330,81 @@ persistent actor TradingCanister {  // ✅ FIXED: Added `persistent`
     // 3. Not storing settlement_price field
     // 4. Overwriting correct settlement data from settleTrade function
 
+    // ✅ SIMPLIFIED: PLACE TRADE (OFF-CHAIN PRICING)
+    // Frontend does all calculations, backend just stores the result
+    public func place_trade_simple(
+        user: Principal,
+        option_type: Text,
+        strike_offset: Nat,
+        expiry: Text,
+        contract_count: Nat,
+        entry_price_cents: Nat64,
+        strike_price_cents: Nat64
+    ) : async Result.Result<Nat, Text> {
+        // Convert from cents to dollars
+        let entry_price = Float.fromInt(Int64.toInt(Int64.fromNat64(entry_price_cents))) / 100.0;
+        let strike_price = Float.fromInt(Int64.toInt(Int64.fromNat64(strike_price_cents))) / 100.0;
+        let strike_offset_float = Float.fromInt(Int.abs(strike_offset)) / 10.0;
+        
+        let option_type_enum = if (option_type == "Call") { #Call } else { #Put };
+        
+        let contracts = Float.fromInt(Int.abs(contract_count));
+        let premium_cost = contracts; // $1 per contract
+        
+        ignore await create_user(user);
+        
+        switch (users.get(user)) {
+            case (?user_data) {
+                if (user_data.balance < (premium_cost / entry_price)) {
+                    return #err("Insufficient balance for trade");
+                };
+
+                let updated_user = {
+                    user_data with
+                    balance = user_data.balance - (premium_cost / entry_price);
+                };
+                users.put(user, updated_user);
+
+                // Update platform wallet balance
+                platform_wallet := {
+                    platform_wallet with
+                    balance = platform_wallet.balance + (premium_cost / entry_price);
+                };
+
+                let now = Time.now();
+                let expiry_seconds = switch (expiry) {
+                    case ("5s") { 5 }; case ("10s") { 10 }; case ("15s") { 15 };
+                    case (_) { 5 };
+                };
+                let expiry_timestamp = now + (expiry_seconds * 1_000_000_000);
+
+                let position: Position = {
+                    id = next_order_id;
+                    user = user;
+                    option_type = option_type_enum;
+                    strike_price = strike_price;  // ✅ Use calculated strike price from frontend
+                    entry_price = entry_price;    // ✅ Use calculated entry price from frontend
+                    expiry = expiry;
+                    expiry_timestamp = expiry_timestamp;
+                    size = contracts;
+                    entry_premium = premium_cost;
+                    current_value = 0.0;
+                    pnl = -(premium_cost);
+                    status = #Active;
+                    opened_at = now;
+                    settled_at = null;
+                    settlement_price = null;
+                };
+
+                positions.put(next_order_id, position);
+                let trade_id = next_order_id;
+                next_order_id += 1;
+                #ok(trade_id);
+            };
+            case null { #err("User not found") };
+        };
+    };
+
     // ✅ SIMPLIFIED: RECORD SETTLEMENT (OFF-CHAIN CALCULATED)
     // Frontend does all calculations, backend just records the result
     public func recordSettlement(

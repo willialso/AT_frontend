@@ -237,12 +237,12 @@ export class OffChainPricingEngine {
     finalPrice: number,
     entryPrice: number
   ): SettlementResult {
-    // Calculate strike price from entry price and offset
+    // ✅ FIXED: Calculate strike price from REAL entry price and offset
     const strikePrice = optionType === 'call' 
       ? entryPrice + strikeOffset 
       : entryPrice - strikeOffset;
     
-    // Determine win/loss
+    // ✅ FIXED: Determine win/loss using correct strike price
     const isWin = optionType === 'call' 
       ? finalPrice > strikePrice 
       : finalPrice < strikePrice;
@@ -297,6 +297,74 @@ export class OffChainPricingEngine {
       profit,
       finalPrice
     };
+  }
+
+  /**
+   * ✅ PLACE TRADE (OFF-CHAIN)
+   * Complete trade placement with off-chain pricing
+   * Only store minimal data on-chain for efficiency
+   */
+  public async placeTrade(
+    userPrincipal: string,
+    optionType: 'call' | 'put',
+    strikeOffset: number,
+    expiry: string,
+    contractCount: number,
+    backendCanister: any
+  ): Promise<{ success: boolean; positionId?: number; error?: string }> {
+    try {
+      // Get current price from our own feed
+      const currentPrice = this.getCurrentPrice();
+      if (currentPrice === 0) {
+        throw new Error('Price feed not available');
+      }
+
+      // Calculate all pricing off-chain
+      const strikePrice = this.calculateStrikePrice(currentPrice, strikeOffset, optionType);
+      const premium = this.calculatePremium(contractCount);
+      const tradeCost = this.calculateTradeCost(contractCount, currentPrice);
+
+      console.log('🎯 Off-chain trade calculation:', {
+        currentPrice,
+        strikePrice,
+        premium,
+        tradeCost,
+        optionType,
+        strikeOffset,
+        expiry,
+        contractCount
+      });
+
+      // ✅ SIMPLIFIED: Only store essential data on-chain
+      const result = await backendCanister.place_trade_simple(
+        userPrincipal,
+        optionType === 'call' ? 'Call' : 'Put',
+        strikeOffset,
+        expiry,
+        contractCount,
+        Math.round(currentPrice * 100), // Convert to cents
+        Math.round(strikePrice * 100)   // Convert to cents
+      );
+
+      if ('ok' in result) {
+        return {
+          success: true,
+          positionId: Number(result.ok)
+        };
+      } else {
+        return {
+          success: false,
+          error: result.err
+        };
+      }
+
+    } catch (error) {
+      console.error('❌ Off-chain trade placement failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 
   /**

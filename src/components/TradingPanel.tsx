@@ -724,12 +724,14 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
       console.log('🚀 Starting async trade processing...');
       setTradeState(prev => ({ ...prev, statusMessage: 'Executing trade...' }));
       
-      // Create trade promise (non-blocking)
-      const tradePromise = tradingService.placeTrade(
-        isDemoMode ? 'demo-user' : user!.principal.toString(), 
-        tradeRequest, 
-        isDemoMode,
-        priceState.current // ✅ FIXED: Pass current Bitcoin price to backend
+      // ✅ NEW: Use off-chain trade placement (faster, more accurate)
+      const tradePromise = pricingEngine.placeTrade(
+        isDemoMode ? 'demo-user' : user!.principal.toString(),
+        optionType,
+        strikeOffset,
+        selectedExpiry,
+        contracts,
+        tradingCanister
       );
       
       // Run trade in parallel with price monitoring
@@ -741,18 +743,17 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
       
       const result = tradeResult.value;
 
-      if (result.status === 'failed') {
-        throw new Error(result.message);
+      if (!result.success) {
+        throw new Error(result.error || 'Trade execution failed');
       }
 
-      const orderId = result.orderId;
+      const orderId = result.positionId;
 
-      // ✅ SIMPLIFIED: Backend handles all price recording using price oracle
-      // Frontend just tracks trade state for UI display
+      // ✅ FIXED: Capture real entry price for accurate off-chain calculations
       const tradeData: TradeData = {
         id: orderId.toString(),
         positionId: orderId, // ✅ ADDED: Store actual backend position ID
-        entryPrice: 0, // ✅ SIMPLIFIED: Backend records actual entry price from oracle
+        entryPrice: tradeStartPrice, // ✅ FIXED: Use actual captured price, not 0!
         strikeOffset: strikeOffset, // ✅ FIXED: Use strike offset instead of strike price
         startTime: Date.now(),
         expiry: selectedExpiry,  // ✅ Use selected expiry
