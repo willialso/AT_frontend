@@ -277,6 +277,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
   const isGoogleConfigured = googleClientId && 
     googleClientId !== 'your-google-client-id.apps.googleusercontent.com' &&
     googleClientId.includes('.apps.googleusercontent.com');
+  
+  console.log('🔍 Google OAuth configuration check:', {
+    googleClientId,
+    isGoogleConfigured,
+    hasViteEnv: !!import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    hasProcessEnv: !!process.env['REACT_APP_GOOGLE_CLIENT_ID']
+  });
 
   return (
     <LandingContainer>

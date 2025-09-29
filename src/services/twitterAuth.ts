@@ -60,6 +60,8 @@ export class TwitterAuth {
         
         if (authState !== storedState) {
           console.error('❌ Twitter OAuth state mismatch');
+          console.error('❌ Expected state:', storedState);
+          console.error('❌ Received state:', authState);
           return null;
         }
         
@@ -121,6 +123,9 @@ export class TwitterAuth {
         // Store state for verification
         sessionStorage.setItem('twitter_oauth_state', authData.state);
         sessionStorage.setItem('twitter_oauth_code_challenge', authData.codeChallenge);
+        
+        console.log('🔧 Stored OAuth state:', authData.state);
+        console.log('🔧 Stored code challenge:', authData.codeChallenge);
         
         // Redirect to Twitter OAuth (will redirect back to our app)
         window.location.href = authData.authUrl;
