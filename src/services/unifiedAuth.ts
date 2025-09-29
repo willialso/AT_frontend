@@ -71,96 +71,36 @@ export class UnifiedAuth {
    * Sign in with ICP Identity (existing method)
    */
   async signInWithICP(): Promise<UnifiedUser> {
-    if (!this.authClient) {
-      throw new Error('Auth client not initialized');
-    }
-
-    console.log('🔧 Starting ICP authentication...');
-    console.log('🔧 Identity provider:', process.env['NODE_ENV'] === 'production' ? 'https://identity.ic0.app' : 'http://localhost:4943');
+    console.log('🔧 Starting direct canister authentication...');
     console.log('🔧 Current domain:', window.location.origin);
-    console.log('🔧 Browser info:', {
-      userAgent: navigator.userAgent,
-      language: navigator.language,
-      platform: navigator.platform
-    });
     
-    // Check if mobile Safari
-    const isMobileSafari = /iPhone|iPad|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
-    if (isMobileSafari) {
-      console.log('📱 Mobile Safari detected - authentication may be restricted');
-      throw new Error('ICP authentication is not supported on mobile Safari. Please use a desktop browser or try Google/Twitter authentication.');
+    // For off-chain frontend, we need to get the user's Principal directly
+    // This is different from on-chain frontend which had automatic Principal access
+    try {
+      // Get the user's Principal from the auth client
+      const identity = this.authClient!.getIdentity();
+      const principal = identity.getPrincipal();
+      
+      console.log('✅ Got user Principal:', principal.toString());
+      
+      this.user = {
+        principal,
+        authMethod: 'icp',
+        isAuthenticated: true
+      };
+
+      this.currentAuthMethod = 'icp';
+
+      console.log('✅ Direct canister authentication successful:', {
+        principal: principal.toString(),
+        authMethod: 'icp'
+      });
+
+      return this.user;
+    } catch (error) {
+      console.error('❌ Failed to get user Principal:', error);
+      throw new Error('Failed to get user Principal. Please try again.');
     }
-
-    return new Promise((resolve, reject) => {
-      // Add timeout to prevent hanging
-      const timeout = setTimeout(() => {
-        console.error('❌ ICP authentication timeout');
-        reject(new Error('Authentication timeout - please try again'));
-      }, 60000); // 60 second timeout
-
-      try {
-        this.authClient!.login({
-          identityProvider: process.env['NODE_ENV'] === 'production'
-            ? 'https://identity.ic0.app'
-            : 'http://localhost:4943',
-          maxTimeToLive: BigInt(24 * 60 * 60 * 1000 * 1000 * 1000), // 24 hours
-          windowOpenerFeatures: 'width=500,height=600,scrollbars=yes,resizable=yes',
-
-          onSuccess: async () => {
-            try {
-              clearTimeout(timeout);
-              console.log('✅ ICP authentication popup completed successfully');
-              
-              const identity = this.authClient!.getIdentity();
-              const principal = identity.getPrincipal();
-
-              this.user = {
-                principal,
-                authMethod: 'icp',
-                isAuthenticated: true
-              };
-
-              this.currentAuthMethod = 'icp';
-
-              console.log('✅ ICP authentication successful:', {
-                principal: principal.toString(),
-                authMethod: 'icp'
-              });
-
-              resolve(this.user);
-            } catch (error) {
-              console.error('❌ ICP authentication error:', error);
-              reject(error);
-            }
-          },
-
-          onError: (error: any) => {
-            clearTimeout(timeout);
-            console.error('❌ ICP login failed:', error);
-            console.error('❌ Error details:', {
-              name: error.name,
-              message: error.message,
-              stack: error.stack
-            });
-            
-            // Provide more helpful error messages
-            if (error.name === 'UserInterrupt') {
-              reject(new Error('Authentication was cancelled. Please make sure popup blockers are disabled and try again.'));
-            } else if (error.message && error.message.includes('popup')) {
-              reject(new Error('Popup was blocked. Please allow popups for this site and try again.'));
-            } else if (error.message && error.message.includes('Missing request')) {
-              reject(new Error('Authentication request failed. Please try again or use a different browser.'));
-            } else {
-              reject(error);
-            }
-          }
-        });
-      } catch (error) {
-        clearTimeout(timeout);
-        console.error('❌ Failed to start ICP authentication:', error);
-        reject(new Error('Failed to start authentication. Please try again.'));
-      }
-    });
   }
 
   /**
