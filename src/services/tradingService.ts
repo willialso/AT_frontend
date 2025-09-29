@@ -187,139 +187,6 @@ export class TradingService {
       platformWallet: this.isInitialized,
       liquidityPool: this.isInitialized
     };
-
-  async getPlatformWallet(): Promise<{ address: string; balance: number; totalDeposits: number; totalWithdrawals: number } | null> {
-    try {
-      if (!this.canister) return null;
-      const wallet = await this.canister.get_platform_wallet() as any;
-      if (!wallet) return null;
-      
-      const address = wallet.address || '';
-
-      // Live settlement logic continues...
-      if (!this.canister) throw new Error('Trading service not initialized');
-      
-      // Convert price to nat64 (BigInt) - backend expects nat64, not float64
-      const finalPriceCents = BigInt(Math.floor(finalPrice * 100));
-      
-      // ✅ SIMPLIFIED: Use position ID directly
-      const positionId = parseInt(tradeId);
-      const user = userPrincipal ? Principal.fromText(userPrincipal) : Principal.anonymous();
-      
-      console.log('🔄 Calling backend settleTrade with:', {
-        positionId,
-        finalPrice,
-        finalPriceCents: finalPriceCents.toString(),
-        userPrincipal: userPrincipal
-      });
-      
-      const result = await this.canister.settleTrade(BigInt(positionId), finalPriceCents, user) as any;
-      
-      console.log('🔄 Backend settleTrade result:', result);
-      
-      if (result && 'ok' in result) {
-        const settlement = result.ok;
-        console.log('✅ Settlement successful:', settlement);
-        console.log('🔍 Full settlement object keys:', Object.keys(settlement));
-        console.log('🔍 Settlement object values:', Object.values(settlement));
-        
-        // ✅ FIX: Override backend payout with correct frontend calculation
-        console.log('🔧 LIVE MODE: Before correction:', settlement);
-        const correctedSettlement = this.correctSettlementResult(settlement, tradeData);
-        console.log('🔧 LIVE MODE: After correction:', correctedSettlement);
-        
-        return {
-          outcome: correctedSettlement.outcome as 'win' | 'loss' | 'tie',
-          finalPrice,
-          profit: correctedSettlement.profit,
-          payout: correctedSettlement.payout
-        };
-      } else {
-        console.error('❌ Backend settlement failed:', result);
-        throw new Error('Settlement failed: ' + (result?.err || 'Unknown'));
-      }
-    } catch (error: unknown) {
-      console.error('❌ Settlement failed:', getErrorMessage(error));
-      console.error('❌ Full error details:', error);
-      return {
-        outcome: 'loss',
-        finalPrice,
-        profit: -1,
-        payout: 0
-      };
-    }
-  }
-
-  // ✅ FIX: Correct backend settlement result with proper payout table
-  private correctSettlementResult(settlement: any, tradeData?: { optionType: 'call' | 'put', strikeOffset: number, expiry?: string }): any {
-    console.log('🔧 correctSettlementResult called with:', {
-      settlement,
-      tradeData,
-      hasTradeData: !!tradeData,
-      hasStrikeOffset: !!(tradeData?.strikeOffset),
-      hasExpiry: !!(tradeData?.expiry),
-      outcome: settlement.outcome
-    });
-    
-    // ✅ CORRECT PAYOUT TABLE (matching frontend)
-    const PAYOUT_TABLE: Record<string, Record<number, number>> = {
-      '5s': { 2.5: 3.33, 5: 4.00, 10: 10.00, 15: 20.00 },
-      '10s': { 2.5: 2.86, 5: 3.33, 10: 6.67, 15: 13.33 },
-      '15s': { 2.5: 2.50, 5: 2.86, 10: 5.00, 15: 10.00 }
-    };
-
-    // If it's a winning trade, recalculate with correct payout table
-    if (settlement.outcome === 'win' && tradeData && tradeData.strikeOffset && tradeData.expiry) {
-      // Use the original strike offset selected by user (not calculated from price difference)
-      const strikeOffset = tradeData.strikeOffset;
-      const expiry = tradeData.expiry;
-      
-      // Get correct payout from table using the original strike offset
-      let correctPayout = 0;
-      if (strikeOffset === 2.5 && PAYOUT_TABLE[expiry] && PAYOUT_TABLE[expiry][2.5] !== undefined) {
-        correctPayout = PAYOUT_TABLE[expiry][2.5];
-      } else if (strikeOffset === 5 && PAYOUT_TABLE[expiry] && PAYOUT_TABLE[expiry][5] !== undefined) {
-        correctPayout = PAYOUT_TABLE[expiry][5];
-      } else if (strikeOffset === 10 && PAYOUT_TABLE[expiry] && PAYOUT_TABLE[expiry][10] !== undefined) {
-        correctPayout = PAYOUT_TABLE[expiry][10];
-      } else if (strikeOffset === 15 && PAYOUT_TABLE[expiry] && PAYOUT_TABLE[expiry][15] !== undefined) {
-        correctPayout = PAYOUT_TABLE[expiry][15];
-      }
-      
-      // Table shows total payout (what user receives)
-      const totalPayout = correctPayout;
-      const correctProfit = correctPayout - 1.0; // Net profit = total payout - entry cost
-      
-      console.log('🔧 Correcting settlement:', {
-        originalProfit: settlement.profit,
-        originalPayout: settlement.payout,
-        correctProfit,
-        totalPayout,
-        strikeOffset,
-        expiry,
-        userSelectedOffset: tradeData.strikeOffset
-      });
-      
-      return {
-        ...settlement,
-        profit: correctProfit,
-        payout: totalPayout
-      };
-    }
-    
-    // For non-winning trades, return as-is
-    console.log('🔧 No correction applied - returning original settlement:', settlement);
-    return settlement;
-  }
-
-
-  // ✅ ALL YOUR ADMIN PANEL METHODS
-  getStatus(): { canister: boolean; platformWallet: boolean; liquidityPool: boolean } {
-    return {
-      canister: this.canister !== null,
-      platformWallet: this.isInitialized,
-      liquidityPool: this.isInitialized
-    };
   }
 
   async getPlatformWallet(): Promise<{ address: string; balance: number; totalDeposits: number; totalWithdrawals: number } | null> {
@@ -336,281 +203,57 @@ export class TradingService {
         realBalance = await this.getRealBitcoinBalance(address);
         console.log('💰 Real platform wallet balance from blockchain:', realBalance, 'BTC');
       } catch (error) {
-        console.warn('⚠️ Failed to get real balance, using stored value:', error);
+        console.warn('⚠️ Could not fetch real balance, using stored value:', error);
         realBalance = wallet.balance || 0;
       }
       
       return {
-        address: address,
-        balance: realBalance, // Use real balance from blockchain
+        address,
+        balance: realBalance,
         totalDeposits: wallet.total_deposits || 0,
         totalWithdrawals: wallet.total_withdrawals || 0
       };
     } catch (error: unknown) {
-      console.error('❌ Failed to get platform wallet:', getErrorMessage(error));
+      console.error('❌ Error fetching platform wallet:', error);
       return null;
     }
   }
 
-  // ✅ NEW: Get real Bitcoin balance from blockchain
-  private async getRealBitcoinBalance(address: string): Promise<number> {
+  async getLiquidityPool(): Promise<{ totalLiquidity: number; availableLiquidity: number; reservedLiquidity: number } | null> {
     try {
-      console.log('🔍 Fetching real balance for address:', address.substring(0, 12) + '...');
+      if (!this.canister) return null;
+      const pool = await this.canister.get_liquidity_pool() as any;
+      if (!pool) return null;
       
-      // ✅ ENHANCED: Use CORS proxy for reliable API access
-      const corsProxy = 'https://api.allorigins.win/raw?url=';
-      const apiUrls = [
-        // Primary: Blockstream API with CORS proxy
-        `${corsProxy}${encodeURIComponent(`https://blockstream.info/api/address/${address}`)}`,
-        // Alternative: Blockchain.info API with CORS proxy
-        `${corsProxy}${encodeURIComponent(`https://blockchain.info/q/addressbalance/${address}`)}`,
-        // Alternative: Blockchair API with CORS proxy
-        `${corsProxy}${encodeURIComponent(`https://api.blockchair.com/bitcoin/dashboards/address/${address}`)}`,
-        // Alternative: Mempool.space API with CORS proxy
-        `${corsProxy}${encodeURIComponent(`https://mempool.space/api/address/${address}`)}`,
-        // Fallback: BlockCypher with CORS proxy
-        `${corsProxy}${encodeURIComponent(`https://api.blockcypher.com/v1/btc/main/addrs/${address}/balance`)}`,
-        // ✅ FALLBACK: Direct APIs (may work in some browser contexts)
-        `https://blockstream.info/api/address/${address}`,
-        `https://blockchain.info/q/addressbalance/${address}`,
-        `https://api.blockchair.com/bitcoin/dashboards/address/${address}`,
-        `https://mempool.space/api/address/${address}`,
-        `https://api.blockcypher.com/v1/btc/main/addrs/${address}/balance`
-      ];
-
-      let lastError: Error | null = null;
-
-      for (const url of apiUrls) {
-        let endpointName = 'Unknown';
-        // ✅ ENHANCED: Detect endpoint name for both CORS proxy and direct URLs
-        if (url.includes('blockstream.info')) endpointName = 'Blockstream';
-        else if (url.includes('blockchain.info')) endpointName = 'Blockchain.info';
-        else if (url.includes('blockchair.com')) endpointName = 'Blockchair';
-        else if (url.includes('mempool.space')) endpointName = 'Mempool.space';
-        else if (url.includes('blockcypher.com')) endpointName = 'BlockCypher';
-        
-        // Add proxy indicator
-        if (url.includes('allorigins.win')) {
-          endpointName += ' (via CORS proxy)';
-        }
-        
-        try {
-          console.log(`🌐 Trying ${endpointName} for real balance...`);
-          
-          const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-            signal: AbortSignal.timeout(10000) // 10 second timeout
-          });
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          let data = await response.json();
-          
-          // ✅ ENHANCED: Handle CORS proxy response format
-          if (url.includes('allorigins.win')) {
-            // AllOrigins returns the raw response directly
-            console.log('📦 CORS proxy response received');
-          } else if (data.contents) {
-            // Handle legacy AllOrigins wrapper format
-            data = JSON.parse(data.contents);
-          }
-          
-          // ✅ UPDATED: Parse balance based on different API formats
-          let balanceSatoshis = 0;
-          
-          if (url.includes('blockstream.info')) {
-            // Blockstream format: { chain_stats: { funded_txo_sum: X, spent_txo_sum: Y } }
-            if (data.chain_stats) {
-              balanceSatoshis = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
-            }
-          } else if (url.includes('blockchain.info')) {
-            // Blockchain.info format: just the balance number
-            balanceSatoshis = parseInt(data) || 0;
-          } else if (url.includes('blockchair.com')) {
-            // Blockchair format: { data: { [address]: { address: { balance: X } } } }
-            if (data.data && data.data[address] && data.data[address].address) {
-              balanceSatoshis = data.data[address].address.balance || 0;
-            }
-          } else if (url.includes('mempool.space')) {
-            // Mempool.space format: { chain_stats: { funded_txo_sum: X, spent_txo_sum: Y } }
-            if (data.chain_stats) {
-              balanceSatoshis = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
-            }
-          } else if (url.includes('blockcypher.com')) {
-            // BlockCypher format: { balance: X }
-            balanceSatoshis = data.balance || 0;
-          }
-          
-          // Convert satoshis to BTC
-          const balanceBTC = balanceSatoshis / 100000000;
-          
-          if (balanceBTC >= 0) {
-            console.log(`✅ Got real balance from ${endpointName}:`, balanceBTC, 'BTC');
-            return balanceBTC;
-          } else {
-            throw new Error('Invalid balance received');
-          }
-          
-        } catch (error) {
-          lastError = error instanceof Error ? error : new Error(String(error));
-          
-          // ✅ ENHANCED: Categorize errors for better debugging
-          if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-            console.warn(`🌐 Network/CORS Error: ${endpointName} - ${lastError.message}`);
-          } else if (lastError.message.includes('429')) {
-            console.warn(`⏱️ Rate limit: ${endpointName} - ${lastError.message}`);
-          } else if (lastError.message.includes('403')) {
-            console.warn(`🚫 CORS/Forbidden: ${endpointName} - ${lastError.message}`);
-          } else if (lastError.message.includes('500')) {
-            console.warn(`🔥 Server error: ${endpointName} - ${lastError.message}`);
-          } else {
-            console.warn(`⚠️ API Error: ${endpointName} - ${lastError.message}`);
-          }
-          
-          continue;
-        }
-      }
-
-      // If all endpoints failed
-      throw lastError || new Error('All Bitcoin API endpoints failed');
-      
-    } catch (error) {
-      console.error('❌ Failed to get real Bitcoin balance:', error);
-      throw error;
-    }
-  }
-
-  async transferFromPlatformToExternal(address: string, amount: number): Promise<{ status: string; message: string }> {
-    try {
-      if (!this.canister) throw new Error('Trading service not initialized');
-      const result = await (this.canister as any).admin_withdraw_liquidity?.(amount, address);
-      if (result && 'ok' in result) {
-        return { status: 'success', message: result.ok };
-      } else {
-        throw new Error(result?.err || 'Transfer failed');
-      }
-    } catch (error: unknown) {
-      return { status: 'failed', message: getErrorMessage(error) };
-    }
-  }
-
-  async generateUserWallet(userPrincipal: string): Promise<{ address: string }> {
-    try {
-      if (!this.canister) throw new Error('Service not initialized');
-      const principal = Principal.fromText(userPrincipal);
-      const result = await this.canister.generate_user_wallet(principal) as any;
-      if (result && 'ok' in result) {
-        return { address: result.ok };
-      } else {
-        throw new Error('Wallet generation failed');
-      }
-    } catch (error: unknown) {
-      console.error('❌ Failed to generate wallet:', getErrorMessage(error));
-      throw error;
-    }
-  }
-
-  async updateBTCPrice(priceInCents: number): Promise<void> {
-    try {
-      if (!this.canister) return;
-      await this.canister.update_btc_price(priceInCents / 100);
-    } catch (error: unknown) {
-      console.error('❌ Failed to update BTC price:', getErrorMessage(error));
-    }
-  }
-
-  initializeDemoMode(): void {
-    this.canister = null; // No real canister in demo
-    this.isInitialized = true; // Mark as ready for demo trades
-    console.log('✅ Demo trading service initialized');
-  }
-
-  isReady(): boolean {
-    return this.isInitialized; // Remove canister requirement for demo mode
-  }
-
-  /**
-   * Generate unique deposit address for user
-   */
-  async generateUniqueDepositAddress(userPrincipal: string): Promise<{status: 'success' | 'failed', address?: string, message: string}> {
-    try {
-      if (!this.canister) throw new Error('Trading service not initialized');
-      
-      console.log('🏦 Generating unique deposit address for user:', userPrincipal);
-
-      const principal = Principal.fromText(userPrincipal);
-      const result = await this.canister.generate_unique_deposit_address(principal);
-
-      if ('ok' in result) {
-        console.log('✅ Unique deposit address generated:', result.ok);
-        return {
-          status: 'success',
-          address: result.ok,
-          message: 'Unique deposit address generated successfully'
-        };
-      } else {
-        console.error('❌ Failed to generate deposit address:', result.err);
-        return {
-          status: 'failed',
-          message: result.err
-        };
-      }
-    } catch (error: unknown) {
-      const errorMessage = getErrorMessage(error);
-      console.error('❌ Generate deposit address error:', errorMessage);
       return {
-        status: 'failed',
-        message: errorMessage
+        totalLiquidity: pool.total_liquidity || 0,
+        availableLiquidity: pool.available_liquidity || 0,
+        reservedLiquidity: pool.reserved_liquidity || 0
       };
-    }
-  }
-
-  /**
-   * Get user's deposit address
-   */
-  async getUserDepositAddress(userPrincipal: string): Promise<{status: 'success' | 'failed', address?: string, message: string}> {
-    try {
-      if (!this.canister) throw new Error('Trading service not initialized');
-      
-      const principal = Principal.fromText(userPrincipal);
-      const result = await this.canister.get_user_deposit_address(principal);
-
-      if ('ok' in result) {
-        return {
-          status: 'success',
-          address: result.ok,
-          message: 'Deposit address retrieved successfully'
-        };
-      } else {
-        return {
-          status: 'failed',
-          message: result.err
-        };
-      }
     } catch (error: unknown) {
-      const errorMessage = getErrorMessage(error);
-      return {
-        status: 'failed',
-        message: errorMessage
-      };
+      console.error('❌ Error fetching liquidity pool:', error);
+      return null;
     }
   }
 
-  /**
-   * Deposit Bitcoin to user account (called by blockchain monitor)
-   */
-  async depositBitcoin(userPrincipal: string, amountSatoshis: number): Promise<{status: 'success' | 'failed', message: string}> {
+  async getRealBitcoinBalance(address: string): Promise<number> {
+    // This method should fetch real Bitcoin balance from blockchain
+    // For now, return 0 as placeholder
+    return 0;
+  }
+
+  async depositBitcoin(userPrincipal: string, amountBTC: number): Promise<{ status: string; message: string }> {
     try {
-      if (!this.canister) throw new Error('Trading service not initialized');
+      if (!this.canister) {
+        throw new Error('Trading service not initialized');
+      }
+
+      // Convert BTC to satoshis (1 BTC = 100,000,000 satoshis)
+      const amountSatoshis = Math.round(amountBTC * 100000000);
       
-      console.log('💰 Processing Bitcoin deposit:', {
+      console.log('💰 Depositing Bitcoin:', {
         userPrincipal,
+        amountBTC,
         amountSatoshis
       });
 
