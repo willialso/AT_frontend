@@ -126,15 +126,31 @@ const AppContent: React.FC = () => {
 
   const handleTwitterSignIn = async () => {
     try {
+      console.log('🔧 App: handleTwitterSignIn called');
       const result = await signInWithTwitter();
+      console.log('🔧 App: Twitter auth result:', result);
+      
       if (result) {
+        console.log('🔧 App: Twitter authentication successful');
+        
+        // Wait for React state to update
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        console.log('🔧 App: Current auth state after Twitter login (after delay):', { isAuthenticated, user, principal });
+        console.log('🔧 App: isAuthenticated value:', isAuthenticated);
+        console.log('🔧 App: user value:', user);
+        
         setIsDemoMode(false);
+        
+        // Force a re-render to check auth state
+        console.log('🔧 App: Forcing re-render to check auth state...');
       } else {
         console.log('🔄 Twitter OAuth redirect initiated, user will be redirected back');
         // Don't set demo mode to false for redirect case
       }
     } catch (err) {
-      console.error('Twitter login failed:', err);
+      console.error('🔧 App: Twitter login failed:', err);
+      alert(`Twitter login failed: ${err.message || 'Unknown error'}`);
     }
   };
 
@@ -152,12 +168,19 @@ const AppContent: React.FC = () => {
       
       if (result) {
         console.log('🔧 App: signInWithGoogle completed successfully');
+        console.log('🔧 App: Google auth result:', result);
         
         // Wait for React state to update
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         console.log('🔧 App: Current auth state after Google login (after delay):', { isAuthenticated, user, principal });
+        console.log('🔧 App: isAuthenticated value:', isAuthenticated);
+        console.log('🔧 App: user value:', user);
+        
         setIsDemoMode(false);
+        
+        // Force a re-render to check auth state
+        console.log('🔧 App: Forcing re-render to check auth state...');
       } else {
         console.log('🔄 Google OAuth redirect initiated, user will be redirected back');
         // Don't set demo mode to false for redirect case
@@ -189,7 +212,9 @@ const AppContent: React.FC = () => {
   }
 
   // 2. Landing page for unauthenticated users (not in demo mode)
+  console.log('🔧 App: Render decision - isAuthenticated:', isAuthenticated, 'isDemoMode:', isDemoMode);
   if (!isAuthenticated && !isDemoMode) {
+    console.log('🔧 App: Rendering LandingPage because !isAuthenticated && !isDemoMode');
     return (
       <>
         <GlobalStyle />
