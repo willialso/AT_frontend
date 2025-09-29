@@ -376,15 +376,40 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
             if (currentTime > (expiryTime + 60000)) {
               console.log('🔄 Auto-settling expired position:', position.id, 'expired at:', new Date(expiryTime));
               try {
-                // Get current BTC price for settlement
-                const currentPrice = await backend.get_btc_price();
-                const finalPriceCents = Math.floor(currentPrice * 100);
+                // ✅ FIXED: Use off-chain settlement instead of old settleTrade
+                const { pricingEngine } = await import('../services/OffChainPricingEngine');
                 
-                // Call settleTrade
-                const settlementResult = await backend.settleTrade(position.id.toString(), finalPriceCents);
-                console.log('✅ Auto-settlement result:', settlementResult);
+                // Get current price from off-chain pricing engine
+                const currentPrice = pricingEngine.getCurrentPrice();
+                if (currentPrice === 0) {
+                  console.warn('⚠️ Price feed not available for settlement');
+                  return;
+                }
+                
+                // Calculate settlement off-chain
+                const strikeOffset = position.strike_offset || 0;
+                const expiry = position.expiry || '5s';
+                const optionType = position.option_type?.Call !== undefined ? 'call' : 'put';
+                const entryPrice = position.entry_price || currentPrice;
+                
+                const settlementResult = pricingEngine.calculateSettlement(
+                  optionType,
+                  strikeOffset,
+                  expiry,
+                  currentPrice,
+                  entryPrice
+                );
+                
+                // Record settlement to backend
+                await pricingEngine.recordSettlement(
+                  Number(position.id),
+                  settlementResult,
+                  backend
+                );
+                
+                console.log('✅ Off-chain auto-settlement result:', settlementResult);
               } catch (error) {
-                console.error('❌ Auto-settlement failed:', error);
+                console.error('❌ Off-chain auto-settlement failed:', error);
               }
             }
           }
