@@ -27,6 +27,7 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0', // ✅ ADDED: Allow external connections for Render
       allowedHosts: [
         'at-frontend.onrender.com',
+        'atticusmini.com',
         'localhost',
         '127.0.0.1',
         '0.0.0.0'
@@ -48,6 +49,7 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0', // ✅ ADDED: Allow external connections for Render
       allowedHosts: [
         'at-frontend.onrender.com',
+        'atticusmini.com',
         'localhost',
         '127.0.0.1',
         '0.0.0.0'
@@ -73,9 +75,9 @@ export default defineConfig(({ mode }) => {
             'dfinity': ['@dfinity/auth-client', '@dfinity/agent', '@dfinity/principal', '@dfinity/identity']
           },
           // ✅ ADDED: Force new hash for cache busting with timestamp
-            entryFileNames: `assets/[name]-[hash]-${Date.now()}-v3-${Math.random().toString(36).substr(2, 9)}.js`,
-            chunkFileNames: `assets/[name]-[hash]-${Date.now()}-v3-${Math.random().toString(36).substr(2, 9)}.js`,
-            assetFileNames: `assets/[name]-[hash]-${Date.now()}-v3-${Math.random().toString(36).substr(2, 9)}.[ext]`
+            entryFileNames: `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.js`,
+            chunkFileNames: `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.js`,
+            assetFileNames: `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.[ext]`
         }
       },
       // ✅ ADDED: Force sourcemap generation for debugging
