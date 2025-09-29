@@ -286,8 +286,8 @@ export class AtticusService {
   }
 
   /**
-   * ✅ SETTLE TRADE (ON-CHAIN SETTLEMENT)
-   * Use backend settlement with correct payout tables
+   * ✅ SETTLE TRADE (OFF-CHAIN SETTLEMENT)
+   * Use off-chain settlement for fast, accurate results
    */
   public async settleTrade(tradeId: number, finalPrice: number): Promise<SettlementResult> {
     if (!this.isInitialized) {
@@ -295,27 +295,38 @@ export class AtticusService {
     }
 
     try {
-      // Convert final price to cents (backend expects Nat64)
-      const finalPriceCents = Math.round(finalPrice * 100);
+      // ✅ FIXED: Use off-chain settlement instead of old backend method
+      const { pricingEngine } = await import('./OffChainPricingEngine');
       
-      // Use backend settlement with correct payout tables
-      const result = await this.coreCanister.settleTrade(
-        BigInt(tradeId), 
-        BigInt(finalPriceCents),
-        Principal.anonymous() // User principal not needed for settlement
+      // Get position data from backend to calculate settlement
+      const position = await this.coreCanister.get_position(tradeId);
+      if (!position || !position.ok) {
+        throw new Error('Position not found');
+      }
+      
+      const pos = position.ok;
+      const strikeOffset = pos.strike_offset || 0;
+      const expiry = pos.expiry || '5s';
+      const optionType = pos.option_type?.Call !== undefined ? 'call' : 'put';
+      const entryPrice = pos.entry_price || finalPrice;
+      
+      // Calculate settlement off-chain
+      const result = pricingEngine.calculateSettlement(
+        optionType,
+        strikeOffset,
+        expiry,
+        finalPrice,
+        entryPrice
       );
       
-      if ('ok' in result) {
-        const settlement = result.ok;
-        return {
-          outcome: settlement.outcome,
-          payout: Number(settlement.payout),
-          profit: Number(settlement.profit),
-          finalPrice: finalPrice
-        };
-      } else {
-        throw new Error(result.err);
-      }
+      // Record settlement to backend
+      await pricingEngine.recordSettlement(
+        tradeId,
+        result,
+        this.coreCanister
+      );
+      
+      return result;
       
     } catch (error) {
       console.error('❌ Error settling trade:', error);
