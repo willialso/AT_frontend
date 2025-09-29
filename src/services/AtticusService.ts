@@ -77,10 +77,16 @@ export class AtticusService {
           // User management
           create_user: IDL.Func([IDL.Principal], [IDL.Variant({ ok: IDL.Record({
             balance: IDL.Float64,
+            total_wins: IDL.Float64,
+            total_losses: IDL.Float64,
+            net_pnl: IDL.Float64,
             created_at: IDL.Int
           }), err: IDL.Text })], []),
           get_user: IDL.Func([IDL.Principal], [IDL.Variant({ ok: IDL.Record({
             balance: IDL.Float64,
+            total_wins: IDL.Float64,
+            total_losses: IDL.Float64,
+            net_pnl: IDL.Float64,
             created_at: IDL.Int
           }), err: IDL.Text })], ['query']),
           
@@ -147,9 +153,9 @@ export class AtticusService {
         return {
           principal,
           balance: Number(result.ok.balance),
-          totalWins: 0,
-          totalLosses: 0,
-          netPnl: 0,
+          totalWins: Number(result.ok.total_wins),
+          totalLosses: Number(result.ok.total_losses),
+          netPnl: Number(result.ok.net_pnl),
           createdAt: Number(result.ok.created_at)
         };
       } else {
@@ -171,9 +177,9 @@ export class AtticusService {
         return {
           principal,
           balance: Number(result.ok.balance),
-          totalWins: 0,
-          totalLosses: 0,
-          netPnl: 0,
+          totalWins: Number(result.ok.total_wins),
+          totalLosses: Number(result.ok.total_losses),
+          netPnl: Number(result.ok.net_pnl),
           createdAt: Number(result.ok.created_at)
         };
       } else {
