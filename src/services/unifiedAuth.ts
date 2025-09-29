@@ -132,6 +132,14 @@ export class UnifiedAuth {
 
       return this.user!;
     } catch (error) {
+      // Handle redirect case gracefully
+      if (error.message && error.message.includes('Redirecting to Twitter OAuth')) {
+        console.log('🔄 Twitter OAuth redirect initiated, user will be redirected back');
+        // Don't throw error for redirect case, just return null
+        // The callback will be handled by checkMobileCallback()
+        return null as any;
+      }
+      
       console.error('❌ Twitter authentication failed:', error);
       throw error;
     }

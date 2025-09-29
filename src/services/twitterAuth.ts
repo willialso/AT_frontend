@@ -18,22 +18,37 @@ export class TwitterAuth {
    */
   async checkMobileCallback(): Promise<TwitterUser | null> {
     const urlParams = new URLSearchParams(window.location.search);
-    const twitterAuth = urlParams.get('twitter_auth');
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const error = urlParams.get('error');
     
     console.log('🔍 Checking for mobile callback, URL params:', window.location.search);
     console.log('🔍 Current URL:', window.location.href);
-    console.log('🔍 Twitter auth param:', twitterAuth);
+    console.log('🔍 Twitter OAuth params:', { code, state, error });
     
-    if (twitterAuth) {
+    if (error) {
+      console.error('❌ Twitter OAuth error:', error);
+      return null;
+    }
+    
+    if (code && state) {
       try {
-        const authData = JSON.parse(decodeURIComponent(twitterAuth));
-        console.log('📱 Mobile Twitter OAuth callback detected:', authData);
+        // Verify state matches what we stored
+        const storedState = sessionStorage.getItem('twitter_oauth_state');
+        if (state !== storedState) {
+          console.error('❌ Twitter OAuth state mismatch');
+          return null;
+        }
         
-        // Clean up URL
+        console.log('📱 Mobile Twitter OAuth callback detected:', { code, state });
+        
+        // Clean up URL and session storage
         window.history.replaceState({}, document.title, window.location.pathname);
+        sessionStorage.removeItem('twitter_oauth_state');
+        sessionStorage.removeItem('twitter_oauth_code_challenge');
         
         // Handle the callback
-        const result = await this.handleTwitterCallback(authData.code, authData.state);
+        const result = await this.handleTwitterCallback(code, state);
         console.log('✅ Twitter OAuth callback completed successfully:', result);
         return result;
       } catch (error) {
@@ -74,62 +89,22 @@ export class TwitterAuth {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
       if (isMobile) {
-        // For mobile, open Twitter OAuth in new tab (like desktop)
-        console.log('📱 Mobile detected, opening OAuth in new tab');
+        // For mobile, use redirect approach instead of popup
+        console.log('📱 Mobile detected, using redirect approach for Twitter OAuth');
         
-        // Store root URL for redirect back (always go to main app after auth)
-        const mainAppUrl = `${window.location.origin}/`;
-        sessionStorage.setItem('twitter_oauth_return_url', mainAppUrl);
+        // Store state for verification
+        sessionStorage.setItem('twitter_oauth_state', authData.state);
+        sessionStorage.setItem('twitter_oauth_code_challenge', authData.codeChallenge);
         
-        // Open Twitter OAuth in new tab (works better on mobile)
-        const popup = window.open(
-          authData.authUrl,
-          'twitter-oauth',
-          'width=600,height=700,scrollbars=yes,resizable=yes'
-        );
-
-        if (!popup) {
-          throw new Error('Failed to open Twitter OAuth popup. Please allow popups for this site.');
-        }
-
-        // Wait for popup to complete OAuth (same as desktop)
-        return new Promise<TwitterUser>((resolve, reject) => {
-          let isCompleted = false;
-          
-          const messageHandler = (event: MessageEvent) => {
-            if (event.origin !== window.location.origin) return;
-
-            if (event.data.type === 'TWITTER_OAUTH_CALLBACK') {
-              isCompleted = true;
-              window.removeEventListener('message', messageHandler);
-              clearInterval(checkClosed);
-              
-              // Handle the callback
-              this.handleTwitterCallback(event.data.code, event.data.state)
-                .then(resolve)
-                .catch(reject);
-            } else if (event.data.type === 'TWITTER_OAUTH_ERROR') {
-              isCompleted = true;
-              window.removeEventListener('message', messageHandler);
-              clearInterval(checkClosed);
-              reject(new Error(event.data.error));
-            }
-          };
-
-          window.addEventListener('message', messageHandler);
-
-          // Handle popup closed manually (only if not completed)
-          const checkClosed = setInterval(() => {
-            if (popup.closed && !isCompleted) {
-              clearInterval(checkClosed);
-              window.removeEventListener('message', messageHandler);
-              reject(new Error('Twitter OAuth cancelled by user'));
-            }
-          }, 1000);
-        });
+        // Redirect to Twitter OAuth (will redirect back to our app)
+        window.location.href = authData.authUrl;
+        
+        // This will never resolve as the page will redirect
+        // The callback will be handled by checkMobileCallback()
+        throw new Error('Redirecting to Twitter OAuth...');
       }
 
-      // Open Twitter OAuth in popup window (desktop)
+      // Try popup first, fallback to redirect if blocked
       const popup = window.open(
         authData.authUrl,
         'twitter-oauth',
@@ -137,7 +112,18 @@ export class TwitterAuth {
       );
 
       if (!popup) {
-        throw new Error('Failed to open Twitter OAuth popup. Please allow popups for this site.');
+        console.log('⚠️ Popup blocked, falling back to redirect approach');
+        
+        // Store state for verification
+        sessionStorage.setItem('twitter_oauth_state', authData.state);
+        sessionStorage.setItem('twitter_oauth_code_challenge', authData.codeChallenge);
+        
+        // Redirect to Twitter OAuth (will redirect back to our app)
+        window.location.href = authData.authUrl;
+        
+        // This will never resolve as the page will redirect
+        // The callback will be handled by checkMobileCallback()
+        throw new Error('Redirecting to Twitter OAuth...');
       }
 
       // Wait for popup to complete OAuth

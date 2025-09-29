@@ -127,22 +127,35 @@ persistent actor AtticusTreasury {
         // Store the mapping
         user_address_mapping := Array.append(user_address_mapping, [(unique_deposit_id, user)]);
         
-        // Update user data
+        // Check if user exists, if not create them
         switch (Array.find(users, func((p, _)) = p == user)) {
             case (?user_data) {
                 let (_, user_data_record) = user_data;
-                let updated_user = {
-                    user_data_record with
-                    unique_deposit_address = ?unique_deposit_id
-                };
-                users := Array.map(users, func((p, u)) = if (p == user) { (p, updated_user) } else { (p, u) });
+                // For existing users, just update the deposit address mapping
+                // The Treasury UserData doesn't have unique_deposit_address field
+                // We'll store this in the user_address_mapping instead
                 
                 let instructions = "Send BTC to: " # platform_wallet.address # "\n" #
                                   "Include memo: " # unique_deposit_id # "\n" #
                                   "This ensures your deposit is credited to your account.";
                 #ok(instructions);
             };
-            case null { #err("User not found") };
+            case null { 
+                // Create user if they don't exist
+                let new_user_data = {
+                    principal = user;
+                    balance = 0.0;
+                    total_deposits = 0.0;
+                    total_withdrawals = 0.0;
+                    created_at = Time.now();
+                };
+                users := Array.append(users, [(user, new_user_data)]);
+                
+                let instructions = "Send BTC to: " # platform_wallet.address # "\n" #
+                                  "Include memo: " # unique_deposit_id # "\n" #
+                                  "This ensures your deposit is credited to your account.";
+                #ok(instructions);
+            };
         };
     };
 

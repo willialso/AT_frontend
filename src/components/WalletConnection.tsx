@@ -335,9 +335,9 @@ export const WalletConnection: React.FC = () => {
 
         // ✅ FIXED: Get balance with proper null checks
         try {
-          const userData = await (tradingCanister as any).get_user?.(user);
-          if (userData && Array.isArray(userData) && userData.length > 0 && userData[0]) {
-            setPlatformBalance(userData[0].balance || 0);
+          const userData = await atticusService.getUser(user.principal.toString());
+          if (userData && userData.balance !== undefined) {
+            setPlatformBalance(userData.balance);
           }
         } catch (balanceError) {
           console.warn('Failed to get balance:', balanceError);
@@ -364,13 +364,13 @@ export const WalletConnection: React.FC = () => {
 
   // ✅ REFRESH BALANCE WITH PROPER ERROR HANDLING
   const handleRefreshBalance = async () => {
-    if (!user || !tradingCanister) return;
+    if (!user || !atticusService) return;
 
     try {
-      const userData = await (tradingCanister as any).get_user?.(user);
-      if (userData && Array.isArray(userData) && userData.length > 0 && userData[0]) {
-        setPlatformBalance(userData[0].balance || 0);
-        console.log('✅ Platform balance refreshed:', userData[0].balance);
+      const userData = await atticusService.getUser(user.principal.toString());
+      if (userData && userData.balance !== undefined) {
+        setPlatformBalance(userData.balance);
+        console.log('✅ Platform balance refreshed:', userData.balance);
       } else {
         setPlatformBalance(0);
       }
@@ -381,7 +381,7 @@ export const WalletConnection: React.FC = () => {
 
   // ✅ WITHDRAWAL WITH PROPER ERROR HANDLING
   const handleWithdrawal = async () => {
-    if (!withdrawAmount || !withdrawAddress || !user || !tradingCanister) {
+    if (!withdrawAmount || !withdrawAddress || !user || !atticusService) {
       setOperationStatus('❌ Please enter withdrawal amount, address, and ensure you are logged in');
       return;
     }
@@ -401,7 +401,10 @@ export const WalletConnection: React.FC = () => {
 
       // ✅ FIXED: Convert to BigInt
       const amountSatoshis = BigInt(Math.floor(amount * 100000000));
-      const result = await (tradingCanister as any).withdraw_bitcoin?.(user, amountSatoshis, withdrawAddress);
+      // Note: Withdrawal functionality needs to be implemented in TreasuryService
+      // For now, we'll show a placeholder message
+      setOperationStatus('❌ Withdrawal functionality not yet implemented in TreasuryService');
+      return;
 
       if (result && 'ok' in result) {
         console.log('✅ Platform withdrawal successful:', result);
