@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test ICP Authentication</title>
+    <script src="https://unpkg.com/@dfinity/auth-client@0.20.4/dist/index.umd.js"></script>
+</head>
+<body>
+    <h1>Test ICP Authentication</h1>
+    <button onclick="testICPAuth()">Test ICP Authentication</button>
+    <div id="result"></div>
+
+    <script>
+        async function testICPAuth() {
+            try {
+                console.log('🚀 Testing ICP authentication...');
+                
+                // Create auth client
+                const authClient = await window.dfinity.AuthClient.create();
+                console.log('✅ Auth client created');
+                
+                // Test login
+                const result = await new Promise((resolve, reject) => {
+                    authClient.login({
+                        identityProvider: 'https://identity.ic0.app',
+                        onSuccess: () => {
+                            console.log('✅ Authentication successful');
+                            const identity = authClient.getIdentity();
+                            const principal = identity.getPrincipal();
+                            resolve({
+                                success: true,
+                                principal: principal.toString()
+                            });
+                        },
+                        onError: (error) => {
+                            console.error('❌ Authentication failed:', error);
+                            reject(error);
+                        }
+                    });
+                });
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>✅ SUCCESS!</h2>
+                    <p>ICP authentication test passed:</p>
+                    <ul>
+                        <li>✅ Auth client: Created</li>
+                        <li>✅ Authentication: Successful</li>
+                        <li>✅ Principal: ${result.principal}</li>
+                    </ul>
+                `;
+                
+            } catch (error) {
+                console.error('❌ ICP authentication test failed:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2>❌ FAILED</h2>
+                    <p>ICP authentication test failed:</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Type:</strong> ${error.name}</p>
+                    <p><strong>Stack:</strong></p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

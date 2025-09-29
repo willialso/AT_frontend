@@ -76,6 +76,11 @@ export class UnifiedAuth {
 
     console.log('🔧 Starting ICP authentication...');
     console.log('🔧 Identity provider:', process.env['NODE_ENV'] === 'production' ? 'https://identity.ic0.app' : 'http://localhost:4943');
+    console.log('🔧 Browser info:', {
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform
+    });
 
     return new Promise((resolve, reject) => {
       // Add timeout to prevent hanging
@@ -84,51 +89,64 @@ export class UnifiedAuth {
         reject(new Error('Authentication timeout - please try again'));
       }, 60000); // 60 second timeout
 
-      this.authClient!.login({
-        identityProvider: process.env['NODE_ENV'] === 'production'
-          ? 'https://identity.ic0.app'
-          : 'http://localhost:4943',
+      try {
+        this.authClient!.login({
+          identityProvider: process.env['NODE_ENV'] === 'production'
+            ? 'https://identity.ic0.app'
+            : 'http://localhost:4943',
 
-        onSuccess: async () => {
-          try {
+          onSuccess: async () => {
+            try {
+              clearTimeout(timeout);
+              console.log('✅ ICP authentication popup completed successfully');
+              
+              const identity = this.authClient!.getIdentity();
+              const principal = identity.getPrincipal();
+
+              this.user = {
+                principal,
+                authMethod: 'icp',
+                isAuthenticated: true
+              };
+
+              this.currentAuthMethod = 'icp';
+
+              console.log('✅ ICP authentication successful:', {
+                principal: principal.toString(),
+                authMethod: 'icp'
+              });
+
+              resolve(this.user);
+            } catch (error) {
+              console.error('❌ ICP authentication error:', error);
+              reject(error);
+            }
+          },
+
+          onError: (error: any) => {
             clearTimeout(timeout);
-            console.log('✅ ICP authentication popup completed successfully');
-            
-            const identity = this.authClient!.getIdentity();
-            const principal = identity.getPrincipal();
-
-            this.user = {
-              principal,
-              authMethod: 'icp',
-              isAuthenticated: true
-            };
-
-            this.currentAuthMethod = 'icp';
-
-            console.log('✅ ICP authentication successful:', {
-              principal: principal.toString(),
-              authMethod: 'icp'
+            console.error('❌ ICP login failed:', error);
+            console.error('❌ Error details:', {
+              name: error.name,
+              message: error.message,
+              stack: error.stack
             });
-
-            resolve(this.user);
-          } catch (error) {
-            console.error('❌ ICP authentication error:', error);
-            reject(error);
+            
+            // Provide more helpful error messages
+            if (error.name === 'UserInterrupt') {
+              reject(new Error('Authentication was cancelled. Please make sure popup blockers are disabled and try again.'));
+            } else if (error.message && error.message.includes('popup')) {
+              reject(new Error('Popup was blocked. Please allow popups for this site and try again.'));
+            } else {
+              reject(error);
+            }
           }
-        },
-
-        onError: (error: any) => {
-          clearTimeout(timeout);
-          console.error('❌ ICP login failed:', error);
-          
-          // Provide more helpful error messages
-          if (error.name === 'UserInterrupt') {
-            reject(new Error('Authentication was cancelled. Please make sure popup blockers are disabled and try again.'));
-          } else {
-            reject(error);
-          }
-        }
-      });
+        });
+      } catch (error) {
+        clearTimeout(timeout);
+        console.error('❌ Failed to start ICP authentication:', error);
+        reject(new Error('Failed to start authentication. Please try again.'));
+      }
     });
   }
 
