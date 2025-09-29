@@ -249,8 +249,13 @@ export const WalletConnection: React.FC = () => {
           console.log('🔍 User type:', typeof user);
           console.log('🔍 User principal:', user?.principal);
           
-          // ✅ FIXED: Pass the principal directly, not the user object
-          const userPrincipal = user?.principal || user;
+          // ✅ FIXED: Extract principal properly from user object
+          if (!user?.principal) {
+            throw new Error('User principal not available');
+          }
+          
+          const userPrincipal = user.principal;
+          console.log('🔍 Using principal:', userPrincipal.toString());
           const result = await atticusService.generateUserWallet(userPrincipal.toString());
           console.log('📥 Backend Response:', result);
 

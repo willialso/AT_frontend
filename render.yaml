@@ -16,6 +16,12 @@ services:
         value: https://ic0.app
       - key: NODE_ENV
         value: production
+      - key: REACT_APP_GOOGLE_CLIENT_ID
+        value: 255794166358-poj0rbu2bqtd663m9nsu6hfam6hd0661.apps.googleusercontent.com
+      - key: REACT_APP_TWITTER_CLIENT_ID
+        value: cDNGQ0tqRTRmZDBrbVVtc19wZk06MTpjaQ
+      - key: REACT_APP_IC_HOST
+        value: https://ic0.app
     healthCheckPath: /
     autoDeploy: true
     plan: starter
