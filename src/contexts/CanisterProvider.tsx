@@ -42,7 +42,7 @@ export const CanisterProvider: React.FC<{ children: ReactNode }> = React.memo(({
         });
 
         // ✅ ATTICUS CORE CANISTER ID (Your Mainnet Canister)
-        const ATTICUS_CORE_CANISTER_ID = process.env.ATTICUS_CORE_CANISTER_ID || 'q4oqk-hyaaa-aaaam-qd4la-cai';
+        const ATTICUS_CORE_CANISTER_ID = process.env.ATTICUS_CORE_CANISTER_ID || 'rraue-iqaaa-aaaam-qd4mq-cai';
         
         // ✅ ATTICUS TREASURY CANISTER ID (New Treasury Canister)
         const ATTICUS_TREASURY_CANISTER_ID = process.env.ATTICUS_TREASURY_CANISTER_ID || 'rwbsq-fiaaa-aaaam-qd4ma-cai';
