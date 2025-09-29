@@ -89,8 +89,9 @@ export class TwitterAuth {
     try {
       console.log('🐦 Starting Twitter OAuth 2.0 PKCE flow via proxy server...');
       
-      // Get auth URL from our proxy server
-      const proxyUrl = 'https://twitter-oauth-8z0l.onrender.com/twitter/auth';
+      // Get auth URL from our proxy server with correct redirect URI
+      const redirectUri = `${window.location.origin}/`;
+      const proxyUrl = `https://twitter-oauth-8z0l.onrender.com/twitter/auth?redirect_uri=${encodeURIComponent(redirectUri)}`;
       const response = await fetch(proxyUrl, {
         method: 'GET',
         headers: {

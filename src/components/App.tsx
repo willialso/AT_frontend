@@ -106,7 +106,7 @@ const AppContent: React.FC = () => {
 
   // ✅ EMAIL SERVICE NOW HANDLED BY BACKEND - NO FRONTEND INITIALIZATION NEEDED
   React.useEffect(() => {
-    console.log('🚀 Email service will be handled by backend canister');
+    // Email service removed - using simple architecture
   }, []);
   
   const [isDemoMode, setIsDemoMode] = useState(false);
