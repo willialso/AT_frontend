@@ -5,13 +5,12 @@ import { atticusService } from '../services/AtticusService';
 import { pricingEngine } from '../services/OffChainPricingEngine';
 import { TreasuryService } from '../services/TreasuryService';
 
-// ✅ NEW CANISTER CONTEXT - Single Canister Architecture
+// ✅ SIMPLE ARCHITECTURE - No Intercanister Calls
 interface CanisterContextType {
   isConnected: boolean;
-  atticusService: typeof atticusService;
-  treasuryService: TreasuryService;
-  pricingEngine: typeof pricingEngine;
-  tradingCanister: any; // ✅ ADDED: For backward compatibility
+  atticusService: typeof atticusService; // ✅ User signup/authentication only
+  treasuryService: TreasuryService; // ✅ Wallet generation only
+  pricingEngine: typeof pricingEngine; // ✅ All trading logic off-chain
   agent: HttpAgent | null;
   principal: Principal | null;
 }
@@ -72,10 +71,9 @@ export const CanisterProvider: React.FC<{ children: ReactNode }> = React.memo(({
 
   const contextValue: CanisterContextType = {
     isConnected,
-    atticusService,
-    treasuryService,
-    pricingEngine,
-    tradingCanister: atticusService, // ✅ ADDED: Always available
+    atticusService, // ✅ User signup/authentication only
+    treasuryService, // ✅ Wallet generation only
+    pricingEngine, // ✅ All trading logic off-chain
     agent,
     principal
   };
@@ -84,7 +82,8 @@ export const CanisterProvider: React.FC<{ children: ReactNode }> = React.memo(({
   console.log('🔍 CanisterProvider context value:', {
     isConnected,
     hasAtticusService: !!atticusService,
-    hasTradingCanister: !!contextValue.tradingCanister
+    hasTreasuryService: !!treasuryService,
+    hasPricingEngine: !!pricingEngine
   });
 
   return (

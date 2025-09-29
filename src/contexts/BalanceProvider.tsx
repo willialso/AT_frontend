@@ -36,11 +36,11 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
   const [error, setError] = useState<string | null>(null);
   
   const { user } = useAuth();
-  const { tradingCanister, isConnected } = useCanister();
+  const { atticusService, treasuryService, isConnected } = useCanister();
 
   const refreshBalance = useCallback(async () => {
-    if (!user || !tradingCanister || !isConnected) {
-      console.warn('Cannot refresh balance: missing user, canister, or connection');
+    if (!user || !atticusService || !isConnected) {
+      console.warn('Cannot refresh balance: missing user, service, or connection');
       return;
     }
 
@@ -83,7 +83,7 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
       console.log('🔍 Using principal for backend call:', userPrincipal.toString());
       
       // Get user data from backend with properly extracted principal
-      const userData = await (tradingCanister as any).get_user?.(userPrincipal);
+      const userData = await atticusService.getUser(userPrincipal);
       console.log('🔍 Raw userData from backend:', userData);
       
       // Handle both array and object responses for backward compatibility

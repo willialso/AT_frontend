@@ -408,7 +408,7 @@ interface TradeData {
 
 export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode = false, onConnectWallet, shouldOpenHelp, onHelpOpened }) => {
   const { priceState, isConnected: priceConnected } = useSynchronizedPrice();
-  const { isConnected: canisterConnected, tradingCanister, atticusService } = useCanister();
+  const { isConnected: canisterConnected, atticusService, treasuryService } = useCanister();
   const { user } = useAuth();
   const { refreshBalance } = useBalance();
   const { showOnboarding, handleClose, handleDontShowAgain } = useOnboarding(isDemoMode);
@@ -443,10 +443,10 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
   useEffect(() => {
     if (isDemoMode) {
       console.log('🎮 Demo mode: Using demo trading service');
-    } else if (tradingCanister) {
-      console.log('✅ Trading canister available:', tradingCanister);
+    } else if (atticusService) {
+      console.log('✅ Atticus service available:', atticusService);
     }
-  }, [tradingCanister, isDemoMode]);
+  }, [atticusService, isDemoMode]);
 
   useEffect(() => {
     setOptionType(null);
@@ -727,7 +727,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         strikeOffset,
         selectedExpiry,
         contracts,
-        tradingCanister,
+        atticusService,
         isDemoMode
       );
       
