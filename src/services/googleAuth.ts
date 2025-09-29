@@ -19,15 +19,20 @@ export class GoogleAuth {
   async signInWithGoogle(credentialResponse: GoogleCredentialResponse): Promise<GoogleUser> {
     try {
       console.log('🔍 Starting real Google OAuth flow...');
+      console.log('🔧 Google OAuth credential response:', credentialResponse);
       
       if (!credentialResponse.credential) {
+        console.error('❌ No credential received from Google');
         throw new Error('No credential received from Google');
       }
 
       // Decode the JWT token to get user info
+      console.log('🔧 Decoding JWT token...');
       const userInfo = this.decodeJWT(credentialResponse.credential);
+      console.log('🔧 Decoded user info:', userInfo);
       
       if (!userInfo.sub || !userInfo.email) {
+        console.error('❌ Invalid Google credential data:', userInfo);
         throw new Error('Invalid Google credential data');
       }
 

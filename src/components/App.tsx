@@ -141,7 +141,15 @@ const AppContent: React.FC = () => {
   const handleGoogleSignIn = async (credentialResponse: any) => {
     try {
       console.log('🔧 App: handleGoogleSignIn called with:', credentialResponse);
-      const result = await signInWithGoogle(credentialResponse);
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Google OAuth timeout')), 10000); // 10 second timeout
+      });
+      
+      const authPromise = signInWithGoogle(credentialResponse);
+      const result = await Promise.race([authPromise, timeoutPromise]);
+      
       if (result) {
         console.log('🔧 App: signInWithGoogle completed successfully');
         
@@ -156,6 +164,8 @@ const AppContent: React.FC = () => {
       }
     } catch (err) {
       console.error('🔧 App: Google login failed:', err);
+      // Show user-friendly error message
+      alert(`Google login failed: ${err.message || 'Unknown error'}`);
     }
   };
 

@@ -291,25 +291,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
           Connect ICP Identity
         </PrimaryButton>
         <OrSeparator>or</OrSeparator>
-            {(import.meta.env.VITE_TWITTER_CLIENT_ID || process.env['REACT_APP_TWITTER_CLIENT_ID'] || 'cDNGQ0tqRTRmZDBrbVVtc19wZk06MTpjaQ') ? (
-              <TwitterButton onClick={onTwitterSignIn}>
-                <IconWrapper style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>𝕏</IconWrapper>
-                Sign in with X
-              </TwitterButton>
-            ) : (
-              <div style={{ 
-                padding: '0.9rem 2rem', 
-                background: '#f0f0f0', 
-                color: '#666', 
-                border: '2px solid #ddd', 
-                borderRadius: '12px', 
-                textAlign: 'center',
-                maxWidth: '280px',
-                fontSize: '0.95rem'
-              }}>
-                Twitter OAuth Not Configured
-              </div>
-            )}
+            <TwitterButton onClick={onTwitterSignIn}>
+              <IconWrapper style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>𝕏</IconWrapper>
+              Sign in with X
+            </TwitterButton>
             {isGoogleConfigured ? (
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
