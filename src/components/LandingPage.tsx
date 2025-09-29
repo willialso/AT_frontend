@@ -266,14 +266,14 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDemo, onTwitterSignIn, onGoogleSignIn }) => {
   // Debug environment variables
   console.log('🔍 Environment variables debug:', {
-    REACT_APP_TWITTER_CLIENT_ID: process.env['REACT_APP_TWITTER_CLIENT_ID'],
-    REACT_APP_GOOGLE_CLIENT_ID: process.env['REACT_APP_GOOGLE_CLIENT_ID'],
+    REACT_APP_TWITTER_CLIENT_ID: import.meta.env.VITE_TWITTER_CLIENT_ID || process.env['REACT_APP_TWITTER_CLIENT_ID'],
+    REACT_APP_GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID || process.env['REACT_APP_GOOGLE_CLIENT_ID'],
     NODE_ENV: process.env['NODE_ENV'],
     allEnvVars: Object.keys(process.env).filter(key => key.startsWith('REACT_APP_'))
   });
 
   // Check if Google OAuth is properly configured
-  const googleClientId = process.env['REACT_APP_GOOGLE_CLIENT_ID'] || '255794166358-poj0rbu2bqtd663m9nsu6hfam6hd0661.apps.googleusercontent.com';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || process.env['REACT_APP_GOOGLE_CLIENT_ID'] || '255794166358-poj0rbu2bqtd663m9nsu6hfam6hd0661.apps.googleusercontent.com';
   const isGoogleConfigured = googleClientId && 
     googleClientId !== 'your-google-client-id.apps.googleusercontent.com' &&
     googleClientId.includes('.apps.googleusercontent.com');
@@ -291,7 +291,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
           Connect ICP Identity
         </PrimaryButton>
         <OrSeparator>or</OrSeparator>
-            {(process.env['REACT_APP_TWITTER_CLIENT_ID'] || 'cDNGQ0tqRTRmZDBrbVVtc19wZk06MTpjaQ') ? (
+            {(import.meta.env.VITE_TWITTER_CLIENT_ID || process.env['REACT_APP_TWITTER_CLIENT_ID'] || 'cDNGQ0tqRTRmZDBrbVVtc19wZk06MTpjaQ') ? (
               <TwitterButton onClick={onTwitterSignIn}>
                 <IconWrapper style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>𝕏</IconWrapper>
                 Sign in with X

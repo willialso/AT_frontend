@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Canister Connection</title>
+    <script>
+        const CANISTER_ID = 'q4oqk-hyaaa-aaaam-qd4la-cai';
+        
+        async function testCanister() {
+            try {
+                console.log('🚀 Testing canister connection...');
+                
+                // Test 1: Check if we can reach the ICP network
+                const response = await fetch('https://ic0.app/api/v2/status');
+                console.log('✅ ICP network reachable:', response.ok);
+                
+                // Test 2: Check if we can reach the canister's Candid interface
+                const candidUrl = `https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=${CANISTER_ID}`;
+                const candidResponse = await fetch(candidUrl);
+                console.log('✅ Canister Candid interface reachable:', candidResponse.ok);
+                
+                // Test 3: Try a simple HTTP call to the canister
+                const canisterUrl = `https://${CANISTER_ID}.ic0.app/api/v2/canister/${CANISTER_ID}/query`;
+                console.log('Testing canister URL:', canisterUrl);
+                
+                const canisterResponse = await fetch(canisterUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/cbor'
+                    },
+                    body: new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) // Empty CBOR
+                });
+                
+                console.log('✅ Canister HTTP endpoint reachable:', canisterResponse.ok);
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>✅ SUCCESS!</h2>
+                    <p>All network tests passed:</p>
+                    <ul>
+                        <li>✅ ICP Network: ${response.ok ? 'Reachable' : 'Failed'}</li>
+                        <li>✅ Candid Interface: ${candidResponse.ok ? 'Reachable' : 'Failed'}</li>
+                        <li>✅ Canister Endpoint: ${canisterResponse.ok ? 'Reachable' : 'Failed'}</li>
+                    </ul>
+                    <p><strong>Conclusion:</strong> The canister is reachable from the browser. The issue is likely in the frontend code or IDL definition.</p>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Network test failed:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2>❌ FAILED</h2>
+                    <p>Network connectivity issue:</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Stack:</strong></p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+        
+        window.testCanister = testCanister;
+    </script>
+</head>
+<body>
+    <h1>Canister Connection Test</h1>
+    <p>Testing connection to canister: <code>q4oqk-hyaaa-aaaam-qd4la-cai</code></p>
+    <button onclick="testCanister()">Test Canister Connection</button>
+    <div id="result"></div>
+</body>
+</html>

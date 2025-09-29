@@ -338,3 +338,9 @@ export class AtticusService {
 
 // ✅ SINGLETON INSTANCE
 export const atticusService = new AtticusService();
+    }
+  }
+}
+
+// ✅ SINGLETON INSTANCE
+export const atticusService = new AtticusService();
