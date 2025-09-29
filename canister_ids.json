@@ -1,10 +1,11 @@
 {
+  "atticus_core": {
+    "ic": "q4oqk-hyaaa-aaaam-qd4la-cai"
+  },
   "backend": {
     "ic": "tl44y-waaaa-aaaam-qd4dq-cai"
   },
-  "frontend": {
-    "ic": "tf6rq-nqaaa-aaaam-qd4cq-cai"
-  },
+  "frontend": {},
   "price_oracle": {
     "ic": "tm52m-3yaaa-aaaam-qd4da-cai"
   }

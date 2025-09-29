@@ -9,7 +9,7 @@ services:
     startCommand: npm run start
     envVars:
       - key: ATTICUS_CORE_CANISTER_ID
-        value: tl44y-waaaa-aaaam-qd4dq-cai
+        value: q4oqk-hyaaa-aaaam-qd4la-cai
       - key: ICP_NETWORK
         value: ic
       - key: ICP_HOST
