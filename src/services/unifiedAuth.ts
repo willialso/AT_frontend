@@ -36,6 +36,7 @@ export class UnifiedAuth {
     }
 
     try {
+      // Configure auth client for off-chain frontend
       this.authClient = await AuthClient.create();
       
       // Check for mobile Twitter OAuth callback
@@ -76,6 +77,7 @@ export class UnifiedAuth {
 
     console.log('🔧 Starting ICP authentication...');
     console.log('🔧 Identity provider:', process.env['NODE_ENV'] === 'production' ? 'https://identity.ic0.app' : 'http://localhost:4943');
+    console.log('🔧 Current domain:', window.location.origin);
     console.log('🔧 Browser info:', {
       userAgent: navigator.userAgent,
       language: navigator.language,
