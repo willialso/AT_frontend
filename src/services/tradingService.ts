@@ -173,13 +173,10 @@ export class TradingService {
   }
 
 
-  // ✅ SIMPLE SETTLEMENT - Uses backend settleTrade method
+  // ✅ DEPRECATED: Use atticusService.settleTrade instead
   async autoSettleTrade(tradeId: string, finalPrice: number, tradeData?: { optionType: 'call' | 'put', strikeOffset: number, expiry?: string }, isDemoMode: boolean = false, userPrincipal?: string): Promise<SettlementResult> {
-    try {
-      // ✅ FIXED: Check if trading service is initialized, not just canister
-      if (!this.isInitialized) {
-        throw new Error('Trading service not initialized');
-      }
+    console.warn('⚠️ DEPRECATED: autoSettleTrade is deprecated. Use atticusService.settleTrade instead.');
+    throw new Error('This method is deprecated. Use atticusService.settleTrade instead.');
       
       // ✅ ADD: Price validation
       if (finalPrice <= 0) {

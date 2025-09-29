@@ -407,7 +407,7 @@ interface TradeData {
 
 export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode = false, onConnectWallet, shouldOpenHelp, onHelpOpened }) => {
   const { priceState, isConnected: priceConnected } = useSynchronizedPrice();
-  const { isConnected: canisterConnected, tradingCanister } = useCanister();
+  const { isConnected: canisterConnected, tradingCanister, atticusService } = useCanister();
   const { user } = useAuth();
   const { refreshBalance } = useBalance();
   const { showOnboarding, handleClose, handleDontShowAgain } = useOnboarding(isDemoMode);
@@ -511,16 +511,10 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         isCall: currentTradeData.type === 'call'
       });
       
-      const result = await tradingService.autoSettleTrade(
-        positionId.toString(), 
-        currentPrice,
-        { 
-          optionType: currentTradeData.type, 
-          strikeOffset: currentTradeData.strikeOffset, // ✅ FIXED: Use strike offset
-          expiry: currentTradeData.expiry // ✅ FIXED: Add expiry
-        },
-        isDemoMode, // ✅ FIXED: Pass demo mode flag
-        user?.principal.toString() // ✅ FIXED: Pass user principal
+      // ✅ FIXED: Use AtticusService for settlement (single source of truth)
+      const result = await atticusService.settleTrade(
+        positionId, 
+        currentPrice
       );
 
       console.log('✅ Settlement result:', result);
