@@ -4,6 +4,8 @@
  * This eliminates the need for a price oracle canister and provides instant calculations
  */
 
+import { DemoService } from './DemoService';
+
 export interface PriceData {
   current: number;
   timestamp: number;
@@ -310,7 +312,8 @@ export class OffChainPricingEngine {
     strikeOffset: number,
     expiry: string,
     contractCount: number,
-    backendCanister: any
+    backendCanister: any,
+    isDemoMode: boolean = false
   ): Promise<{ success: boolean; positionId?: number; error?: string }> {
     try {
       // Get current price from our own feed
@@ -332,10 +335,39 @@ export class OffChainPricingEngine {
         optionType,
         strikeOffset,
         expiry,
-        contractCount
+        contractCount,
+        isDemoMode
       });
 
-      // ✅ SIMPLIFIED: Only store essential data on-chain
+      // ✅ DEMO MODE: Use demo service instead of real canister
+      if (isDemoMode) {
+        console.log('🎮 Demo mode: Using demo service for trade placement');
+        const demoService = DemoService.getInstance();
+        
+        const result = await demoService.place_trade_simple(
+          userPrincipal,
+          optionType === 'call' ? 'Call' : 'Put',
+          strikeOffset,
+          expiry,
+          contractCount,
+          Math.round(currentPrice * 100), // Convert to cents
+          Math.round(strikePrice * 100)   // Convert to cents
+        );
+
+        if ('ok' in result) {
+          return {
+            success: true,
+            positionId: Number(result.ok)
+          };
+        } else {
+          return {
+            success: false,
+            error: result.err
+          };
+        }
+      }
+
+      // ✅ LIVE MODE: Use real canister
       const result = await backendCanister.place_trade_simple(
         userPrincipal,
         optionType === 'call' ? 'Call' : 'Put',

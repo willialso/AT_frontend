@@ -3,17 +3,17 @@ import { Decimal } from 'decimal.js';
 import { Principal } from '@dfinity/principal';
 import { useAuth } from './AuthProvider';
 import { useCanister } from './CanisterProvider';
-import { BalanceValidationService } from '../services/balanceValidation';
+// ✅ REMOVED: balanceValidation service - logic moved inline
 
 interface BalanceContextType {
   refreshBalance: () => Promise<void>;
   userBalance: number;
   isLoading: boolean;
   error: string | null;
-  validateTradeBalance: (contractCount: number, btcPrice: number) => ReturnType<typeof BalanceValidationService.validateTradeBalance>;
+  validateTradeBalance: (contractCount: number, btcPrice: number) => { isValid: boolean; requiredAmount: number; currentBalance: number; shortfall: number };
   hasMinimumBalance: (requiredAmount: number) => boolean;
   getBalanceInUSD: (btcPrice: number) => number;
-  getBalanceStatus: (requiredBalance: number, btcPrice: number) => ReturnType<typeof BalanceValidationService.getBalanceStatus>;
+  getBalanceStatus: (requiredBalance: number, btcPrice: number) => { status: 'sufficient' | 'insufficient' | 'low'; message: string };
 }
 
 const BalanceContext = createContext<BalanceContextType | undefined>(undefined);
@@ -158,11 +158,16 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
    * Validate trade balance
    */
   const validateTradeBalance = useCallback((contractCount: number, btcPrice: number) => {
-    return BalanceValidationService.validateTradeBalance(
-      new Decimal(userBalance), 
-      contractCount, 
-      btcPrice
-    );
+    const currentBalance = new Decimal(userBalance);
+    const requiredAmount = new Decimal(contractCount).mul(btcPrice).mul(0.01); // 1% of trade value
+    const shortfall = requiredAmount.sub(currentBalance);
+    
+    return {
+      isValid: currentBalance.greaterThanOrEqualTo(requiredAmount),
+      requiredAmount: requiredAmount.toNumber(),
+      currentBalance: currentBalance.toNumber(),
+      shortfall: shortfall.greaterThan(0) ? shortfall.toNumber() : 0
+    };
   }, [userBalance]);
 
   /**
@@ -176,18 +181,25 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
    * Get balance in USD
    */
   const getBalanceInUSD = useCallback((btcPrice: number): number => {
-    return BalanceValidationService.convertBTCToUSD(new Decimal(userBalance), btcPrice);
+    return new Decimal(userBalance).mul(btcPrice).toNumber();
   }, [userBalance]);
 
   /**
    * Get balance status for UI
    */
   const getBalanceStatus = useCallback((requiredBalance: number, btcPrice: number) => {
-    return BalanceValidationService.getBalanceStatus(
-      new Decimal(userBalance),
-      new Decimal(requiredBalance),
-      btcPrice
-    );
+    const currentBalance = new Decimal(userBalance);
+    const required = new Decimal(requiredBalance);
+    const balanceUSD = currentBalance.mul(btcPrice);
+    const requiredUSD = required.mul(btcPrice);
+    
+    if (currentBalance.greaterThanOrEqualTo(required)) {
+      return { status: 'sufficient' as const, message: 'Balance sufficient' };
+    } else if (balanceUSD.greaterThan(requiredUSD.mul(0.5))) {
+      return { status: 'low' as const, message: 'Balance low' };
+    } else {
+      return { status: 'insufficient' as const, message: 'Insufficient balance' };
+    }
   }, [userBalance]);
 
   // ✅ FIXED: Memoize context value to prevent unnecessary re-renders

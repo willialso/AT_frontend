@@ -4,6 +4,10 @@
     "atticus_core": {
       "main": "src/backend/atticus_core.mo",
       "type": "motoko"
+    },
+    "atticus_treasury": {
+      "main": "src/backend/atticus_treasury.mo",
+      "type": "motoko"
     }
   },
   "defaults": {

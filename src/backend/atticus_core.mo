@@ -22,8 +22,13 @@ persistent actor AtticusCore {
         entry_price: Float;
         expiry: Text;
         size: Float;
+        entry_premium: Float;
+        current_value: Float;
+        pnl: Float;
         status: TradeStatus;
         opened_at: Int;
+        settled_at: ?Int;
+        settlement_price: ?Float;
     };
 
     public type UserData = {
@@ -121,8 +126,13 @@ persistent actor AtticusCore {
             entry_price = entry_price;
             expiry = expiry;
             size = contracts;
+            entry_premium = 10.0; // Default premium
+            current_value = 0.0; // Will be calculated off-chain
+            pnl = 0.0; // Will be calculated off-chain
             status = #Active;
             opened_at = Time.now();
+            settled_at = null;
+            settlement_price = null;
         };
 
         positions := Array.append(positions, [(next_order_id, position)]);
@@ -143,10 +153,17 @@ persistent actor AtticusCore {
         let profitFloat = Float.fromInt(Int64.toInt(Int64.fromNat64(profit))) / 100.0;
         let finalPriceFloat = Float.fromInt(Int64.toInt(Int64.fromNat64(finalPrice))) / 100.0;
         
-        // Update position status
+        // Update position status and settlement data
         positions := Array.map(positions, func((id, pos)) = 
             if (id == positionId) {
-                (id, { pos with status = #Settled })
+                (id, { 
+                    pos with 
+                    status = #Settled;
+                    settled_at = ?Time.now();
+                    settlement_price = ?finalPriceFloat;
+                    pnl = profitFloat;
+                    current_value = payoutFloat;
+                })
             } else {
                 (id, pos)
             }

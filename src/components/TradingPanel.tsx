@@ -727,7 +727,8 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         strikeOffset,
         selectedExpiry,
         contracts,
-        tradingCanister
+        tradingCanister,
+        isDemoMode
       );
       
       // Run trade in parallel with price monitoring

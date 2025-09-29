@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Auth Test</title>
+</head>
+<body>
+    <h1>Simple Authentication Test</h1>
+    <button onclick="testAuth()">Test Authentication</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAuth() {
+            try {
+                console.log('🚀 Testing authentication...');
+                
+                // Test if we can reach the identity provider
+                const identityUrl = 'https://identity.ic0.app';
+                console.log('🔍 Testing identity provider:', identityUrl);
+                
+                const response = await fetch(identityUrl, {
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                });
+                
+                console.log('✅ Identity provider reachable');
+                
+                // Test if we can reach the canister
+                const canisterUrl = 'https://q4oqk-hyaaa-aaaam-qd4la-cai.ic0.app';
+                console.log('🔍 Testing canister:', canisterUrl);
+                
+                const canisterResponse = await fetch(canisterUrl, {
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                });
+                
+                console.log('✅ Canister reachable');
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>✅ SUCCESS!</h2>
+                    <p>Network connectivity test passed:</p>
+                    <ul>
+                        <li>✅ Identity provider: Reachable</li>
+                        <li>✅ Canister: Reachable</li>
+                        <li>✅ Browser: ${navigator.userAgent}</li>
+                    </ul>
+                    <p><strong>Conclusion:</strong> Network connectivity is working. The authentication issue is likely in the browser or popup handling.</p>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Network test failed:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2>❌ FAILED</h2>
+                    <p>Network connectivity test failed:</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Browser:</strong> ${navigator.userAgent}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
+

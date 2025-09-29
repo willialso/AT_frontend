@@ -7,6 +7,7 @@
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 import { pricingEngine } from './OffChainPricingEngine';
+import { DemoService } from './DemoService';
 
 // ✅ TYPES - Essential trading only
 export interface TradeData {
@@ -107,8 +108,13 @@ export class AtticusService {
             entry_price: IDL.Float64,
             expiry: IDL.Text,
             size: IDL.Float64,
+            entry_premium: IDL.Float64,
+            current_value: IDL.Float64,
+            pnl: IDL.Float64,
             status: IDL.Variant({ Active: IDL.Null, Settled: IDL.Null }),
-            opened_at: IDL.Int
+            opened_at: IDL.Int,
+            settled_at: IDL.Opt(IDL.Int),
+            settlement_price: IDL.Opt(IDL.Float64)
           }), err: IDL.Text })], ['query']),
           get_user_positions: IDL.Func([IDL.Principal], [IDL.Vec(IDL.Record({
             id: IDL.Nat,
@@ -118,8 +124,13 @@ export class AtticusService {
             entry_price: IDL.Float64,
             expiry: IDL.Text,
             size: IDL.Float64,
+            entry_premium: IDL.Float64,
+            current_value: IDL.Float64,
+            pnl: IDL.Float64,
             status: IDL.Variant({ Active: IDL.Null, Settled: IDL.Null }),
-            opened_at: IDL.Int
+            opened_at: IDL.Int,
+            settled_at: IDL.Opt(IDL.Int),
+            settlement_price: IDL.Opt(IDL.Float64)
           }))], ['query']),
           
           // User trade summary (for frontend history)
@@ -192,8 +203,8 @@ export class AtticusService {
   }
 
   // ✅ PLACE TRADE (using off-chain pricing)
-  public async placeTrade(tradeData: TradeData): Promise<TradeResult> {
-    if (!this.isInitialized) throw new Error('Service not initialized');
+  public async placeTrade(tradeData: TradeData, isDemoMode: boolean = false): Promise<TradeResult> {
+    if (!this.isInitialized && !isDemoMode) throw new Error('Service not initialized');
     
     try {
       // Get current price from off-chain pricing engine
@@ -209,6 +220,35 @@ export class AtticusService {
         tradeData.optionType
       );
 
+      // ✅ DEMO MODE: Use demo service
+      if (isDemoMode) {
+        console.log('🎮 Demo mode: Using demo service for trade placement');
+        const demoService = DemoService.getInstance();
+        
+        const result = await demoService.place_trade_simple(
+          tradeData.userPrincipal,
+          tradeData.optionType === 'call' ? 'Call' : 'Put',
+          tradeData.strikeOffset,
+          tradeData.expiry,
+          tradeData.contractCount,
+          Math.round(currentPrice * 100), // Convert to cents
+          Math.round(strikePrice * 100)   // Convert to cents
+        );
+
+        if ('ok' in result) {
+          return {
+            success: true,
+            tradeId: Number(result.ok)
+          };
+        } else {
+          return {
+            success: false,
+            error: result.err
+          };
+        }
+      }
+
+      // ✅ LIVE MODE: Use real canister
       const result = await this.coreCanister.place_trade_simple(
         Principal.fromText(tradeData.userPrincipal),
         tradeData.optionType === 'call' ? 'Call' : 'Put',
