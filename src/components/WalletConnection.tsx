@@ -256,6 +256,14 @@ export const WalletConnection: React.FC = () => {
           
           const userPrincipal = user.principal;
           console.log('🔍 Using principal:', userPrincipal.toString());
+          
+          // ✅ STEP 1: Create user in canister first
+          console.log('👤 Creating user in canister...');
+          await atticusService.createUser(userPrincipal.toString());
+          console.log('✅ User created successfully');
+          
+          // ✅ STEP 2: Generate wallet for user
+          console.log('🏦 Generating wallet for user...');
           const result = await atticusService.generateUserWallet(userPrincipal.toString());
           console.log('📥 Backend Response:', result);
 

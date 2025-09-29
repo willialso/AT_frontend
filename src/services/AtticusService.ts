@@ -399,8 +399,31 @@ export class AtticusService {
   }
 
   /**
+   * ✅ CREATE USER
+   * Create user in the canister (must be called before wallet generation)
+   */
+  public async createUser(principal: string): Promise<UserData> {
+    if (!this.isInitialized) {
+      throw new Error('Atticus Service not initialized');
+    }
+
+    try {
+      const result = await this.coreCanister.create_user(Principal.fromText(principal));
+      
+      if ('ok' in result) {
+        return result.ok;
+      } else {
+        throw new Error(result.err);
+      }
+    } catch (error) {
+      console.error('❌ Error creating user:', error);
+      throw error;
+    }
+  }
+
+  /**
    * ✅ GENERATE USER WALLET
-   * Generate Bitcoin wallet for user
+   * Generate Bitcoin wallet for user (user must exist first)
    */
   public async generateUserWallet(principal: string): Promise<string> {
     if (!this.isInitialized) {
