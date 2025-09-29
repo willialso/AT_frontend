@@ -299,10 +299,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   console.log('🔧 LandingPage: Google OAuth success callback triggered:', credentialResponse);
+                  console.log('🔧 LandingPage: Calling onGoogleSignIn with:', credentialResponse);
                   onGoogleSignIn(credentialResponse);
                 }}
-                onError={() => {
-                  console.error('🔧 LandingPage: Google OAuth failed');
+                onError={(error) => {
+                  console.error('🔧 LandingPage: Google OAuth failed:', error);
                 }}
                 theme="outline"
                 size="medium"
