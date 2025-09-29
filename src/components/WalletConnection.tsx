@@ -264,7 +264,7 @@ export const WalletConnection: React.FC = () => {
           
           // ✅ STEP 2: Generate wallet for user
           console.log('🏦 Generating wallet for user...');
-          const result = await atticusService.generateUserWallet(userPrincipal.toString());
+          const result = await treasuryService.generateUserWallet(userPrincipal.toString());
           console.log('📥 Backend Response:', result);
 
           if (result) {
@@ -327,7 +327,7 @@ export const WalletConnection: React.FC = () => {
     try {
       setIsGeneratingWallet(true);
       setOperationStatus('🔧 Generating custodial wallet...');
-      const result = await treasuryService.generateUniqueDepositAddress(user.principal.toString());
+      const result = await treasuryService.generateDepositAddress(user.principal.toString());
 
       if (result && 'ok' in result) {
         const userDepositAddress = result.ok;
