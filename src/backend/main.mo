@@ -330,145 +330,72 @@ persistent actor TradingCanister {  // ✅ FIXED: Added `persistent`
     // 3. Not storing settlement_price field
     // 4. Overwriting correct settlement data from settleTrade function
 
-    // ✅ SIMPLE STRUCTURED PAYOUT METHOD
-    public func settleTrade(positionId: Nat, finalPrice: Nat64, user: Principal) : async Result.Result<SettlementResult, Text> {
-        // ✅ SIMPLIFIED: Find position by ID and user
+    // ✅ SIMPLIFIED: RECORD SETTLEMENT (OFF-CHAIN CALCULATED)
+    // Frontend does all calculations, backend just records the result
+    public func recordSettlement(
+        positionId: Nat, 
+        outcome: Text, 
+        payout: Nat64, 
+        profit: Nat64, 
+        finalPrice: Nat64
+    ) : async Result.Result<(), Text> {
         switch (positions.get(positionId)) {
             case (?position) {
-                if (position.user != user) {
-                    return #err("Position does not belong to user");
-                };
-                
                 if (position.status != #Active) {
                     return #err("Position is not active");
                 };
                 
-                // Convert final price
+                // Convert from cents to dollars
+                let payoutFloat = Float.fromInt(Int64.toInt(Int64.fromNat64(payout))) / 100.0;
+                let profitFloat = Float.fromInt(Int64.toInt(Int64.fromNat64(profit))) / 100.0;
                 let finalPriceFloat = Float.fromInt(Int64.toInt(Int64.fromNat64(finalPrice))) / 100.0;
                 
-                // ✅ SIMPLE WIN/LOSS LOGIC
-                let isWin = if (position.option_type == #Call) {
-                    finalPriceFloat > position.strike_price
-                } else {
-                    finalPriceFloat < position.strike_price
-                };
-                
-                let outcome = if (finalPriceFloat == position.strike_price) { "tie" }
-                             else if (isWin) { "win" } 
-                             else { "loss" };
-                
-                // ✅ FIXED: Calculate strike offset from position data (convert to integer for lookup)
-                let strike_offset_float = if (position.option_type == #Call) {
-                    position.strike_price - position.entry_price
-                } else {
-                    position.entry_price - position.strike_price
-                };
-                let strike_offset_int = Int.abs(Float.toInt(strike_offset_float * 10.0)); // Convert 2.5 → 25
-                
-                // ✅ FIXED: Use correct payout table lookup based on strike offset and expiry
-                let cost = position.size * 1.0; // $1 per contract
-                let total_payout = switch (position.expiry) {
-                    case ("5s") { 
-                        switch (strike_offset_int) {
-                            case (25) { 3.33 };  // 2.50 offset
-                            case (50) { 4.00 };   // 5.00 offset
-                            case (100) { 10.00 }; // 10.00 offset
-                            case (150) { 20.00 }; // 15.00 offset
-                            case (_) { 0.0 };
-                        }
-                    };
-                    case ("10s") { 
-                        switch (strike_offset_int) {
-                            case (25) { 2.86 };  // 2.50 offset
-                            case (50) { 3.33 };  // 5.00 offset
-                            case (100) { 6.67 };  // 10.00 offset
-                            case (150) { 13.33 }; // 15.00 offset
-                            case (_) { 0.0 };
-                        }
-                    };
-                    case ("15s") { 
-                        switch (strike_offset_int) {
-                            case (25) { 2.50 };  // 2.50 offset
-                            case (50) { 2.86 };  // 5.00 offset
-                            case (100) { 5.00 }; // 10.00 offset
-                            case (150) { 10.00 }; // 15.00 offset
-                            case (_) { 0.0 };
-                        }
-                    };
-                    case (_) { 0.0 };
-                };
-                
-                let profit = if (outcome == "win") { 
-                    total_payout - cost  // Net profit = payout - entry cost
-                } else if (outcome == "tie") { 
-                    0.0 // Refund
-                } else { 
-                    0.0 - cost // Lose premium
-                };
-                
-                let payout = if (outcome == "win") { 
-                    profit  // ✅ FIXED: Payout = profit (what user receives)
-                } else if (outcome == "tie") { 
-                    cost // Refund entry cost
-                } else { 
-                    0.0 // Lose everything
-                };
-                
-                // ✅ UPDATE POSITION
+                // ✅ UPDATE POSITION (Simple recording)
                 let now = Time.now();
                 let settled_position = {
                     position with
                     status = #Settled;
-                    current_value = if (outcome == "win") { total_payout } else { 0.0 };
-                    pnl = profit;
+                    current_value = payoutFloat;
+                    pnl = profitFloat;
                     settled_at = ?now;
-                    settlement_price = ?finalPriceFloat; // ✅ Store actual settlement price
+                    settlement_price = ?finalPriceFloat;
                 };
                 positions.put(positionId, settled_position);
                 
-                // ✅ COMPREHENSIVE SETTLEMENT: Update user balance, wins/losses, and platform ledger
+                // ✅ UPDATE USER BALANCE (Simple recording)
                 switch (users.get(position.user)) {
                     case (?user_data) {
                         let net_gain_btc = if (outcome == "win") {
-                            profit / finalPriceFloat
+                            profitFloat / finalPriceFloat
                         } else {
                             0.0
                         };
                         
-                        // ✅ NEW: Calculate trading metrics
-                        let premium_btc = (position.entry_premium / finalPriceFloat);
-                        let payout_btc = if (outcome == "win") { payout / finalPriceFloat } else { 0.0 };
-                        
                         let updated_user = {
                             user_data with
                             balance = user_data.balance + net_gain_btc;
-                            total_wins = if (outcome == "win") { user_data.total_wins + payout_btc } else { user_data.total_wins };
-                            total_losses = if (outcome == "loss") { user_data.total_losses + premium_btc } else { user_data.total_losses };
-                            net_pnl = if (outcome == "win") { user_data.net_pnl + payout_btc } else { user_data.net_pnl - premium_btc };
+                            total_wins = if (outcome == "win") { user_data.total_wins + (payoutFloat / finalPriceFloat) } else { user_data.total_wins };
+                            total_losses = if (outcome == "loss") { user_data.total_losses + (position.entry_premium / finalPriceFloat) } else { user_data.total_losses };
+                            net_pnl = if (outcome == "win") { user_data.net_pnl + (payoutFloat / finalPriceFloat) } else { user_data.net_pnl - (position.entry_premium / finalPriceFloat) };
                         };
                         users.put(position.user, updated_user);
                     };
                     case null {};
                 };
 
-                // ✅ CRITICAL FIX: Update platform wallet balance during settlement
+                // ✅ UPDATE PLATFORM WALLET (Simple recording)
                 if (outcome == "win") {
-                    // Platform pays out winnings (balance decreases)
-                    let payout_btc = payout / finalPriceFloat;
+                    let payout_btc = payoutFloat / finalPriceFloat;
                     platform_wallet := {
                         platform_wallet with
                         balance = platform_wallet.balance - payout_btc;
                     };
                 };
-                // Note: When trader loses, platform keeps the premium (no change needed)
 
-                // ✅ FIXED: Update platform ledger with USD amounts (not BTC)
-                // total_winning_trades = profits from user losses (USD)
-                // total_losing_trades = payouts to user wins (USD)
-                let premium_usd = position.entry_premium; // Already in USD
-                let payout_usd = if (outcome == "win") { payout } else { 0.0 }; // Already in USD
+                // ✅ UPDATE PLATFORM LEDGER (Simple recording)
+                let premium_usd = position.entry_premium;
+                let payout_usd = if (outcome == "win") { payoutFloat } else { 0.0 };
                 
-                // ✅ FIXED: Calculate new values first to avoid using old values in net_pnl
                 let new_total_winning_trades = if (outcome == "loss") { platform_ledger.total_winning_trades + premium_usd } else { platform_ledger.total_winning_trades };
                 let new_total_losing_trades = if (outcome == "win") { platform_ledger.total_losing_trades + payout_usd } else { platform_ledger.total_losing_trades };
                 
@@ -476,16 +403,11 @@ persistent actor TradingCanister {  // ✅ FIXED: Added `persistent`
                     platform_ledger with
                     total_winning_trades = new_total_winning_trades;
                     total_losing_trades = new_total_losing_trades;
-                    net_pnl = new_total_winning_trades - new_total_losing_trades; // ✅ FIXED: Use new values
+                    net_pnl = new_total_winning_trades - new_total_losing_trades;
                     total_trades = platform_ledger.total_trades + 1;
                 };
                 
-                // ✅ Return settlement result
-                #ok({ 
-                    profit = profit;
-                    outcome = outcome;
-                    payout = payout;
-                })
+                #ok(())
             };
             case null { #err("Position not found") };
         }

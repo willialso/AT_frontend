@@ -11,6 +11,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { useCanister } from '../contexts/CanisterProvider';
 import { useBalance } from '../contexts/BalanceProvider';
 import { tradingService, TradeRequest } from '../services/tradingService'; // ✅ FIXED: Added TradeRequest import
+import { pricingEngine } from '../services/OffChainPricingEngine'; // ✅ NEW: Off-chain settlement
 // import { useAuth } from '../hooks/useAuth'; // ✅ REMOVED: Using useUnifiedAuth
 import { useAuth } from '../contexts/AuthProvider';
 import { useOnboarding } from '../hooks/useOnboarding';
@@ -511,11 +512,27 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         isCall: currentTradeData.type === 'call'
       });
       
-      // ✅ FIXED: Use AtticusService for settlement (single source of truth)
-      const result = await atticusService.settleTrade(
-        positionId, 
-        currentPrice
+      // ✅ NEW: Use off-chain settlement (fast, accurate, uniform)
+      const result = await pricingEngine.calculateSettlement(
+        currentTradeData.type,
+        currentTradeData.strikeOffset,
+        currentTradeData.expiry,
+        currentPrice,
+        currentTradeData.entryPrice
       );
+      
+      // ✅ RECORD: Send result to backend for storage only
+      try {
+        await pricingEngine.recordSettlement(
+          positionId,
+          result,
+          tradingCanister
+        );
+        console.log('✅ Settlement recorded to backend');
+      } catch (error) {
+        console.error('❌ Failed to record settlement:', error);
+        // Continue with UI update even if backend recording fails
+      }
 
       console.log('✅ Settlement result:', result);
       console.log('🔍 Toast calculation - result.profit:', result.profit);

@@ -174,6 +174,7 @@ export class OffChainPricingEngine {
   /**
    * ✅ ADD PRICE LISTENER
    * Subscribe to real-time price updates
+   * This replaces WebSocketProvider and PriceFeedManager
    */
   public addPriceListener(callback: (priceData: PriceData) => void): void {
     this.listeners.push(callback);
@@ -225,23 +226,73 @@ export class OffChainPricingEngine {
   }
 
   /**
-   * ✅ CALCULATE SETTLEMENT
-   * Calculate trade settlement result
+   * ✅ CALCULATE SETTLEMENT (OFF-CHAIN)
+   * Fast, accurate settlement using proper payout tables
+   * This replaces the slow backend settlement with instant off-chain calculation
    */
   public calculateSettlement(
     optionType: 'call' | 'put',
-    strikePrice: number,
-    finalPrice: number
+    strikeOffset: number,
+    expiry: string,
+    finalPrice: number,
+    entryPrice: number
   ): SettlementResult {
+    // Calculate strike price from entry price and offset
+    const strikePrice = optionType === 'call' 
+      ? entryPrice + strikeOffset 
+      : entryPrice - strikeOffset;
+    
+    // Determine win/loss
     const isWin = optionType === 'call' 
       ? finalPrice > strikePrice 
       : finalPrice < strikePrice;
     
-    const payout = isWin ? 2.0 : 0;
-    const profit = isWin ? 1.0 : -1.0;
+    const isTie = Math.abs(finalPrice - strikePrice) < 0.005; // 0.5 cent tolerance
+    
+    let outcome: 'win' | 'loss' | 'tie' = 'loss';
+    let payout = 0;
+    let profit = -1.0; // Default to losing the $1 entry premium
+    
+    if (isTie) {
+      outcome = 'tie';
+      payout = 1.0; // Refund entry cost
+      profit = 0.0; // No profit/loss
+    } else if (isWin) {
+      outcome = 'win';
+      
+      // ✅ USE CORRECT PAYOUT TABLES (matching backend)
+      const PAYOUT_TABLE: Record<string, Record<number, number>> = {
+        '5s': { 2.5: 3.33, 5: 4.00, 10: 10.00, 15: 20.00 },
+        '10s': { 2.5: 2.86, 5: 3.33, 10: 6.67, 15: 13.33 },
+        '15s': { 2.5: 2.50, 5: 2.86, 10: 5.00, 15: 10.00 }
+      };
+      
+      // Get payout from table
+      const tablePayout = PAYOUT_TABLE[expiry]?.[strikeOffset] || 0;
+      payout = tablePayout;
+      profit = payout - 1.0; // Net profit = total payout - entry cost
+    } else {
+      outcome = 'loss';
+      payout = 0;
+      profit = -1.0; // Lose the entry premium
+    }
+    
+    console.log('🎯 Off-chain settlement calculation:', {
+      optionType,
+      strikeOffset,
+      expiry,
+      entryPrice,
+      strikePrice,
+      finalPrice,
+      isWin,
+      isTie,
+      outcome,
+      payout,
+      profit
+    });
     
     return {
-      outcome: isWin ? 'win' : 'loss',
+      outcome,
       payout,
       profit,
       finalPrice
@@ -304,6 +355,43 @@ export class OffChainPricingEngine {
    */
   public isPriceFeedConnected(): boolean {
     return this.isConnected;
+  }
+
+  /**
+   * ✅ RECORD SETTLEMENT (BACKEND)
+   * Send settlement result to backend for recording only
+   * Backend just stores the result - no complex calculations
+   */
+  public async recordSettlement(
+    positionId: number,
+    settlementResult: SettlementResult,
+    backendCanister: any
+  ): Promise<void> {
+    try {
+      console.log('📝 Recording settlement to backend:', {
+        positionId,
+        settlementResult
+      });
+      
+      // Simple backend call to record the result
+      const result = await backendCanister.recordSettlement(
+        BigInt(positionId),
+        settlementResult.outcome,
+        Math.round(settlementResult.payout * 100), // Convert to cents
+        Math.round(settlementResult.profit * 100), // Convert to cents
+        Math.round(settlementResult.finalPrice * 100) // Convert to cents
+      );
+      
+      if ('ok' in result) {
+        console.log('✅ Settlement recorded successfully');
+      } else {
+        console.error('❌ Failed to record settlement:', result.err);
+        throw new Error(result.err);
+      }
+    } catch (error) {
+      console.error('❌ Error recording settlement:', error);
+      throw error;
+    }
   }
 
   /**

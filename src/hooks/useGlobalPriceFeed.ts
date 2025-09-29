@@ -1,35 +1,46 @@
 import { useState, useEffect, useCallback } from 'react';
-import { priceFeedManager, PriceData, PriceUpdateCallback } from '../services/priceFeedManager';
+import { pricingEngine, PriceData } from '../services/OffChainPricingEngine';
 
 /**
  * Hook to access the global price feed manager
  * This hook provides a bridge between the React component lifecycle and the global singleton
  */
 export const useGlobalPriceFeed = () => {
-  const [priceData, setPriceData] = useState<PriceData>(priceFeedManager.getPriceData());
-  const [isConnected, setIsConnected] = useState<boolean>(priceFeedManager.isConnected());
+  const [priceData, setPriceData] = useState<PriceData>({
+    current: 0,
+    timestamp: Date.now(),
+    isValid: false,
+    change: { amount: 0, percentage: 0 },
+    source: 'connecting',
+    volume: 0,
+    high: 0,
+    low: 0
+  });
+  const [isConnected, setIsConnected] = useState<boolean>(pricingEngine.isPriceFeedConnected());
 
   useEffect(() => {
-    const callback: PriceUpdateCallback = (data: PriceData) => {
+    const callback = (data: PriceData) => {
       setPriceData(data);
-      setIsConnected(priceFeedManager.isConnected());
+      setIsConnected(pricingEngine.isPriceFeedConnected());
     };
 
     // Subscribe to price updates
-    const unsubscribe = priceFeedManager.subscribe(callback);
+    pricingEngine.addPriceListener(callback);
 
     // Update connection state
-    setIsConnected(priceFeedManager.isConnected());
+    setIsConnected(pricingEngine.isPriceFeedConnected());
 
-    return unsubscribe;
+    return () => {
+      pricingEngine.removePriceListener(callback);
+    };
   }, []);
 
   const getConnectionState = useCallback(() => {
-    return priceFeedManager.getConnectionState();
+    return pricingEngine.isPriceFeedConnected() ? 'connected' : 'disconnected';
   }, []);
 
   const isReady = useCallback(() => {
-    return priceFeedManager.isConnected() && priceData.isValid;
+    return pricingEngine.isPriceFeedConnected() && priceData.isValid;
   }, [priceData.isValid]);
 
   return {
