@@ -56,6 +56,8 @@ export class TwitterAuth {
       try {
         // Verify state matches what we stored
         const storedState = sessionStorage.getItem('twitter_oauth_state');
+        console.log('🔍 State verification:', { authState, storedState, match: authState === storedState });
+        
         if (authState !== storedState) {
           console.error('❌ Twitter OAuth state mismatch');
           return null;

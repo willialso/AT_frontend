@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Twitter Callback</title>
+</head>
+<body>
+    <h1>Debug Twitter Callback</h1>
+    <div id="debug-info"></div>
+    
+    <script>
+        function debugTwitterCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const twitterAuth = urlParams.get('twitter_auth');
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            const error = urlParams.get('error');
+            
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.innerHTML = `
+                <h2>Current URL:</h2>
+                <p>${window.location.href}</p>
+                
+                <h2>URL Parameters:</h2>
+                <p>twitter_auth: ${twitterAuth || 'null'}</p>
+                <p>code: ${code || 'null'}</p>
+                <p>state: ${state || 'null'}</p>
+                <p>error: ${error || 'null'}</p>
+                
+                <h2>Session Storage:</h2>
+                <p>twitter_oauth_state: ${sessionStorage.getItem('twitter_oauth_state') || 'null'}</p>
+                <p>twitter_oauth_code_challenge: ${sessionStorage.getItem('twitter_oauth_code_challenge') || 'null'}</p>
+                
+                <h2>All URL Parameters:</h2>
+                <pre>${JSON.stringify(Object.fromEntries(urlParams), null, 2)}</pre>
+            `;
+        }
+        
+        // Run debug on page load
+        debugTwitterCallback();
+    </script>
+</body>
+</html>
