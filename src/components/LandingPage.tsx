@@ -290,34 +290,58 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
               Sign in with X
             </TwitterButton>
             {isGoogleConfigured ? (
-              <GoogleLogin
-                onSuccess={async (credentialResponse) => {
-                  console.log('🎉 ========== REACT-OAUTH GOOGLE LOGIN SUCCESS ==========');
-                  console.log('🔧 Credential response:', credentialResponse);
-                  
-                  try {
-                    console.log('🔧 Calling onGoogleSignIn immediately...');
-                    onGoogleSignIn(credentialResponse);
-                    console.log('✅ onGoogleSignIn called successfully');
-                  } catch (error) {
-                    console.error('❌ Google OAuth callback error:', error);
+              <button
+                onClick={() => {
+                  console.log('🔧 Manual Google OAuth redirect initiated');
+                  // Use Google Identity Services directly with redirect
+                  if (window.google && window.google.accounts && window.google.accounts.id) {
+                    window.google.accounts.id.initialize({
+                      client_id: googleClientId,
+                      callback: (response: any) => {
+                        console.log('🎉 ========== GOOGLE OAUTH REDIRECT CALLBACK ==========');
+                        console.log('🔧 Redirect callback response:', response);
+                        try {
+                          onGoogleSignIn(response);
+                          console.log('✅ onGoogleSignIn called successfully');
+                        } catch (error) {
+                          console.error('❌ Google OAuth callback error:', error);
+                        }
+                      },
+                      ux_mode: 'redirect',
+                      redirect_uri: window.location.origin
+                    });
+                    
+                    // Trigger the redirect
+                    window.google.accounts.id.prompt();
+                  } else {
+                    console.error('❌ Google Identity Services not loaded');
                   }
                 }}
-                onError={(error) => {
-                  console.error('❌ Google OAuth failed via react-oauth:', error);
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '12px 24px',
+                  background: '#fff',
+                  border: '1px solid #dadce0',
+                  borderRadius: '4px',
+                  color: '#3c4043',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  width: '280px',
+                  height: '40px'
                 }}
-                theme="outline"
-                size="large"
-                text="signin_with"
-                shape="rectangular"
-                logo_alignment="left"
-                width="280"
-                useOneTap={false}
-                auto_select={false}
-                cancel_on_tap_outside={true}
-                ux_mode="redirect"
-                redirect_uri={window.location.origin}
-              />
+              >
+                <svg width="18" height="18" viewBox="0 0 18 18">
+                  <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z"/>
+                  <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2.04a6.8 6.8 0 01-10.62-2.22h2.6v2.07A8.22 8.22 0 008.98 17z"/>
+                  <path fill="#FBBC05" d="M4.16 10.8a6.8 6.8 0 010-4.16V4.57H1.56a8.22 8.22 0 000 7.26l2.6-2.03z"/>
+                  <path fill="#EA4335" d="M8.98 4.16c1.17 0 2.23.4 3.06 1.2l2.3-2.3A7.6 7.6 0 008.98.5a8.22 8.22 0 00-7.42 4.07l2.6 2.07c.64-1.88 2.4-3.08 4.82-3.08z"/>
+                </svg>
+                Sign in with Google
+              </button>
             ) : (
           <div style={{ 
             padding: '0.9rem 2rem', 
