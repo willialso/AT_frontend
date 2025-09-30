@@ -15,8 +15,9 @@ window.addEventListener('error', (event) => {
   if (errorMessage.includes('postMessage') || 
       errorMessage.includes('Cannot read properties of null') ||
       errorSource.includes('transform_layer_library') ||
-      errorSource.includes('m=transform_layer_library')) {
-    console.log('🔧 Suppressed Google OAuth error');
+      errorSource.includes('m=transform_layer_library') ||
+      errorMessage.includes('transform_layer_library')) {
+    console.log('🔧 Suppressed Google OAuth error:', errorMessage, 'from:', errorSource);
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -37,7 +38,9 @@ window.addEventListener('unhandledrejection', (event) => {
 const originalConsoleError = console.error;
 console.error = (...args) => {
   const message = args.join(' ');
-  if (message.includes('postMessage') || message.includes('Cannot read properties of null')) {
+  if (message.includes('postMessage') || 
+      message.includes('Cannot read properties of null') ||
+      message.includes('transform_layer_library')) {
     console.log('🔧 Suppressed console error from Google OAuth library:', message);
     return;
   }

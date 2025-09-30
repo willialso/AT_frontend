@@ -295,12 +295,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                   console.log('🎉 ========== REACT-OAUTH GOOGLE LOGIN SUCCESS ==========');
                   console.log('🔧 Credential response:', credentialResponse);
                   
-                  // Add delay to ensure popup communication is established
-                  console.log('🔧 Adding 1 second delay for popup communication...');
-                  await new Promise(resolve => setTimeout(resolve, 1000));
-                  
                   try {
-                    console.log('🔧 Calling onGoogleSignIn after delay...');
+                    console.log('🔧 Calling onGoogleSignIn immediately...');
                     onGoogleSignIn(credentialResponse);
                     console.log('✅ onGoogleSignIn called successfully');
                   } catch (error) {
@@ -319,6 +315,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                 useOneTap={false}
                 auto_select={false}
                 cancel_on_tap_outside={true}
+                ux_mode="redirect"
+                redirect_uri={window.location.origin}
               />
             ) : (
           <div style={{ 
