@@ -26,6 +26,9 @@ export class GoogleAuth {
         throw new Error('No credential received from Google');
       }
 
+      console.log('🔧 Credential length:', credentialResponse.credential.length);
+      console.log('🔧 Credential preview:', credentialResponse.credential.substring(0, 50) + '...');
+
       // Decode the JWT token to get user info
       console.log('🔧 Decoding JWT token...');
       const userInfo = this.decodeJWT(credentialResponse.credential);
@@ -60,6 +63,12 @@ export class GoogleAuth {
       return this.user;
     } catch (error) {
       console.error('❌ Google authentication failed:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        stack: error.stack,
+        credentialResponse: credentialResponse
+      });
+      
       // Provide more specific error messages
       if (error.message.includes('Invalid JWT token')) {
         throw new Error('Google OAuth token is invalid or expired. Please try again.');
@@ -76,26 +85,38 @@ export class GoogleAuth {
    */
   private decodeJWT(token: string): any {
     try {
+      console.log('🔧 Decoding JWT token, length:', token.length);
+      
       const parts = token.split('.');
       if (parts.length !== 3) {
+        console.error('❌ Invalid JWT token format, parts:', parts.length);
         throw new Error('Invalid JWT token format');
       }
       
       const base64Url = parts[1];
       if (!base64Url) {
+        console.error('❌ Missing JWT payload');
         throw new Error('Invalid JWT token format');
       }
       
+      console.log('🔧 JWT payload (base64url):', base64Url.substring(0, 50) + '...');
+      
+      // Add padding if needed
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(jsonPayload);
+      const paddedBase64 = base64 + '='.repeat((4 - base64.length % 4) % 4);
+      
+      console.log('🔧 Padded base64:', paddedBase64.substring(0, 50) + '...');
+      
+      const jsonPayload = atob(paddedBase64);
+      console.log('🔧 Decoded payload:', jsonPayload);
+      
+      const userInfo = JSON.parse(jsonPayload);
+      console.log('🔧 Parsed user info:', userInfo);
+      
+      return userInfo;
     } catch (error) {
       console.error('❌ Failed to decode JWT token:', error);
+      console.error('❌ Token parts:', token.split('.').map((part, i) => `${i}: ${part.substring(0, 20)}...`));
       throw new Error('Invalid JWT token');
     }
   }
@@ -105,18 +126,34 @@ export class GoogleAuth {
    * Backend requires Principal for wallet creation and user management
    */
   private generatePrincipalFromGoogleData(googleId: string, email: string): Principal {
-    // Create a deterministic seed from Google ID and email
-    const seed = `google:${googleId}:${email}:icp-derivation-mainnet`;
-    const seedHash = this.hashString(seed);
-    
-    // Convert hash to a shorter byte array (8 bytes for shorter Principal)
-    const seedBytes = new Uint8Array(8);
-    for (let i = 0; i < 8; i++) {
-      seedBytes[i] = (seedHash >> (i * 8)) & 0xFF;
+    try {
+      console.log('🔧 Generating Principal from Google data:', { googleId, email });
+      
+      // Create a deterministic seed from Google ID and email
+      const seed = `google:${googleId}:${email}:icp-derivation-mainnet`;
+      console.log('🔧 Seed string:', seed);
+      
+      const seedHash = this.hashString(seed);
+      console.log('🔧 Seed hash:', seedHash);
+      
+      // Convert hash to a shorter byte array (8 bytes for shorter Principal)
+      const seedBytes = new Uint8Array(8);
+      for (let i = 0; i < 8; i++) {
+        seedBytes[i] = (seedHash >> (i * 8)) & 0xFF;
+      }
+      
+      console.log('🔧 Seed bytes:', Array.from(seedBytes));
+      
+      // Generate Principal from shorter bytes - this should create a valid, shorter Principal
+      const principal = Principal.fromUint8Array(seedBytes);
+      console.log('🔧 Generated Principal:', principal.toString());
+      
+      return principal;
+    } catch (error) {
+      console.error('❌ Failed to generate Principal from Google data:', error);
+      // Fallback to a simple Principal
+      return Principal.anonymous();
     }
-    
-    // Generate Principal from shorter bytes - this should create a valid, shorter Principal
-    return Principal.fromUint8Array(seedBytes);
   }
 
   /**
