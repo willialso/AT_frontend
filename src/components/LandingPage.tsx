@@ -272,19 +272,41 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
 
   // Initialize Google OAuth once when component mounts
   React.useEffect(() => {
-    if (isGoogleConfigured && window.google && window.google.accounts && window.google.accounts.id) {
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: (response: any) => {
-          console.log('🔧 Google OAuth callback triggered:', response);
-          try {
-            onGoogleSignIn(response);
-          } catch (error) {
-            console.error('Google OAuth callback error:', error);
-          }
+    const initializeGoogleOAuth = () => {
+      if (isGoogleConfigured && googleClientId && window.google && window.google.accounts && window.google.accounts.id) {
+        console.log('🔧 Initializing Google OAuth with client ID:', googleClientId);
+        try {
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: (response: any) => {
+              console.log('🔧 Google OAuth callback triggered:', response);
+              try {
+                onGoogleSignIn(response);
+              } catch (error) {
+                console.error('Google OAuth callback error:', error);
+              }
+            }
+          });
+          console.log('✅ Google OAuth initialized successfully');
+        } catch (error) {
+          console.error('❌ Failed to initialize Google OAuth:', error);
         }
-      });
-    }
+      } else {
+        console.log('🔧 Google OAuth not ready:', {
+          isGoogleConfigured,
+          hasClientId: !!googleClientId,
+          hasGoogleLibrary: !!(window.google && window.google.accounts && window.google.accounts.id)
+        });
+      }
+    };
+
+    // Try to initialize immediately
+    initializeGoogleOAuth();
+
+    // Also try after a delay in case Google library loads later
+    const timeout = setTimeout(initializeGoogleOAuth, 1000);
+    
+    return () => clearTimeout(timeout);
   }, [isGoogleConfigured, googleClientId, onGoogleSignIn]);
   
 
@@ -308,10 +330,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
             {isGoogleConfigured ? (
               <button 
                 onClick={() => {
+                  console.log('🔧 Google OAuth button clicked');
+                  console.log('🔧 Google OAuth status:', {
+                    hasGoogleLibrary: !!(window.google && window.google.accounts && window.google.accounts.id),
+                    hasClientId: !!googleClientId,
+                    clientId: googleClientId
+                  });
+                  
                   if (window.google && window.google.accounts && window.google.accounts.id) {
-                    window.google.accounts.id.prompt();
+                    try {
+                      window.google.accounts.id.prompt();
+                    } catch (error) {
+                      console.error('❌ Google OAuth prompt failed:', error);
+                      alert('Google OAuth failed. Please try again.');
+                    }
                   } else {
-                    alert('Google OAuth library not loaded');
+                    console.error('❌ Google OAuth library not available');
+                    alert('Google OAuth library not loaded. Please refresh the page.');
                   }
                 }}
                 style={{
