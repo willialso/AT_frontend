@@ -20,9 +20,12 @@ export class GoogleAuth {
     try {
       console.log('🔍 Starting real Google OAuth flow...');
       console.log('🔧 Google OAuth credential response:', credentialResponse);
+      console.log('🔧 CredentialResponse type:', typeof credentialResponse);
+      console.log('🔧 CredentialResponse keys:', Object.keys(credentialResponse || {}));
       
-      if (!credentialResponse.credential) {
+      if (!credentialResponse || !credentialResponse.credential) {
         console.error('❌ No credential received from Google');
+        console.error('❌ CredentialResponse:', credentialResponse);
         throw new Error('No credential received from Google');
       }
 

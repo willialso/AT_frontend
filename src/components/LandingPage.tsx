@@ -307,10 +307,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                 onSuccess={(credentialResponse) => {
                   console.log('🔧 LandingPage: Google OAuth success callback triggered:', credentialResponse);
                   console.log('🔧 LandingPage: Calling onGoogleSignIn with:', credentialResponse);
-                  onGoogleSignIn(credentialResponse);
+                  try {
+                    onGoogleSignIn(credentialResponse);
+                  } catch (error) {
+                    console.error('🔧 LandingPage: Error in onGoogleSignIn callback:', error);
+                  }
                 }}
                 onError={(error) => {
                   console.error('🔧 LandingPage: Google OAuth failed:', error);
+                  console.error('🔧 LandingPage: Error details:', {
+                    error,
+                    type: typeof error,
+                    message: error?.message,
+                    stack: error?.stack
+                  });
                 }}
                 theme="outline"
                 size="medium"
@@ -319,6 +329,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                 logo_alignment="left"
                 width="200"
                 useOneTap={false}
+                auto_select={false}
+                cancel_on_tap_outside={true}
               />
             ) : (
           <div style={{ 
