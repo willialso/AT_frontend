@@ -8,13 +8,21 @@ import { App } from './components/App.tsx'
 
 // Global error handler for Google OAuth postMessage errors
 window.addEventListener('error', (event) => {
-  if (event.message && (event.message.includes('postMessage') || event.message.includes('Cannot read properties of null'))) {
-    console.log('🔧 Suppressed postMessage error from Google OAuth library:', event.message);
+  const errorMessage = event.message || '';
+  const errorSource = event.filename || '';
+  
+  // Suppress Google OAuth errors
+  if (errorMessage.includes('postMessage') || 
+      errorMessage.includes('Cannot read properties of null') ||
+      errorSource.includes('transform_layer_library') ||
+      errorSource.includes('m=transform_layer_library')) {
+    console.log('🔧 Suppressed Google OAuth error');
     event.preventDefault();
     event.stopPropagation();
+    event.stopImmediatePropagation();
     return false;
   }
-});
+}, true); // Use capture phase to catch earlier
 
 // Global unhandled promise rejection handler
 window.addEventListener('unhandledrejection', (event) => {
