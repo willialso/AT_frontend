@@ -140,6 +140,9 @@ export const useUnifiedAuth = () => {
         setWalletGenerating(true); // ✅ FIXED: Start wallet generation after Google auth
         setWalletReady(false); // ✅ FIXED: Reset wallet ready state
         console.log('🔧 useUnifiedAuth: State updated, user:', user, 'authMethod:', user.authMethod);
+        console.log('🔧 useUnifiedAuth: Wallet generation should start now');
+      } else {
+        console.log('🔧 useUnifiedAuth: User is null, wallet generation will not start');
       }
       
       return user;

@@ -249,6 +249,14 @@ export const WalletConnection: React.FC = () => {
         try {
           setIsGeneratingWallet(true);
           console.log('🏦 === Starting Wallet Generation ===');
+          console.log('🔧 WalletConnection: Wallet generation conditions met:', {
+            isAuthenticated,
+            hasUser: !!user,
+            canisterConnected,
+            walletGenerating,
+            hasDepositAddress: !!depositAddress,
+            isGeneratingWallet
+          });
 
           if (!atticusService) {
             throw new Error('Atticus service not available');
