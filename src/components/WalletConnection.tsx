@@ -329,8 +329,8 @@ export const WalletConnection: React.FC = () => {
       setOperationStatus('🔧 Generating custodial wallet...');
       const result = await treasuryService.generateDepositAddress(user.principal.toString());
 
-      if (result && 'ok' in result) {
-        const userDepositAddress = result.ok;
+      if (result) {
+        const userDepositAddress = result;
         setDepositAddress(userDepositAddress);
 
         // ✅ FIXED: Get balance with proper null checks

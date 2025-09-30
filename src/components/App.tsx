@@ -158,13 +158,8 @@ const AppContent: React.FC = () => {
     try {
       console.log('🔧 App: handleGoogleSignIn called with:', credentialResponse);
       
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Google OAuth timeout')), 10000); // 10 second timeout
-      });
-      
-      const authPromise = signInWithGoogle(credentialResponse);
-      const result = await Promise.race([authPromise, timeoutPromise]);
+      // Call Google authentication without timeout
+      const result = await signInWithGoogle(credentialResponse);
       
       if (result) {
         console.log('🔧 App: signInWithGoogle completed successfully');
@@ -182,16 +177,6 @@ const AppContent: React.FC = () => {
         // Force a re-render to check auth state
         console.log('🔧 App: Forcing re-render to check auth state...');
         
-        // Close any popup windows if they exist
-        try {
-          if (window.opener && !window.opener.closed) {
-            window.opener.focus();
-            window.close();
-          }
-        } catch (error) {
-          console.log('🔧 Could not close popup window:', error);
-        }
-        
         console.log('🔧 Google OAuth completed successfully');
       } else {
         console.log('🔄 Google OAuth redirect initiated, user will be redirected back');
@@ -201,16 +186,6 @@ const AppContent: React.FC = () => {
       console.error('🔧 App: Google login failed:', err);
       // Show user-friendly error message
       alert(`Google login failed: ${err.message || 'Unknown error'}`);
-      
-      // Close popup on error too
-      try {
-        if (window.opener && !window.opener.closed) {
-          window.opener.focus();
-          window.close();
-        }
-      } catch (error) {
-        console.log('🔧 Could not close popup window on error:', error);
-      }
       
       console.log('🔧 Google OAuth error handled');
     }
