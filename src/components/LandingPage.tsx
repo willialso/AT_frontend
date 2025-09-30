@@ -264,13 +264,28 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDemo, onTwitterSignIn, onGoogleSignIn }) => {
-
-
   // Check if Google OAuth is properly configured
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || process.env['REACT_APP_GOOGLE_CLIENT_ID'] || '255794166358-poj0rbu2bqtd663m9nsu6hfam6hd0661.apps.googleusercontent.com';
   const isGoogleConfigured = googleClientId && 
     googleClientId !== 'your-google-client-id.apps.googleusercontent.com' &&
     googleClientId.includes('.apps.googleusercontent.com');
+
+  // Initialize Google OAuth once when component mounts
+  React.useEffect(() => {
+    if (isGoogleConfigured && window.google && window.google.accounts && window.google.accounts.id) {
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (response: any) => {
+          console.log('🔧 Google OAuth callback triggered:', response);
+          try {
+            onGoogleSignIn(response);
+          } catch (error) {
+            console.error('Google OAuth callback error:', error);
+          }
+        }
+      });
+    }
+  }, [isGoogleConfigured, googleClientId, onGoogleSignIn]);
   
 
   return (
@@ -294,18 +309,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
               <button 
                 onClick={() => {
                   if (window.google && window.google.accounts && window.google.accounts.id) {
-                    // Set up the callback to handle the response
-                    window.google.accounts.id.initialize({
-                      client_id: googleClientId,
-                      callback: (response: any) => {
-                        console.log('🔧 Custom Google OAuth callback triggered:', response);
-                        try {
-                          onGoogleSignIn(response);
-                        } catch (error) {
-                          console.error('Google OAuth callback error:', error);
-                        }
-                      }
-                    });
                     window.google.accounts.id.prompt();
                   } else {
                     alert('Google OAuth library not loaded');
