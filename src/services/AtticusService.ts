@@ -137,6 +137,31 @@ export class AtticusService {
           get_user_trade_summary: IDL.Func([IDL.Principal], [IDL.Variant({ 
             ok: IDL.Record({ total_trades: IDL.Nat, wins: IDL.Nat, losses: IDL.Nat }), 
             err: IDL.Text 
+          })], ['query']),
+          
+          // Admin/Query functions
+          get_all_users: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Record({
+            balance: IDL.Float64,
+            total_wins: IDL.Float64,
+            total_losses: IDL.Float64,
+            net_pnl: IDL.Float64,
+            created_at: IDL.Int
+          })))], ['query']),
+          get_platform_wallet: IDL.Func([], [IDL.Record({
+            balance: IDL.Float64,
+            total_deposits: IDL.Float64,
+            total_withdrawals: IDL.Float64
+          })], ['query']),
+          get_platform_ledger: IDL.Func([], [IDL.Record({
+            total_winning_trades: IDL.Float64,
+            total_losing_trades: IDL.Float64,
+            net_pnl: IDL.Float64,
+            total_trades: IDL.Nat
+          })], ['query']),
+          get_platform_trading_summary: IDL.Func([], [IDL.Record({
+            total_trades: IDL.Nat,
+            active_trades: IDL.Nat,
+            settled_trades: IDL.Nat
           })], ['query'])
         });
       };
@@ -371,6 +396,78 @@ export class AtticusService {
       }
     } catch (error) {
       console.error('❌ Error getting user trade summary:', error);
+      throw error;
+    }
+  }
+
+  // ✅ GET ALL USERS (Admin function)
+  public async getAllUsers(): Promise<Array<{principal: string, balance: number, totalWins: number, totalLosses: number, netPnl: number, createdAt: number}>> {
+    if (!this.isInitialized) throw new Error('Service not initialized');
+    
+    try {
+      const result = await this.coreCanister.get_all_users();
+      return result.map(([principal, userData]: [Principal, any]) => ({
+        principal: principal.toString(),
+        balance: Number(userData.balance),
+        totalWins: Number(userData.total_wins),
+        totalLosses: Number(userData.total_losses),
+        netPnl: Number(userData.net_pnl),
+        createdAt: Number(userData.created_at)
+      }));
+    } catch (error) {
+      console.error('❌ Error getting all users:', error);
+      throw error;
+    }
+  }
+
+  // ✅ GET PLATFORM WALLET (Admin function)
+  public async getPlatformWallet(): Promise<{balance: number, totalDeposits: number, totalWithdrawals: number}> {
+    if (!this.isInitialized) throw new Error('Service not initialized');
+    
+    try {
+      const result = await this.coreCanister.get_platform_wallet();
+      return {
+        balance: Number(result.balance),
+        totalDeposits: Number(result.total_deposits),
+        totalWithdrawals: Number(result.total_withdrawals)
+      };
+    } catch (error) {
+      console.error('❌ Error getting platform wallet:', error);
+      throw error;
+    }
+  }
+
+  // ✅ GET PLATFORM LEDGER (Admin function)
+  public async getPlatformLedger(): Promise<{totalWinningTrades: number, totalLosingTrades: number, netPnl: number, totalTrades: number}> {
+    if (!this.isInitialized) throw new Error('Service not initialized');
+    
+    try {
+      const result = await this.coreCanister.get_platform_ledger();
+      return {
+        totalWinningTrades: Number(result.total_winning_trades),
+        totalLosingTrades: Number(result.total_losing_trades),
+        netPnl: Number(result.net_pnl),
+        totalTrades: Number(result.total_trades)
+      };
+    } catch (error) {
+      console.error('❌ Error getting platform ledger:', error);
+      throw error;
+    }
+  }
+
+  // ✅ GET PLATFORM TRADING SUMMARY (Admin function)
+  public async getPlatformTradingSummary(): Promise<{totalTrades: number, activeTrades: number, settledTrades: number}> {
+    if (!this.isInitialized) throw new Error('Service not initialized');
+    
+    try {
+      const result = await this.coreCanister.get_platform_trading_summary();
+      return {
+        totalTrades: Number(result.total_trades),
+        activeTrades: Number(result.active_trades),
+        settledTrades: Number(result.settled_trades)
+      };
+    } catch (error) {
+      console.error('❌ Error getting platform trading summary:', error);
       throw error;
     }
   }

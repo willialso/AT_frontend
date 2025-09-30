@@ -224,32 +224,65 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
     }
   };
 
-  // Fetch platform wallet data
-  const fetchPlatformData = async () => {
+  // Fetch all users from canister
+  const fetchAllUsers = async () => {
     try {
       setUsersLoading(true);
       setUsersError(null);
       
-      if (!treasuryService) {
-        setUsersError('Treasury service not available');
+      if (!atticusService) {
+        setUsersError('Atticus service not available');
         return;
       }
       
-      // Get platform wallet data from treasury
-      const platformWallet = await treasuryService.getPlatformWallet();
-      setAllUsers([{
-        principal: 'Platform Wallet',
-        balance: platformWallet.balance,
-        totalWins: platformWallet.totalDeposits,
-        totalLosses: platformWallet.totalWithdrawals,
-        netPnl: platformWallet.balance
-      }]);
+      // Get ALL users from canister
+      const users = await atticusService.getAllUsers();
+      setAllUsers(users.map(user => ({
+        principal: user.principal,
+        balance: user.balance,
+        totalWins: user.totalWins,
+        totalLosses: user.totalLosses,
+        netPnl: user.netPnl
+      })));
+      
+    } catch (err) {
+      console.error('Failed to fetch all users:', err);
+      setUsersError(err instanceof Error ? err.message : 'Failed to fetch all users');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  // Fetch platform data
+  const [platformData, setPlatformData] = useState<any>(null);
+  const [platformLoading, setPlatformLoading] = useState(false);
+  
+  const fetchPlatformData = async () => {
+    try {
+      setPlatformLoading(true);
+      setUsersError(null);
+      
+      if (!atticusService) {
+        setUsersError('Atticus service not available');
+        return;
+      }
+      
+      // Get REAL platform data from canister
+      const wallet = await atticusService.getPlatformWallet();
+      const ledger = await atticusService.getPlatformLedger();
+      const tradingSummary = await atticusService.getPlatformTradingSummary();
+      
+      setPlatformData({
+        wallet,
+        ledger,
+        tradingSummary
+      });
       
     } catch (err) {
       console.error('Failed to fetch platform data:', err);
       setUsersError(err instanceof Error ? err.message : 'Failed to fetch platform data');
     } finally {
-      setUsersLoading(false);
+      setPlatformLoading(false);
     }
   };
 
@@ -389,25 +422,41 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
             </InfoBox>
 
             <InfoBox>
-              <h3>User Management</h3>
-              <InfoText>Use the User Lookup section above to fetch individual user data.</InfoText>
-              <InfoText>Available functions:</InfoText>
-              <InfoText>• get_user - Retrieve user data and balances</InfoText>
-              <InfoText>• create_user - Create new user accounts</InfoText>
-              <InfoText>• User authentication via ICP Identity, Twitter, and Google</InfoText>
-              <InfoText>• Automatic wallet generation for new users</InfoText>
-              
-              <div style={{ marginTop: '2rem' }}>
-                <h4>System Status</h4>
-                <InfoText>
-                  <StatusIndicator status={adminStatus.canisterConnected ? 'online' : 'offline'} />
-                  Canister Connection: {adminStatus.canisterConnected ? 'Connected' : 'Disconnected'}
-                </InfoText>
-                <InfoText>
-                  <StatusIndicator status={adminStatus.serviceReady ? 'online' : 'offline'} />
-                  Atticus Service: {adminStatus.serviceReady ? 'Ready' : 'Not Ready'}
-                </InfoText>
+              <h3>All Registered Users</h3>
+              <div style={{ marginBottom: '1rem' }}>
+                <Button onClick={fetchAllUsers} disabled={usersLoading}>
+                  {usersLoading ? 'Loading...' : 'List All Users'}
+                </Button>
               </div>
+              
+              {usersError && <ErrorText>{usersError}</ErrorText>}
+              
+              {allUsers.length > 0 && (
+                <DataTable>
+                  <thead>
+                    <tr>
+                      <TableHeader>Principal</TableHeader>
+                      <TableHeader>Balance (BTC)</TableHeader>
+                      <TableHeader>Wins (BTC)</TableHeader>
+                      <TableHeader>Losses (BTC)</TableHeader>
+                      <TableHeader>Net PnL (BTC)</TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allUsers.map((user, index) => (
+                      <TableRow key={index}>
+                        <TableCell style={{ fontSize: '0.8rem' }}>{user.principal}</TableCell>
+                        <TableCell>{user.balance.toFixed(8)}</TableCell>
+                        <TableCell>{user.totalWins.toFixed(8)}</TableCell>
+                        <TableCell>{user.totalLosses.toFixed(8)}</TableCell>
+                        <TableCell style={{ color: user.netPnl >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                          {user.netPnl.toFixed(8)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </DataTable>
+              )}
             </InfoBox>
 
             <InfoBox>
@@ -469,56 +518,96 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
         return (
           <>
             <InfoBox>
-              <h3>Platform Wallet Data</h3>
+              <h3>Platform Data</h3>
               <div style={{ marginBottom: '1rem' }}>
-                <Button onClick={fetchPlatformData} disabled={usersLoading}>
-                  {usersLoading ? 'Loading...' : 'Fetch Platform Data'}
+                <Button onClick={fetchPlatformData} disabled={platformLoading}>
+                  {platformLoading ? 'Loading...' : 'Fetch Platform Data'}
                 </Button>
               </div>
               
               {usersError && <ErrorText>{usersError}</ErrorText>}
               
-              {allUsers.length > 0 && (
-                <DataTable>
-                  <thead>
-                    <tr>
-                      <TableHeader>Metric</TableHeader>
-                      <TableHeader>Value</TableHeader>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <TableRow>
-                      <TableCell>Platform Balance</TableCell>
-                      <TableCell>{allUsers[0].balance} BTC</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Total Deposits</TableCell>
-                      <TableCell>{allUsers[0].totalWins} BTC</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Total Withdrawals</TableCell>
-                      <TableCell>{allUsers[0].totalLosses} BTC</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Net Balance</TableCell>
-                      <TableCell>{allUsers[0].netPnl} BTC</TableCell>
-                    </TableRow>
-                  </tbody>
-                </DataTable>
-              )}
-            </InfoBox>
+              {platformData && (
+                <>
+                  <h4 style={{ color: 'var(--accent)', marginTop: '1.5rem' }}>Platform Wallet</h4>
+                  <DataTable>
+                    <thead>
+                      <tr>
+                        <TableHeader>Metric</TableHeader>
+                        <TableHeader>Value (BTC)</TableHeader>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <TableRow>
+                        <TableCell>Platform Balance</TableCell>
+                        <TableCell>{platformData.wallet.balance.toFixed(8)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Total Deposits</TableCell>
+                        <TableCell>{platformData.wallet.totalDeposits.toFixed(8)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Total Withdrawals</TableCell>
+                        <TableCell>{platformData.wallet.totalWithdrawals.toFixed(8)}</TableCell>
+                      </TableRow>
+                    </tbody>
+                  </DataTable>
 
-            <InfoBox>
-              <h3>System Status</h3>
-              <InfoText>
-                <StatusIndicator status={adminStatus.canisterConnected ? 'online' : 'offline'} />
-                Canister Connection: {adminStatus.canisterConnected ? 'Connected' : 'Disconnected'}
-              </InfoText>
-              <InfoText>
-                <StatusIndicator status={adminStatus.serviceReady ? 'online' : 'offline'} />
-                Atticus Service: {adminStatus.serviceReady ? 'Ready' : 'Not Ready'}
-              </InfoText>
-              <InfoText>Last Update: {adminStatus.lastUpdate}</InfoText>
+                  <h4 style={{ color: 'var(--accent)', marginTop: '1.5rem' }}>Platform Ledger</h4>
+                  <DataTable>
+                    <thead>
+                      <tr>
+                        <TableHeader>Metric</TableHeader>
+                        <TableHeader>Value (BTC)</TableHeader>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <TableRow>
+                        <TableCell>Total Winning Trades</TableCell>
+                        <TableCell style={{ color: 'var(--green)' }}>{platformData.ledger.totalWinningTrades.toFixed(8)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Total Losing Trades</TableCell>
+                        <TableCell style={{ color: 'var(--red)' }}>{platformData.ledger.totalLosingTrades.toFixed(8)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Net PnL</TableCell>
+                        <TableCell style={{ color: platformData.ledger.netPnl >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                          {platformData.ledger.netPnl.toFixed(8)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Total Trades</TableCell>
+                        <TableCell>{platformData.ledger.totalTrades}</TableCell>
+                      </TableRow>
+                    </tbody>
+                  </DataTable>
+
+                  <h4 style={{ color: 'var(--accent)', marginTop: '1.5rem' }}>Trading Summary</h4>
+                  <DataTable>
+                    <thead>
+                      <tr>
+                        <TableHeader>Metric</TableHeader>
+                        <TableHeader>Count</TableHeader>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <TableRow>
+                        <TableCell>Total Trades</TableCell>
+                        <TableCell>{platformData.tradingSummary.totalTrades}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Active Trades</TableCell>
+                        <TableCell style={{ color: 'var(--accent)' }}>{platformData.tradingSummary.activeTrades}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Settled Trades</TableCell>
+                        <TableCell>{platformData.tradingSummary.settledTrades}</TableCell>
+                      </TableRow>
+                    </tbody>
+                  </DataTable>
+                </>
+              )}
             </InfoBox>
           </>
         );
