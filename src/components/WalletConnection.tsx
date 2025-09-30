@@ -534,7 +534,6 @@ export const WalletConnection: React.FC = () => {
               </div>
             </div>
           )}
-          </AddressContainer>
         </InfoRow>
       </WalletInfo>
 
