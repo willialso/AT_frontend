@@ -158,7 +158,11 @@ const AppContent: React.FC = () => {
     console.log('🔧 App: handleGoogleSignIn called with:', credentialResponse);
     
     try {
-      // Simple, direct approach - no timeouts, no complex error handling
+      // Add delay to ensure popup communication is fully established
+      console.log('🔧 App: Adding 500ms delay for popup communication...');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('🔧 App: Calling signInWithGoogle after delay...');
       const result = await signInWithGoogle(credentialResponse);
       
       if (result) {

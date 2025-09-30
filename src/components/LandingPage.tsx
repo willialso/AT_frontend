@@ -291,18 +291,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
             </TwitterButton>
             {isGoogleConfigured ? (
               <GoogleLogin
-                onSuccess={(credentialResponse) => {
+                onSuccess={async (credentialResponse) => {
                   console.log('🎉 ========== REACT-OAUTH GOOGLE LOGIN SUCCESS ==========');
                   console.log('🔧 Credential response:', credentialResponse);
+                  
+                  // Add delay to ensure popup communication is established
+                  console.log('🔧 Adding 1 second delay for popup communication...');
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  
                   try {
+                    console.log('🔧 Calling onGoogleSignIn after delay...');
                     onGoogleSignIn(credentialResponse);
                     console.log('✅ onGoogleSignIn called successfully');
                   } catch (error) {
                     console.error('❌ Google OAuth callback error:', error);
                   }
                 }}
-                onError={() => {
-                  console.error('❌ Google OAuth failed via react-oauth');
+                onError={(error) => {
+                  console.error('❌ Google OAuth failed via react-oauth:', error);
                 }}
                 theme="outline"
                 size="large"
@@ -311,6 +317,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                 logo_alignment="left"
                 width="280"
                 useOneTap={false}
+                auto_select={false}
+                cancel_on_tap_outside={true}
               />
             ) : (
           <div style={{ 
