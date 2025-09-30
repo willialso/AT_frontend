@@ -181,6 +181,12 @@ const AppContent: React.FC = () => {
         
         // Force a re-render to check auth state
         console.log('🔧 App: Forcing re-render to check auth state...');
+        
+        // Close any popup windows if they exist
+        if (window.opener) {
+          window.opener.focus();
+          window.close();
+        }
       } else {
         console.log('🔄 Google OAuth redirect initiated, user will be redirected back');
         // Don't set demo mode to false for redirect case
@@ -189,6 +195,12 @@ const AppContent: React.FC = () => {
       console.error('🔧 App: Google login failed:', err);
       // Show user-friendly error message
       alert(`Google login failed: ${err.message || 'Unknown error'}`);
+      
+      // Close popup on error too
+      if (window.opener) {
+        window.opener.focus();
+        window.close();
+      }
     }
   };
 
