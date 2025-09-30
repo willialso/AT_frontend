@@ -270,79 +270,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
     googleClientId !== 'your-google-client-id.apps.googleusercontent.com' &&
     googleClientId.includes('.apps.googleusercontent.com');
 
-  // Reference for the Google button container
-  const googleButtonRef = React.useRef<HTMLDivElement>(null);
-
-  // Initialize Google OAuth once when component mounts
-  React.useEffect(() => {
-    const initializeGoogleOAuth = () => {
-      if (isGoogleConfigured && googleClientId && window.google && window.google.accounts && window.google.accounts.id && googleButtonRef.current) {
-        console.log('🔧 Initializing Google OAuth with client ID:', googleClientId);
-        try {
-          // Render the Google Sign-In button
-          window.google.accounts.id.initialize({
-            client_id: googleClientId,
-            callback: (response: any) => {
-              console.log('🎉 ========== GOOGLE OAUTH CALLBACK TRIGGERED ==========');
-              console.log('🔧 Google OAuth callback triggered:', response);
-              console.log('🔧 Response type:', typeof response);
-              console.log('🔧 Response keys:', response ? Object.keys(response) : 'null');
-              console.log('🔧 Response credential:', response?.credential ? `${response.credential.substring(0, 50)}...` : 'missing');
-              console.log('🔧 Calling onGoogleSignIn...');
-              try {
-                onGoogleSignIn(response);
-                console.log('✅ onGoogleSignIn called successfully');
-                console.log('🎉 ========== CALLBACK COMPLETE ==========');
-              } catch (error) {
-                console.error('❌ Google OAuth callback error:', error);
-                console.error('❌ Error stack:', error?.stack);
-              }
-            },
-            ux_mode: 'popup',
-            auto_select: false
-          });
-          
-          // Render the actual Google button
-          window.google.accounts.id.renderButton(
-            googleButtonRef.current,
-            {
-              theme: 'outline',
-              size: 'large',
-              text: 'signin_with',
-              width: 280,
-              type: 'standard'
-            }
-          );
-          
-          console.log('🔧 Google button configuration:', {
-            theme: 'outline',
-            size: 'large',
-            type: 'standard',
-            width: 280
-          });
-          
-          console.log('✅ Google OAuth button rendered successfully');
-        } catch (error) {
-          console.error('❌ Failed to initialize Google OAuth:', error);
-        }
-      } else {
-        console.log('🔧 Google OAuth not ready:', {
-          isGoogleConfigured,
-          hasClientId: !!googleClientId,
-          hasGoogleLibrary: !!(window.google && window.google.accounts && window.google.accounts.id),
-          hasButtonRef: !!googleButtonRef.current
-        });
-      }
-    };
-
-    // Try to initialize immediately
-    initializeGoogleOAuth();
-
-    // Also try after a delay in case Google library loads later
-    const timeout = setTimeout(initializeGoogleOAuth, 1000);
-    
-    return () => clearTimeout(timeout);
-  }, [isGoogleConfigured, googleClientId, onGoogleSignIn]);
   
 
   return (
@@ -363,14 +290,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
               Sign in with X
             </TwitterButton>
             {isGoogleConfigured ? (
-              <div 
-                ref={googleButtonRef}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  minHeight: '40px'
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  console.log('🎉 ========== REACT-OAUTH GOOGLE LOGIN SUCCESS ==========');
+                  console.log('🔧 Credential response:', credentialResponse);
+                  try {
+                    onGoogleSignIn(credentialResponse);
+                    console.log('✅ onGoogleSignIn called successfully');
+                  } catch (error) {
+                    console.error('❌ Google OAuth callback error:', error);
+                  }
                 }}
+                onError={() => {
+                  console.error('❌ Google OAuth failed via react-oauth');
+                }}
+                theme="outline"
+                size="large"
+                text="signin_with"
+                shape="rectangular"
+                logo_alignment="left"
+                width="280"
+                useOneTap={false}
               />
             ) : (
           <div style={{ 
