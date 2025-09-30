@@ -333,6 +333,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                   logo_alignment="left"
                   width="280"
                   useOneTap={false}
+                  ux_mode="redirect"
+                  redirect_uri={window.location.origin}
                 />
                 <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
                   If Google button doesn't work, try refreshing the page

@@ -6,6 +6,25 @@ import ReactDOM from 'react-dom/client'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { App } from './components/App.tsx'
 
+// Global error handler for Google OAuth postMessage errors
+window.addEventListener('error', (event) => {
+  if (event.message && event.message.includes('postMessage')) {
+    console.log('🔧 Suppressed postMessage error from Google OAuth library:', event.message);
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+  }
+});
+
+// Global unhandled promise rejection handler
+window.addEventListener('unhandledrejection', (event) => {
+  if (event.reason && event.reason.message && event.reason.message.includes('postMessage')) {
+    console.log('🔧 Suppressed postMessage promise rejection from Google OAuth library:', event.reason.message);
+    event.preventDefault();
+    return false;
+  }
+});
+
 // Google OAuth Client ID - only use if properly configured
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || process.env['REACT_APP_GOOGLE_CLIENT_ID'] || '255794166358-poj0rbu2bqtd663m9nsu6hfam6hd0661.apps.googleusercontent.com';
 const isValidGoogleClientId = GOOGLE_CLIENT_ID && 
