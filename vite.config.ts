@@ -66,23 +66,14 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       // ✅ ADDED: Force cache busting with timestamp
       rollupOptions: {
-        input: {
-          main: './index.html',
-          admin: './admin.html'
-        },
         output: {
           manualChunks: {
             'dfinity': ['@dfinity/auth-client', '@dfinity/agent', '@dfinity/principal', '@dfinity/identity']
           },
-          // ✅ FIXED: Use consistent naming for admin bundle
-          entryFileNames: (chunkInfo) => {
-            if (chunkInfo.name === 'admin') {
-              return 'assets/admin-[hash].js';
-            }
-            return `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.js`;
-          },
-          chunkFileNames: `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.js`,
-          assetFileNames: `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.[ext]`
+          // ✅ FIXED: Use stable naming for production builds
+          entryFileNames: 'assets/[name]-[hash].js',
+          chunkFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash].[ext]'
         }
       },
       // ✅ ADDED: Force sourcemap generation for debugging
