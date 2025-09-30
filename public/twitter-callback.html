@@ -107,23 +107,38 @@
                     window.location.href = mainAppUrl;
                 } else {
                     // Send the callback data to the parent window (desktop popup)
-                    if (window.opener) {
-                        window.opener.postMessage({
-                            type: 'TWITTER_OAUTH_CALLBACK',
-                            code,
-                            state
-                        }, window.location.origin);
-                        
-                        // Show success message
-                        document.getElementById('loading').style.display = 'none';
-                        document.getElementById('success').style.display = 'block';
-                        
-                        // Close window after a short delay
-                        setTimeout(() => {
-                            window.close();
-                        }, 2000);
+                    if (window.opener && !window.opener.closed) {
+                        try {
+                            window.opener.postMessage({
+                                type: 'TWITTER_OAUTH_CALLBACK',
+                                code,
+                                state
+                            }, window.location.origin);
+                            
+                            // Show success message
+                            document.getElementById('loading').style.display = 'none';
+                            document.getElementById('success').style.display = 'block';
+                            
+                            // Close window after a short delay
+                            setTimeout(() => {
+                                window.close();
+                            }, 2000);
+                        } catch (error) {
+                            console.error('Failed to communicate with parent window:', error);
+                            // Fallback to mobile redirect approach
+                            const returnUrl = sessionStorage.getItem('twitter_oauth_return_url') || 
+                                             document.referrer || 
+                                             `${window.location.origin}/`;
+                            const mainAppUrl = `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}twitter_auth=${encodeURIComponent(JSON.stringify({code, state}))}`;
+                            window.location.href = mainAppUrl;
+                        }
                     } else {
-                        throw new Error('Unable to communicate with parent window');
+                        // Fallback to mobile redirect approach
+                        const returnUrl = sessionStorage.getItem('twitter_oauth_return_url') || 
+                                         document.referrer || 
+                                         `${window.location.origin}/`;
+                        const mainAppUrl = `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}twitter_auth=${encodeURIComponent(JSON.stringify({code, state}))}`;
+                        window.location.href = mainAppUrl;
                     }
                 }
 
@@ -136,11 +151,15 @@
                 document.getElementById('error-message').textContent = error.message;
                 
                 // Send error to parent window
-                if (window.opener) {
-                    window.opener.postMessage({
-                        type: 'TWITTER_OAUTH_ERROR',
-                        error: error.message
-                    }, window.location.origin);
+                if (window.opener && !window.opener.closed) {
+                    try {
+                        window.opener.postMessage({
+                            type: 'TWITTER_OAUTH_ERROR',
+                            error: error.message
+                        }, window.location.origin);
+                    } catch (postError) {
+                        console.error('Failed to send error to parent window:', postError);
+                    }
                 }
             }
         }

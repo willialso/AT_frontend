@@ -183,10 +183,16 @@ const AppContent: React.FC = () => {
         console.log('🔧 App: Forcing re-render to check auth state...');
         
         // Close any popup windows if they exist
-        if (window.opener) {
-          window.opener.focus();
-          window.close();
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.focus();
+            window.close();
+          }
+        } catch (error) {
+          console.log('🔧 Could not close popup window:', error);
         }
+        
+        console.log('🔧 Google OAuth completed successfully');
       } else {
         console.log('🔄 Google OAuth redirect initiated, user will be redirected back');
         // Don't set demo mode to false for redirect case
@@ -197,10 +203,16 @@ const AppContent: React.FC = () => {
       alert(`Google login failed: ${err.message || 'Unknown error'}`);
       
       // Close popup on error too
-      if (window.opener) {
-        window.opener.focus();
-        window.close();
+      try {
+        if (window.opener && !window.opener.closed) {
+          window.opener.focus();
+          window.close();
+        }
+      } catch (error) {
+        console.log('🔧 Could not close popup window on error:', error);
       }
+      
+      console.log('🔧 Google OAuth error handled');
     }
   };
 

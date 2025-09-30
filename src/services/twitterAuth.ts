@@ -98,6 +98,8 @@ export class TwitterAuth {
       const proxyUrl = `https://twitter-oauth-8z0l.onrender.com/twitter/auth?redirect_uri=${encodeURIComponent(redirectUri)}`;
       console.log('🔧 Twitter OAuth proxy URL:', proxyUrl);
       console.log('🔧 Twitter OAuth redirect URI:', redirectUri);
+      console.log('🔧 Current origin:', window.location.origin);
+      console.log('🔧 Full redirect URI:', redirectUri);
       const response = await fetch(proxyUrl, {
         method: 'GET',
         headers: {

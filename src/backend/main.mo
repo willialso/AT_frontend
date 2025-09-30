@@ -426,7 +426,7 @@ persistent actor TradingCanister {  // ✅ FIXED: Added `persistent`
                 let finalPriceFloat = Float.fromInt(Int64.toInt(Int64.fromNat64(finalPrice))) / 100.0;
                 
                 // ✅ UPDATE POSITION (Simple recording)
-                let now = Time.now();
+        let now = Time.now();
                 let settled_position = {
                     position with
                     status = #Settled;
@@ -1079,7 +1079,7 @@ persistent actor TradingCanister {  // ✅ FIXED: Added `persistent`
 
         let win_rate = if (total_trades > 0) {
             Float.fromInt(win_count) / Float.fromInt(total_trades)
-        } else {
+            } else {
             0.0
         };
 
