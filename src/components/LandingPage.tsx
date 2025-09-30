@@ -303,35 +303,41 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
               Sign in with X
             </TwitterButton>
             {isGoogleConfigured ? (
-              <GoogleLogin
-                onSuccess={(credentialResponse) => {
-                  console.log('🔧 LandingPage: Google OAuth success callback triggered:', credentialResponse);
-                  console.log('🔧 LandingPage: Calling onGoogleSignIn with:', credentialResponse);
-                  try {
-                    onGoogleSignIn(credentialResponse);
-                  } catch (error) {
-                    console.error('🔧 LandingPage: Error in onGoogleSignIn callback:', error);
-                  }
-                }}
-                onError={(error) => {
-                  console.error('🔧 LandingPage: Google OAuth failed:', error);
-                  console.error('🔧 LandingPage: Error details:', {
-                    error,
-                    type: typeof error,
-                    message: error?.message,
-                    stack: error?.stack
-                  });
-                }}
-                theme="outline"
-                size="medium"
-                text="signin_with"
-                shape="pill"
-                logo_alignment="left"
-                width="200"
-                useOneTap={false}
-                auto_select={false}
-                cancel_on_tap_outside={true}
-              />
+              <div>
+                <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
+                  Google OAuth Button (Debug)
+                </div>
+                <GoogleLogin
+                  onSuccess={(credentialResponse) => {
+                    console.log('🔧 LandingPage: Google OAuth success callback triggered:', credentialResponse);
+                    console.log('🔧 LandingPage: Calling onGoogleSignIn with:', credentialResponse);
+                    try {
+                      onGoogleSignIn(credentialResponse);
+                    } catch (error) {
+                      console.error('🔧 LandingPage: Error in onGoogleSignIn callback:', error);
+                    }
+                  }}
+                  onError={(error) => {
+                    console.error('🔧 LandingPage: Google OAuth failed:', error);
+                    console.error('🔧 LandingPage: Error details:', {
+                      error,
+                      type: typeof error,
+                      message: error?.message,
+                      stack: error?.stack
+                    });
+                  }}
+                  theme="outline"
+                  size="large"
+                  text="signin_with"
+                  shape="rectangular"
+                  logo_alignment="left"
+                  width="280"
+                  useOneTap={false}
+                />
+                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
+                  If Google button doesn't work, try refreshing the page
+                </div>
+              </div>
             ) : (
           <div style={{ 
             padding: '0.9rem 2rem', 
