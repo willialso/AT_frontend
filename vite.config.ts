@@ -74,10 +74,15 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             'dfinity': ['@dfinity/auth-client', '@dfinity/agent', '@dfinity/principal', '@dfinity/identity']
           },
-          // ✅ ADDED: Force new hash for cache busting with timestamp
-            entryFileNames: `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.js`,
-            chunkFileNames: `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.js`,
-            assetFileNames: `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.[ext]`
+          // ✅ FIXED: Use consistent naming for admin bundle
+          entryFileNames: (chunkInfo) => {
+            if (chunkInfo.name === 'admin') {
+              return 'assets/admin-[hash].js';
+            }
+            return `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.js`;
+          },
+          chunkFileNames: `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.js`,
+          assetFileNames: `assets/[name]-[hash]-${Date.now()}-FINAL-${Math.random().toString(36).substr(2, 9)}.[ext]`
         }
       },
       // ✅ ADDED: Force sourcemap generation for debugging

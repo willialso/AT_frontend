@@ -3,6 +3,7 @@ import { createGlobalStyle } from 'styled-components';
 import styled from 'styled-components';
 import { LandingPage } from './LandingPage';
 import { TradingPanel } from './TradingPanel';
+import { AdminPanel } from './AdminPanel';
 import { useAuth, AuthProvider } from '../contexts/AuthProvider';
 import { TradeProvider } from '../contexts/TradeContext';
 import { CanisterProvider } from '../contexts/CanisterProvider';
@@ -182,6 +183,21 @@ const AppContent: React.FC = () => {
           <LoadingText>Connecting to Bitcoin Options Platform...</LoadingText>
           <LiquidityBadge>Liquidity Pool Model</LiquidityBadge>
         </LoadingContainer>
+      </>
+    );
+  }
+
+  // Check for admin access
+  const urlParams = new URLSearchParams(window.location.search);
+  const adminCode = urlParams.get('code');
+  const isAdminAccess = adminCode === '040617081822010316';
+  
+  if (isAdminAccess) {
+    console.log('🔧 App: Rendering Admin Panel');
+    return (
+      <>
+        <GlobalStyle />
+        <AdminPanel />
       </>
     );
   }
