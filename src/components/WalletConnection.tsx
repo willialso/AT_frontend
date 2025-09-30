@@ -236,6 +236,15 @@ export const WalletConnection: React.FC = () => {
   // ✅ ENHANCED WALLET GENERATION WITH PROPER ERROR HANDLING
   useEffect(() => {
     const autoGenerateWallet = async () => {
+      console.log('🔍 Wallet generation check:', {
+        isAuthenticated,
+        hasUser: !!user,
+        canisterConnected,
+        walletGenerating,
+        hasDepositAddress: !!depositAddress,
+        isGeneratingWallet
+      });
+      
       if (isAuthenticated && user && canisterConnected && walletGenerating && !depositAddress && !isGeneratingWallet) {
         try {
           setIsGeneratingWallet(true);

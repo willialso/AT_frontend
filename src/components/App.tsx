@@ -158,29 +158,40 @@ const AppContent: React.FC = () => {
     try {
       console.log('🔧 App: handleGoogleSignIn called with:', credentialResponse);
       
-      // Call Google authentication without timeout
-      const result = await signInWithGoogle(credentialResponse);
-      
-      if (result) {
-        console.log('🔧 App: signInWithGoogle completed successfully');
-        console.log('🔧 App: Google auth result:', result);
+      // Add error boundary for postMessage issues
+      try {
+        // Call Google authentication without timeout
+        const result = await signInWithGoogle(credentialResponse);
         
-        // Wait for React state to update
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        console.log('🔧 App: Current auth state after Google login (after delay):', { isAuthenticated, user, principal });
-        console.log('🔧 App: isAuthenticated value:', isAuthenticated);
-        console.log('🔧 App: user value:', user);
-        
-        setIsDemoMode(false);
-        
-        // Force a re-render to check auth state
-        console.log('🔧 App: Forcing re-render to check auth state...');
-        
-        console.log('🔧 Google OAuth completed successfully');
-      } else {
-        console.log('🔄 Google OAuth redirect initiated, user will be redirected back');
-        // Don't set demo mode to false for redirect case
+        if (result) {
+          console.log('🔧 App: signInWithGoogle completed successfully');
+          console.log('🔧 App: Google auth result:', result);
+          
+          // Wait for React state to update
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          console.log('🔧 App: Current auth state after Google login (after delay):', { isAuthenticated, user, principal });
+          console.log('🔧 App: isAuthenticated value:', isAuthenticated);
+          console.log('🔧 App: user value:', user);
+          
+          setIsDemoMode(false);
+          
+          // Force a re-render to check auth state
+          console.log('🔧 App: Forcing re-render to check auth state...');
+          
+          console.log('🔧 Google OAuth completed successfully');
+        } else {
+          console.log('🔄 Google OAuth redirect initiated, user will be redirected back');
+          // Don't set demo mode to false for redirect case
+        }
+      } catch (postMessageError) {
+        // Handle postMessage errors specifically
+        if (postMessageError.message && postMessageError.message.includes('postMessage')) {
+          console.warn('🔧 Google OAuth postMessage error (non-critical):', postMessageError.message);
+          // Continue with authentication flow despite postMessage error
+          return;
+        }
+        throw postMessageError; // Re-throw if it's not a postMessage error
       }
     } catch (err) {
       console.error('🔧 App: Google login failed:', err);
