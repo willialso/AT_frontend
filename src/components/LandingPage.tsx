@@ -291,7 +291,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
               Sign in with X
             </TwitterButton>
             {isGoogleConfigured ? (
-              <GoogleLogin
+              <div>
+                <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
+                  Google OAuth Button (Debug: {isGoogleConfigured.toString()})
+                </div>
+                <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
+                  Google Library: {window.google ? 'Loaded' : 'Not loaded'}
+                </div>
+                <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   try {
                     onGoogleSignIn(credentialResponse);
@@ -311,6 +318,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                 useOneTap={false}
                 ux_mode="popup"
               />
+              <div style={{ marginTop: '0.5rem' }}>
+                <button 
+                  onClick={() => {
+                    console.log('🔧 Manual Google OAuth test button clicked');
+                    if (window.google && window.google.accounts && window.google.accounts.id) {
+                      console.log('🔧 Google OAuth library is available, trying manual trigger');
+                      window.google.accounts.id.prompt();
+                    } else {
+                      console.log('🔧 Google OAuth library not available');
+                      alert('Google OAuth library not loaded');
+                    }
+                  }}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#34a853',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  🔧 Manual Google OAuth Test
+                </button>
+              </div>
+              </div>
             ) : (
           <div style={{ 
             padding: '0.9rem 2rem', 
