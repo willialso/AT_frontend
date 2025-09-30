@@ -284,10 +284,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
             client_id: googleClientId,
             callback: (response: any) => {
               console.log('🔧 Google OAuth callback triggered:', response);
+              console.log('🔧 Response type:', typeof response);
+              console.log('🔧 Response keys:', response ? Object.keys(response) : 'null');
+              console.log('🔧 Calling onGoogleSignIn...');
               try {
                 onGoogleSignIn(response);
+                console.log('✅ onGoogleSignIn called successfully');
               } catch (error) {
-                console.error('Google OAuth callback error:', error);
+                console.error('❌ Google OAuth callback error:', error);
               }
             }
           });
