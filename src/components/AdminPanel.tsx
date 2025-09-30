@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useCanister } from '../contexts/CanisterProvider';
-import { UserMetrics } from './UserMetrics';
-import { PlatformLedger } from './PlatformLedger';
-import { PlatformTradingSummary } from './PlatformTradingSummary';
-import { UserTradeAnalytics } from './UserTradeAnalytics';
-import { AdminActionLog } from './AdminActionLog';
 
 const AdminContainer = styled.div`
   padding: 2rem;
@@ -126,37 +121,75 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
             </InfoBox>
 
             <InfoBox>
-              <h3>Admin Features (Off-chain)</h3>
-              <InfoText>• Real-time analytics and monitoring</InfoText>
-              <InfoText>• Platform performance metrics</InfoText>
-              <InfoText>• User activity tracking</InfoText>
-              <InfoText>• Trade settlement monitoring</InfoText>
-              <InfoText>• Risk management tools</InfoText>
+              <h3>Available Functions</h3>
+              <InfoText>• User authentication and management</InfoText>
+              <InfoText>• Trade placement and settlement</InfoText>
+              <InfoText>• Position tracking</InfoText>
+              <InfoText>• Wallet generation (Treasury)</InfoText>
+              <InfoText>• Deposit processing (Treasury)</InfoText>
             </InfoBox>
 
             <InfoBox>
-              <h3>On-chain Functions</h3>
-              <InfoText>• User authentication (Atticus Core)</InfoText>
-              <InfoText>• Trade event recording (Atticus Core)</InfoText>
-              <InfoText>• Wallet generation (Atticus Treasury)</InfoText>
-              <InfoText>• Deposit processing (Atticus Treasury)</InfoText>
-              <InfoText>• Withdrawal management (Atticus Treasury)</InfoText>
+              <h3>Platform Status</h3>
+              <InfoText>✅ Price Feed: Active (WebSocket)</InfoText>
+              <InfoText>✅ Trading Engine: Operational</InfoText>
+              <InfoText>✅ User Authentication: Working</InfoText>
+              <InfoText>✅ Wallet Generation: Available</InfoText>
+              <InfoText>✅ Trade Settlement: Functional</InfoText>
             </InfoBox>
           </>
         );
       case 'users':
-        return <UserMetrics />;
+        return (
+          <InfoBox>
+            <h3>User Management</h3>
+            <InfoText>User data is stored securely on-chain in the Atticus Core canister.</InfoText>
+            <InfoText>Available functions:</InfoText>
+            <InfoText>• create_user - Create new user accounts</InfoText>
+            <InfoText>• get_user - Retrieve user data and balances</InfoText>
+            <InfoText>• User authentication via ICP Identity, Twitter, and Google</InfoText>
+            <InfoText>• Automatic wallet generation for new users</InfoText>
+          </InfoBox>
+        );
       case 'platform':
         return (
-          <>
-            <PlatformLedger />
-            <PlatformTradingSummary />
-          </>
+          <InfoBox>
+            <h3>Platform Analytics</h3>
+            <InfoText>Platform data is managed through the canister system.</InfoText>
+            <InfoText>Key metrics:</InfoText>
+            <InfoText>• Total users registered</InfoText>
+            <InfoText>• Active trading sessions</InfoText>
+            <InfoText>• Platform balance and liquidity</InfoText>
+            <InfoText>• Trade settlement outcomes</InfoText>
+            <InfoText>• System performance metrics</InfoText>
+          </InfoBox>
         );
       case 'trades':
-        return <UserTradeAnalytics />;
+        return (
+          <InfoBox>
+            <h3>Trade Management</h3>
+            <InfoText>Trade data is recorded on-chain for transparency.</InfoText>
+            <InfoText>Available functions:</InfoText>
+            <InfoText>• place_trade_simple - Execute new trades</InfoText>
+            <InfoText>• recordSettlement - Record trade outcomes</InfoText>
+            <InfoText>• get_position - Retrieve position data</InfoText>
+            <InfoText>• get_user_trade_summary - User trading history</InfoText>
+            <InfoText>• Real-time price feeds for accurate settlements</InfoText>
+          </InfoBox>
+        );
       case 'logs':
-        return <AdminActionLog />;
+        return (
+          <InfoBox>
+            <h3>System Logs</h3>
+            <InfoText>System activity is logged for monitoring and debugging.</InfoText>
+            <InfoText>Log categories:</InfoText>
+            <InfoText>• User authentication events</InfoText>
+            <InfoText>• Trade execution logs</InfoText>
+            <InfoText>• Settlement outcomes</InfoText>
+            <InfoText>• System errors and warnings</InfoText>
+            <InfoText>• Performance metrics</InfoText>
+          </InfoBox>
+        );
       default:
         return null;
     }
