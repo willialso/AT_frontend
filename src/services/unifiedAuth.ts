@@ -24,6 +24,7 @@ export class UnifiedAuth {
   private authClient: AuthClient | null = null;
   private currentAuthMethod: AuthMethod | null = null;
   private isInitialized: boolean = false;
+  public shouldStartWalletGeneration: boolean = false;
 
   /**
    * Initialize authentication client
@@ -57,6 +58,10 @@ export class UnifiedAuth {
         };
         this.currentAuthMethod = 'twitter';
         console.log('✅ Mobile Twitter OAuth callback processed, user set:', this.user);
+        
+        // ✅ FIXED: Set a flag to indicate wallet generation should start
+        this.shouldStartWalletGeneration = true;
+        console.log('🏦 Mobile Twitter callback - wallet generation should start');
       } else {
         console.log('🔍 No mobile Twitter OAuth callback found');
       }

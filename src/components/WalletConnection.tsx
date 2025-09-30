@@ -433,7 +433,13 @@ export const WalletConnection: React.FC = () => {
   };
 
   // ✅ UTILITY FUNCTIONS
-  const formatAddress = (address: string) => `${address.slice(0, 12)}...${address.slice(-12)}`;
+  const formatAddress = (address: string) => {
+    // Show full address for easier copying, but with line breaks for readability
+    if (address.length > 50) {
+      return `${address.slice(0, 25)}\n${address.slice(25, 50)}\n${address.slice(50)}`;
+    }
+    return address;
+  };
   
   const handleCopyAddress = async () => {
     if (depositAddress) {
@@ -512,6 +518,22 @@ export const WalletConnection: React.FC = () => {
                 {copySuccess ? '✓' : '📋'}
               </CopyButton>
             )}
+          </AddressContainer>
+          {depositAddress && (
+            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
+              <strong>Full Address:</strong>
+              <div style={{ 
+                background: '#f5f5f5', 
+                padding: '0.5rem', 
+                borderRadius: '4px', 
+                fontFamily: 'monospace',
+                wordBreak: 'break-all',
+                marginTop: '0.25rem'
+              }}>
+                {depositAddress}
+              </div>
+            </div>
+          )}
           </AddressContainer>
         </InfoRow>
       </WalletInfo>

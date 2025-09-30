@@ -30,6 +30,15 @@ export const useUnifiedAuth = () => {
           setUser(currentUser);
           setAuthMethod(currentUser.authMethod || null);
           console.log('✅ Found existing authentication:', currentUser.authMethod);
+          
+          // ✅ FIXED: Check if wallet generation should start (mobile callback case)
+          if (unifiedAuth.shouldStartWalletGeneration) {
+            console.log('🏦 Mobile callback detected - starting wallet generation');
+            setWalletGenerating(true);
+            setWalletReady(false);
+            // Reset the flag
+            unifiedAuth.shouldStartWalletGeneration = false;
+          }
         }
         
         setIsLoading(false);
