@@ -283,17 +283,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
           window.google.accounts.id.initialize({
             client_id: googleClientId,
             callback: (response: any) => {
+              console.log('🎉 ========== GOOGLE OAUTH CALLBACK TRIGGERED ==========');
               console.log('🔧 Google OAuth callback triggered:', response);
               console.log('🔧 Response type:', typeof response);
               console.log('🔧 Response keys:', response ? Object.keys(response) : 'null');
+              console.log('🔧 Response credential:', response?.credential ? `${response.credential.substring(0, 50)}...` : 'missing');
               console.log('🔧 Calling onGoogleSignIn...');
               try {
                 onGoogleSignIn(response);
                 console.log('✅ onGoogleSignIn called successfully');
+                console.log('🎉 ========== CALLBACK COMPLETE ==========');
               } catch (error) {
                 console.error('❌ Google OAuth callback error:', error);
+                console.error('❌ Error stack:', error?.stack);
               }
-            }
+            },
+            ux_mode: 'popup',
+            auto_select: false
           });
           
           // Render the actual Google button
@@ -303,9 +309,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
               theme: 'outline',
               size: 'large',
               text: 'signin_with',
-              width: 280
+              width: 280,
+              type: 'standard'
             }
           );
+          
+          console.log('🔧 Google button configuration:', {
+            theme: 'outline',
+            size: 'large',
+            type: 'standard',
+            width: 280
+          });
           
           console.log('✅ Google OAuth button rendered successfully');
         } catch (error) {
