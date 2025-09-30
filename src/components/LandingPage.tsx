@@ -264,32 +264,7 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDemo, onTwitterSignIn, onGoogleSignIn }) => {
-  // Debug environment variables
-  console.log('🔍 Environment variables debug:', {
-    REACT_APP_TWITTER_CLIENT_ID: import.meta.env.VITE_TWITTER_CLIENT_ID || process.env['REACT_APP_TWITTER_CLIENT_ID'],
-    REACT_APP_GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID || process.env['REACT_APP_GOOGLE_CLIENT_ID'],
-    NODE_ENV: process.env['NODE_ENV'],
-    allEnvVars: Object.keys(process.env).filter(key => key.startsWith('REACT_APP_'))
-  });
 
-  // Check Google OAuth library status
-  React.useEffect(() => {
-    const checkGoogleOAuth = () => {
-      console.log('🔧 Google OAuth Library Check:', {
-        windowGoogle: !!window.google,
-        windowGoogleAccounts: !!window.google?.accounts,
-        windowGoogleAccountsId: !!window.google?.accounts?.id
-      });
-    };
-    
-    // Check immediately
-    checkGoogleOAuth();
-    
-    // Check again after a delay
-    const timeout = setTimeout(checkGoogleOAuth, 2000);
-    
-    return () => clearTimeout(timeout);
-  }, []);
 
   // Check if Google OAuth is properly configured
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || process.env['REACT_APP_GOOGLE_CLIENT_ID'] || '255794166358-poj0rbu2bqtd663m9nsu6hfam6hd0661.apps.googleusercontent.com';
@@ -297,12 +272,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
     googleClientId !== 'your-google-client-id.apps.googleusercontent.com' &&
     googleClientId.includes('.apps.googleusercontent.com');
   
-  console.log('🔍 Google OAuth configuration check:', {
-    googleClientId,
-    isGoogleConfigured,
-    hasViteEnv: !!import.meta.env.VITE_GOOGLE_CLIENT_ID,
-    hasProcessEnv: !!process.env['REACT_APP_GOOGLE_CLIENT_ID']
-  });
 
   return (
     <LandingContainer>
@@ -322,93 +291,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
               Sign in with X
             </TwitterButton>
             {isGoogleConfigured ? (
-              <div>
-                <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
-                  Google OAuth Button (Debug) - isGoogleConfigured: {isGoogleConfigured.toString()}
-                </div>
-                <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
-                  Google Client ID: {googleClientId ? `${googleClientId.substring(0, 20)}...` : 'Not found'}
-                </div>
-                <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
-                  Google OAuth Library Status: {window.google ? 'Loaded' : 'Not loaded'}
-                </div>
-                <GoogleLogin
-                  onSuccess={(credentialResponse) => {
-                    console.log('🔧 LandingPage: Google OAuth success callback triggered:', credentialResponse);
-                    console.log('🔧 LandingPage: Calling onGoogleSignIn with:', credentialResponse);
-                    try {
-                      onGoogleSignIn(credentialResponse);
-                    } catch (error) {
-                      console.error('🔧 LandingPage: Error in onGoogleSignIn callback:', error);
-                    }
-                  }}
-                  onError={(error) => {
-                    console.error('🔧 LandingPage: Google OAuth failed:', error);
-                    console.error('🔧 LandingPage: Error details:', {
-                      error,
-                      type: typeof error,
-                      message: error?.message,
-                      stack: error?.stack
-                    });
-                  }}
-                  theme="outline"
-                  size="large"
-                  text="signin_with"
-                  shape="rectangular"
-                  logo_alignment="left"
-                  width="280"
-                  useOneTap={false}
-                  ux_mode="popup"
-                />
-                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
-                  If Google button doesn't work, try refreshing the page
-                </div>
-                <div style={{ marginTop: '0.5rem' }}>
-                  <button 
-                    onClick={() => {
-                      console.log('🔧 Fallback Google OAuth button clicked');
-                      alert('Google OAuth fallback button clicked - this would normally redirect to Google');
-                    }}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      background: '#4285f4',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem'
-                    }}
-                  >
-                    🔧 Fallback Google OAuth
-                  </button>
-                </div>
-                <div style={{ marginTop: '0.5rem' }}>
-                  <button 
-                    onClick={() => {
-                      console.log('🔧 Manual Google OAuth test button clicked');
-                      // Try to manually trigger Google OAuth
-                      if (window.google && window.google.accounts && window.google.accounts.id) {
-                        console.log('🔧 Google OAuth library is available, trying manual trigger');
-                        window.google.accounts.id.prompt();
-                      } else {
-                        console.log('🔧 Google OAuth library not available');
-                        alert('Google OAuth library not loaded');
-                      }
-                    }}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      background: '#34a853',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem'
-                    }}
-                  >
-                    🔧 Manual Google OAuth Test
-                  </button>
-                </div>
-              </div>
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  try {
+                    onGoogleSignIn(credentialResponse);
+                  } catch (error) {
+                    console.error('Google OAuth callback error:', error);
+                  }
+                }}
+                onError={(error) => {
+                  console.error('Google OAuth failed:', error);
+                }}
+                theme="outline"
+                size="large"
+                text="signin_with"
+                shape="rectangular"
+                logo_alignment="left"
+                width="280"
+                useOneTap={false}
+                ux_mode="popup"
+              />
             ) : (
           <div style={{ 
             padding: '0.9rem 2rem', 
