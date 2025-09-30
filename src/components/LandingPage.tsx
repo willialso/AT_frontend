@@ -272,6 +272,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
     allEnvVars: Object.keys(process.env).filter(key => key.startsWith('REACT_APP_'))
   });
 
+  // Check Google OAuth library status
+  React.useEffect(() => {
+    const checkGoogleOAuth = () => {
+      console.log('🔧 Google OAuth Library Check:', {
+        windowGoogle: !!window.google,
+        windowGoogleAccounts: !!window.google?.accounts,
+        windowGoogleAccountsId: !!window.google?.accounts?.id
+      });
+    };
+    
+    // Check immediately
+    checkGoogleOAuth();
+    
+    // Check again after a delay
+    const timeout = setTimeout(checkGoogleOAuth, 2000);
+    
+    return () => clearTimeout(timeout);
+  }, []);
+
   // Check if Google OAuth is properly configured
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || process.env['REACT_APP_GOOGLE_CLIENT_ID'] || '255794166358-poj0rbu2bqtd663m9nsu6hfam6hd0661.apps.googleusercontent.com';
   const isGoogleConfigured = googleClientId && 
@@ -309,6 +328,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                 </div>
                 <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
                   Google Client ID: {googleClientId ? `${googleClientId.substring(0, 20)}...` : 'Not found'}
+                </div>
+                <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
+                  Google OAuth Library Status: {window.google ? 'Loaded' : 'Not loaded'}
                 </div>
                 <GoogleLogin
                   onSuccess={(credentialResponse) => {
@@ -358,6 +380,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                     }}
                   >
                     🔧 Fallback Google OAuth
+                  </button>
+                </div>
+                <div style={{ marginTop: '0.5rem' }}>
+                  <button 
+                    onClick={() => {
+                      console.log('🔧 Manual Google OAuth test button clicked');
+                      // Try to manually trigger Google OAuth
+                      if (window.google && window.google.accounts && window.google.accounts.id) {
+                        console.log('🔧 Google OAuth library is available, trying manual trigger');
+                        window.google.accounts.id.prompt();
+                      } else {
+                        console.log('🔧 Google OAuth library not available');
+                        alert('Google OAuth library not loaded');
+                      }
+                    }}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#34a853',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    🔧 Manual Google OAuth Test
                   </button>
                 </div>
               </div>
