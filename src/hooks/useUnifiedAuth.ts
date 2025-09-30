@@ -99,10 +99,15 @@ export const useUnifiedAuth = () => {
     try {
       setError(null);
       const user = await unifiedAuth.signInWithTwitter();
-      setUser(user);
-      setAuthMethod(user.authMethod);
-      setWalletGenerating(true); // ✅ FIXED: Start wallet generation after Twitter auth
-      setWalletReady(false); // ✅ FIXED: Reset wallet ready state
+      
+      // Handle null user (redirect case)
+      if (user) {
+        setUser(user);
+        setAuthMethod(user.authMethod);
+        setWalletGenerating(true); // ✅ FIXED: Start wallet generation after Twitter auth
+        setWalletReady(false); // ✅ FIXED: Reset wallet ready state
+      }
+      
       return user;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Twitter authentication failed';
@@ -118,11 +123,16 @@ export const useUnifiedAuth = () => {
       setError(null);
       const user = await unifiedAuth.signInWithGoogle(credentialResponse);
       console.log('🔧 useUnifiedAuth: Google auth successful, setting user:', user);
-      setUser(user);
-      setAuthMethod(user.authMethod);
-      setWalletGenerating(true); // ✅ FIXED: Start wallet generation after Google auth
-      setWalletReady(false); // ✅ FIXED: Reset wallet ready state
-      console.log('🔧 useUnifiedAuth: State updated, user:', user, 'authMethod:', user.authMethod);
+      
+      // Handle null user (should not happen for Google, but safety check)
+      if (user) {
+        setUser(user);
+        setAuthMethod(user.authMethod);
+        setWalletGenerating(true); // ✅ FIXED: Start wallet generation after Google auth
+        setWalletReady(false); // ✅ FIXED: Reset wallet ready state
+        console.log('🔧 useUnifiedAuth: State updated, user:', user, 'authMethod:', user.authMethod);
+      }
+      
       return user;
     } catch (err) {
       console.error('🔧 useUnifiedAuth: Google authentication failed:', err);
