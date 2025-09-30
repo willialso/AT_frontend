@@ -175,6 +175,11 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
   const [userData, setUserData] = useState<any>(null);
   const [userLoading, setUserLoading] = useState(false);
   const [userError, setUserError] = useState<string | null>(null);
+  
+  // All users state
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState<string | null>(null);
 
   // Ledger management state
   const [ledgerAmount, setLedgerAmount] = useState('');
@@ -216,6 +221,24 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
       setUserError(err instanceof Error ? err.message : 'Failed to fetch user data');
     } finally {
       setUserLoading(false);
+    }
+  };
+
+  // Fetch all users (if the canister supports it)
+  const fetchAllUsers = async () => {
+    try {
+      setUsersLoading(true);
+      setUsersError(null);
+      
+      // Note: This would need to be implemented in the canister
+      // For now, we'll show a message that this feature needs to be added
+      setUsersError('List all users feature needs to be implemented in the canister');
+      
+    } catch (err) {
+      console.error('Failed to fetch all users:', err);
+      setUsersError(err instanceof Error ? err.message : 'Failed to fetch all users');
+    } finally {
+      setUsersLoading(false);
     }
   };
 
@@ -349,6 +372,42 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
                       <TableCell>Created At</TableCell>
                       <TableCell>{new Date(userData.createdAt / 1000000).toLocaleString()}</TableCell>
                     </TableRow>
+                  </tbody>
+                </DataTable>
+              )}
+            </InfoBox>
+
+            <InfoBox>
+              <h3>All Registered Users</h3>
+              <div style={{ marginBottom: '1rem' }}>
+                <Button onClick={fetchAllUsers} disabled={usersLoading}>
+                  {usersLoading ? 'Loading...' : 'List All Users'}
+                </Button>
+              </div>
+              
+              {usersError && <ErrorText>{usersError}</ErrorText>}
+              
+              {allUsers.length > 0 && (
+                <DataTable>
+                  <thead>
+                    <tr>
+                      <TableHeader>Principal</TableHeader>
+                      <TableHeader>Balance</TableHeader>
+                      <TableHeader>Wins</TableHeader>
+                      <TableHeader>Losses</TableHeader>
+                      <TableHeader>Net PnL</TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allUsers.map((user, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{user.principal}</TableCell>
+                        <TableCell>{user.balance} BTC</TableCell>
+                        <TableCell>{user.totalWins} BTC</TableCell>
+                        <TableCell>{user.totalLosses} BTC</TableCell>
+                        <TableCell>{user.netPnl} BTC</TableCell>
+                      </TableRow>
+                    ))}
                   </tbody>
                 </DataTable>
               )}
