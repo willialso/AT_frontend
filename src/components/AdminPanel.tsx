@@ -423,40 +423,11 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
 
             <InfoBox>
               <h3>All Registered Users</h3>
-              <div style={{ marginBottom: '1rem' }}>
-                <Button onClick={fetchAllUsers} disabled={usersLoading}>
-                  {usersLoading ? 'Loading...' : 'List All Users'}
-                </Button>
-              </div>
-              
-              {usersError && <ErrorText>{usersError}</ErrorText>}
-              
-              {allUsers.length > 0 && (
-                <DataTable>
-                  <thead>
-                    <tr>
-                      <TableHeader>Principal</TableHeader>
-                      <TableHeader>Balance (BTC)</TableHeader>
-                      <TableHeader>Wins (BTC)</TableHeader>
-                      <TableHeader>Losses (BTC)</TableHeader>
-                      <TableHeader>Net PnL (BTC)</TableHeader>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allUsers.map((user, index) => (
-                      <TableRow key={index}>
-                        <TableCell style={{ fontSize: '0.8rem' }}>{user.principal}</TableCell>
-                        <TableCell>{user.balance.toFixed(8)}</TableCell>
-                        <TableCell>{user.totalWins.toFixed(8)}</TableCell>
-                        <TableCell>{user.totalLosses.toFixed(8)}</TableCell>
-                        <TableCell style={{ color: user.netPnl >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                          {user.netPnl.toFixed(8)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </tbody>
-                </DataTable>
-              )}
+              <InfoText style={{ color: 'var(--red)', marginBottom: '1rem' }}>
+                ⚠️ This feature requires canister upgrade to add get_all_users() function
+              </InfoText>
+              <InfoText>The deployed canister (rraue-iqaaa-aaaam-qd4mq-cai) needs to be upgraded with admin query functions.</InfoText>
+              <InfoText>Use the User Lookup section above to check individual user balances.</InfoText>
             </InfoBox>
 
             <InfoBox>
@@ -516,100 +487,29 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
         );
       case 'platform':
         return (
-          <>
-            <InfoBox>
-              <h3>Platform Data</h3>
-              <div style={{ marginBottom: '1rem' }}>
-                <Button onClick={fetchPlatformData} disabled={platformLoading}>
-                  {platformLoading ? 'Loading...' : 'Fetch Platform Data'}
-                </Button>
-              </div>
-              
-              {usersError && <ErrorText>{usersError}</ErrorText>}
-              
-              {platformData && (
-                <>
-                  <h4 style={{ color: 'var(--accent)', marginTop: '1.5rem' }}>Platform Wallet</h4>
-                  <DataTable>
-                    <thead>
-                      <tr>
-                        <TableHeader>Metric</TableHeader>
-                        <TableHeader>Value (BTC)</TableHeader>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <TableRow>
-                        <TableCell>Platform Balance</TableCell>
-                        <TableCell>{platformData.wallet.balance.toFixed(8)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Total Deposits</TableCell>
-                        <TableCell>{platformData.wallet.totalDeposits.toFixed(8)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Total Withdrawals</TableCell>
-                        <TableCell>{platformData.wallet.totalWithdrawals.toFixed(8)}</TableCell>
-                      </TableRow>
-                    </tbody>
-                  </DataTable>
-
-                  <h4 style={{ color: 'var(--accent)', marginTop: '1.5rem' }}>Platform Ledger</h4>
-                  <DataTable>
-                    <thead>
-                      <tr>
-                        <TableHeader>Metric</TableHeader>
-                        <TableHeader>Value (BTC)</TableHeader>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <TableRow>
-                        <TableCell>Total Winning Trades</TableCell>
-                        <TableCell style={{ color: 'var(--green)' }}>{platformData.ledger.totalWinningTrades.toFixed(8)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Total Losing Trades</TableCell>
-                        <TableCell style={{ color: 'var(--red)' }}>{platformData.ledger.totalLosingTrades.toFixed(8)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Net PnL</TableCell>
-                        <TableCell style={{ color: platformData.ledger.netPnl >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                          {platformData.ledger.netPnl.toFixed(8)}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Total Trades</TableCell>
-                        <TableCell>{platformData.ledger.totalTrades}</TableCell>
-                      </TableRow>
-                    </tbody>
-                  </DataTable>
-
-                  <h4 style={{ color: 'var(--accent)', marginTop: '1.5rem' }}>Trading Summary</h4>
-                  <DataTable>
-                    <thead>
-                      <tr>
-                        <TableHeader>Metric</TableHeader>
-                        <TableHeader>Count</TableHeader>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <TableRow>
-                        <TableCell>Total Trades</TableCell>
-                        <TableCell>{platformData.tradingSummary.totalTrades}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Active Trades</TableCell>
-                        <TableCell style={{ color: 'var(--accent)' }}>{platformData.tradingSummary.activeTrades}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Settled Trades</TableCell>
-                        <TableCell>{platformData.tradingSummary.settledTrades}</TableCell>
-                      </TableRow>
-                    </tbody>
-                  </DataTable>
-                </>
-              )}
-            </InfoBox>
-          </>
+          <InfoBox>
+            <h3>Platform Data</h3>
+            <InfoText style={{ color: 'var(--red)', marginBottom: '1rem' }}>
+              ⚠️ This feature requires canister upgrade
+            </InfoText>
+            <InfoText>The deployed canister (rraue-iqaaa-aaaam-qd4mq-cai) needs these functions:</InfoText>
+            <InfoText>• get_platform_wallet() - Platform wallet balance and deposits/withdrawals</InfoText>
+            <InfoText>• get_platform_ledger() - Platform trading ledger and PnL</InfoText>
+            <InfoText>• get_platform_trading_summary() - Active/settled trades summary</InfoText>
+            
+            <div style={{ marginTop: '2rem' }}>
+              <h4 style={{ color: 'var(--accent)' }}>System Status</h4>
+              <InfoText>
+                <StatusIndicator status={adminStatus.canisterConnected ? 'online' : 'offline'} />
+                Canister Connection: {adminStatus.canisterConnected ? 'Connected' : 'Disconnected'}
+              </InfoText>
+              <InfoText>
+                <StatusIndicator status={adminStatus.serviceReady ? 'online' : 'offline'} />
+                Atticus Service: {adminStatus.serviceReady ? 'Ready' : 'Not Ready'}
+              </InfoText>
+              <InfoText>Canister ID: rraue-iqaaa-aaaam-qd4mq-cai</InfoText>
+            </div>
+          </InfoBox>
         );
       case 'trades':
         return (
