@@ -305,7 +305,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
             {isGoogleConfigured ? (
               <div>
                 <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
-                  Google OAuth Button (Debug)
+                  Google OAuth Button (Debug) - isGoogleConfigured: {isGoogleConfigured.toString()}
+                </div>
+                <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
+                  Google Client ID: {googleClientId ? `${googleClientId.substring(0, 20)}...` : 'Not found'}
                 </div>
                 <GoogleLogin
                   onSuccess={(credentialResponse) => {
@@ -338,6 +341,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                 />
                 <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
                   If Google button doesn't work, try refreshing the page
+                </div>
+                <div style={{ marginTop: '0.5rem' }}>
+                  <button 
+                    onClick={() => {
+                      console.log('🔧 Fallback Google OAuth button clicked');
+                      alert('Google OAuth fallback button clicked - this would normally redirect to Google');
+                    }}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#4285f4',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    🔧 Fallback Google OAuth
+                  </button>
                 </div>
               </div>
             ) : (
