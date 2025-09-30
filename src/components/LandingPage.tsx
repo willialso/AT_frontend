@@ -292,20 +292,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
             {isGoogleConfigured ? (
               <button
                 onClick={() => {
-                  console.log('🔧 Manual Google OAuth redirect initiated');
                   // Use Google Identity Services directly with redirect
                   if (window.google && window.google.accounts && window.google.accounts.id) {
                     window.google.accounts.id.initialize({
                       client_id: googleClientId,
                       callback: (response: any) => {
-                        console.log('🎉 ========== GOOGLE OAUTH REDIRECT CALLBACK ==========');
-                        console.log('🔧 Redirect callback response:', response);
-                        try {
-                          onGoogleSignIn(response);
-                          console.log('✅ onGoogleSignIn called successfully');
-                        } catch (error) {
-                          console.error('❌ Google OAuth callback error:', error);
-                        }
+                        onGoogleSignIn(response);
                       },
                       ux_mode: 'redirect',
                       redirect_uri: window.location.origin
@@ -313,8 +305,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                     
                     // Trigger the redirect
                     window.google.accounts.id.prompt();
-                  } else {
-                    console.error('❌ Google Identity Services not loaded');
                   }
                 }}
                 style={{

@@ -155,23 +155,14 @@ const AppContent: React.FC = () => {
   };
 
   const handleGoogleSignIn = async (credentialResponse: any) => {
-    console.log('🔧 App: handleGoogleSignIn called with:', credentialResponse);
-    
     try {
-      // Add delay to ensure popup communication is fully established
-      console.log('🔧 App: Adding 500ms delay for popup communication...');
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log('🔧 App: Calling signInWithGoogle after delay...');
       const result = await signInWithGoogle(credentialResponse);
       
       if (result) {
-        console.log('🔧 App: Google authentication successful:', result);
         setIsDemoMode(false);
-        console.log('🔧 Google OAuth completed successfully');
       }
     } catch (err) {
-      console.error('🔧 App: Google login failed:', err);
+      console.error('Google login failed:', err);
       alert(`Google login failed: ${err.message || 'Unknown error'}`);
     }
   };

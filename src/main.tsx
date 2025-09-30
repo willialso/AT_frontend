@@ -6,46 +6,6 @@ import ReactDOM from 'react-dom/client'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { App } from './components/App.tsx'
 
-// Global error handler for Google OAuth postMessage errors
-window.addEventListener('error', (event) => {
-  const errorMessage = event.message || '';
-  const errorSource = event.filename || '';
-  
-  // Suppress Google OAuth errors
-  if (errorMessage.includes('postMessage') || 
-      errorMessage.includes('Cannot read properties of null') ||
-      errorSource.includes('transform_layer_library') ||
-      errorSource.includes('m=transform_layer_library') ||
-      errorMessage.includes('transform_layer_library')) {
-    console.log('🔧 Suppressed Google OAuth error:', errorMessage, 'from:', errorSource);
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    return false;
-  }
-}, true); // Use capture phase to catch earlier
-
-// Global unhandled promise rejection handler
-window.addEventListener('unhandledrejection', (event) => {
-  if (event.reason && event.reason.message && (event.reason.message.includes('postMessage') || event.reason.message.includes('Cannot read properties of null'))) {
-    console.log('🔧 Suppressed postMessage promise rejection from Google OAuth library:', event.reason.message);
-    event.preventDefault();
-    return false;
-  }
-});
-
-// Override console.error to suppress postMessage errors
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  const message = args.join(' ');
-  if (message.includes('postMessage') || 
-      message.includes('Cannot read properties of null') ||
-      message.includes('transform_layer_library')) {
-    console.log('🔧 Suppressed console error from Google OAuth library:', message);
-    return;
-  }
-  originalConsoleError.apply(console, args);
-};
 
 // Google OAuth Client ID - only use if properly configured
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || process.env['REACT_APP_GOOGLE_CLIENT_ID'] || '255794166358-poj0rbu2bqtd663m9nsu6hfam6hd0661.apps.googleusercontent.com';
