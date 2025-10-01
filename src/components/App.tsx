@@ -196,6 +196,7 @@ const AppContent: React.FC = () => {
   React.useEffect(() => {
     const handleGoogleCallback = async () => {
       // Check if we have Google OAuth callback parameters
+      const urlParams = new URLSearchParams(window.location.search);
       const credential = urlParams.get('credential');
       const g_csrf_token = urlParams.get('g_csrf_token');
       
@@ -215,7 +216,7 @@ const AppContent: React.FC = () => {
     };
     
     handleGoogleCallback();
-  }, []);
+  }, []); // ✅ FIXED: Empty dependency array to run only once
   
   if (isAdminAccess) {
     console.log('🔧 App: Rendering Admin Panel');
