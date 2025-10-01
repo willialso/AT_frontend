@@ -238,6 +238,11 @@ persistent actor AtticusCore {
         Array.map(user_positions, func((_, pos)) = pos);
     };
 
+    // ✅ GET ALL POSITIONS (for admin and trade history)
+    public query func get_all_positions() : async [Position] {
+        Array.map(positions, func((_, pos)) = pos);
+    };
+
     // ✅ GET PLATFORM LEDGER
     public query func get_platform_ledger() : async PlatformLedger {
         platform_ledger;
