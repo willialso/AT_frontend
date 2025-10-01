@@ -755,15 +755,15 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
                   </TableRow>
                   <TableRow>
                     <TableCell>Active Positions</TableCell>
-                    <TableCell>{platformData?.tradingSummary?.activePositions || 'Loading...'}</TableCell>
+                    <TableCell>{platformData?.tradingSummary?.activeTrades || 'Loading...'}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>Total Volume (BTC)</TableCell>
-                    <TableCell>{platformData?.tradingSummary?.totalVolume?.toFixed(8) || 'Loading...'}</TableCell>
+                    <TableCell>Settled Trades</TableCell>
+                    <TableCell>{platformData?.tradingSummary?.settledTrades || 'Loading...'}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>Win Rate</TableCell>
-                    <TableCell>{platformData?.tradingSummary?.winRate?.toFixed(2) || 'Loading...'}%</TableCell>
+                    <TableCell>Platform Status</TableCell>
+                    <TableCell style={{ color: 'var(--green)' }}>✅ Operational</TableCell>
                   </TableRow>
                 </tbody>
               </DataTable>
