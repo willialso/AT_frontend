@@ -899,19 +899,19 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '1rem',
-            marginRight: '1rem'
+            gap: '0.5rem'
           }}>
             <div style={{
-              padding: '0.5rem 1rem',
+              padding: '0.35rem 0.65rem',
               background: userBalance > 0 ? 'rgba(0, 212, 170, 0.1)' : 'rgba(255, 71, 87, 0.1)',
               border: `1px solid ${userBalance > 0 ? 'var(--green)' : 'var(--red)'}`,
-              borderRadius: '6px',
-              fontSize: '0.9rem',
-              fontWeight: 'bold',
-              color: userBalance > 0 ? 'var(--green)' : 'var(--red)'
+              borderRadius: '4px',
+              fontSize: '0.75rem',
+              fontWeight: '600',
+              color: userBalance > 0 ? 'var(--green)' : 'var(--red)',
+              whiteSpace: 'nowrap'
             }}>
-              💰 {userBalance.toFixed(8)} BTC
+              {userBalance > 0 ? userBalance.toFixed(6) : '0.00'} BTC
             </div>
           </div>
         )}

@@ -281,9 +281,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
       </LogoContainer>
 
       <ButtonContainer>
-        <PrimaryButton onClick={onGetStarted}>
-          Connect ICP Identity
-        </PrimaryButton>
+        <div style={{
+          padding: '0.9rem 2rem',
+          background: 'rgba(255, 71, 87, 0.1)',
+          color: '#ff4757',
+          border: '2px solid #ff4757',
+          borderRadius: '12px',
+          textAlign: 'center',
+          maxWidth: '280px',
+          fontSize: '0.85rem',
+          cursor: 'not-allowed',
+          opacity: 0.7
+        }}>
+          ICP Identity Unavailable
+          <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#666' }}>
+            Browser compatibility issues
+          </div>
+        </div>
         <OrSeparator>or</OrSeparator>
             <TwitterButton onClick={onTwitterSignIn}>
               <IconWrapper style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>𝕏</IconWrapper>

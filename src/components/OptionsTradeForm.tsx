@@ -569,6 +569,21 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
     !isSubmitting && 
     !isTradeInProgress &&
     (tradeValidation.isValid || tradeValidation.valid); // ✅ Check both properties for compatibility
+  
+  // Debug trade button state
+  console.log('🔍 Trade button state:', {
+    isFormValid,
+    isDemoMode,
+    isConnected,
+    isSubmitting,
+    isTradeInProgress,
+    tradeValidationIsValid: tradeValidation.isValid,
+    tradeValidationValid: tradeValidation.valid,
+    canTrade,
+    userBalance,
+    contractCount,
+    currentPrice
+  });
 
   return (
     <TradeFormContainer>
