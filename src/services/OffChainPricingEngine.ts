@@ -4,6 +4,7 @@
  * This eliminates the need for a price oracle canister and provides instant calculations
  */
 
+import { Principal } from '@dfinity/principal';
 import { DemoService } from './DemoService';
 
 export interface PriceData {
@@ -368,8 +369,8 @@ export class OffChainPricingEngine {
       }
 
       // ✅ LIVE MODE: Use real canister
-      const result = await backendCanister.place_trade_simple(
-        userPrincipal,
+      const result = await backendCanister.coreCanister.place_trade_simple(
+        Principal.fromText(userPrincipal),
         optionType === 'call' ? 'Call' : 'Put',
         strikeOffset,
         expiry,
