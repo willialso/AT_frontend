@@ -397,7 +397,8 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
                   strikeOffset,
                   expiry,
                   currentPrice,
-                  entryPrice
+                  entryPrice,
+                  position.size || 1 // ✅ FIXED: Pass contract count (size)
                 );
                 
                 // Record settlement to backend

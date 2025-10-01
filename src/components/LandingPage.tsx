@@ -281,10 +281,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
       </LogoContainer>
 
       <ButtonContainer>
-        <PrimaryButton onClick={onGetStarted}>
-          Connect ICP Identity
-        </PrimaryButton>
-        <OrSeparator>or</OrSeparator>
             <TwitterButton onClick={onTwitterSignIn}>
               <IconWrapper style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>𝕏</IconWrapper>
               Sign in with X

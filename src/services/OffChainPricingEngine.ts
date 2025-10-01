@@ -238,7 +238,8 @@ export class OffChainPricingEngine {
     strikeOffset: number,
     expiry: string,
     finalPrice: number,
-    entryPrice: number
+    entryPrice: number,
+    contractCount: number = 1
   ): SettlementResult {
     // ✅ FIXED: Calculate strike price from REAL entry price and offset
     const strikePrice = optionType === 'call' 
@@ -258,7 +259,7 @@ export class OffChainPricingEngine {
     
     if (isTie) {
       outcome = 'tie';
-      payout = 1.0; // Refund entry cost
+      payout = 1.0 * contractCount; // ✅ FIXED: Refund entry cost for all contracts
       profit = 0.0; // No profit/loss
     } else if (isWin) {
       outcome = 'win';
@@ -270,14 +271,14 @@ export class OffChainPricingEngine {
         '15s': { 2.5: 2.50, 5: 2.86, 10: 5.00, 15: 10.00 }
       };
       
-      // Get payout from table
-      const tablePayout = PAYOUT_TABLE[expiry]?.[strikeOffset] || 0;
-      payout = tablePayout;
-      profit = payout - 1.0; // Net profit = total payout - entry cost
+      // Get payout from table (per contract)
+      const tablePayoutPerContract = PAYOUT_TABLE[expiry]?.[strikeOffset] || 0;
+      payout = tablePayoutPerContract * contractCount; // ✅ FIXED: Multiply by contract count
+      profit = payout - (1.0 * contractCount); // ✅ FIXED: Net profit = total payout - total entry cost
     } else {
       outcome = 'loss';
       payout = 0;
-      profit = -1.0; // Lose the entry premium
+      profit = -1.0 * contractCount; // ✅ FIXED: Lose the entry premium for all contracts
     }
     
     console.log('🎯 Off-chain settlement calculation:', {

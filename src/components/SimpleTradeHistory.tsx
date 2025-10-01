@@ -100,7 +100,7 @@ export const SimpleTradeHistory: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTradeHistory = useCallback(async () => {
-    if (!isConnected || !user || !backend) {
+    if (!isConnected || !user) {
       setLoading(false);
       return;
     }

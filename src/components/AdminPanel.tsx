@@ -737,20 +737,52 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
       case 'trades':
         return (
           <InfoBox>
-            <h3>Trade Management</h3>
-            <InfoText>Trade data is recorded on-chain for transparency.</InfoText>
-            <InfoText>Available functions:</InfoText>
-            <InfoText>• place_trade_simple - Execute new trades</InfoText>
-            <InfoText>• recordSettlement - Record trade outcomes</InfoText>
-            <InfoText>• get_position - Retrieve position data</InfoText>
-            <InfoText>• get_user_trade_summary - User trading history</InfoText>
-            <InfoText>• Real-time price feeds for accurate settlements</InfoText>
+            <h3>📈 Live Trading Dashboard</h3>
             
-            <div style={{ marginTop: '2rem' }}>
-              <h4>Current Price Feed Status</h4>
+            <div style={{ marginBottom: '2rem' }}>
+              <h4>🎯 Trading Statistics</h4>
+              <DataTable>
+                <thead>
+                  <tr>
+                    <TableHeader>Metric</TableHeader>
+                    <TableHeader>Value</TableHeader>
+                  </tr>
+                </thead>
+                <tbody>
+                  <TableRow>
+                    <TableCell>Total Trades</TableCell>
+                    <TableCell>{platformData?.tradingSummary?.totalTrades || 'Loading...'}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Active Positions</TableCell>
+                    <TableCell>{platformData?.tradingSummary?.activePositions || 'Loading...'}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Total Volume (BTC)</TableCell>
+                    <TableCell>{platformData?.tradingSummary?.totalVolume?.toFixed(8) || 'Loading...'}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Win Rate</TableCell>
+                    <TableCell>{platformData?.tradingSummary?.winRate?.toFixed(2) || 'Loading...'}%</TableCell>
+                  </TableRow>
+                </tbody>
+              </DataTable>
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <h4>⚡ System Status</h4>
               <InfoText>✅ Price Feed: Active (WebSocket)</InfoText>
               <InfoText>✅ Trading Engine: Operational</InfoText>
-              <InfoText>✅ Settlement System: Functional</InfoText>
+              <InfoText>✅ Settlement Engine: Off-chain (Fast)</InfoText>
+              <InfoText>✅ Trade Recording: On-chain (Transparent)</InfoText>
+            </div>
+
+            <div>
+              <h4>🔧 Available Functions</h4>
+              <InfoText>• place_trade_simple - Execute new trades</InfoText>
+              <InfoText>• recordSettlement - Record trade outcomes</InfoText>
+              <InfoText>• get_position - Retrieve position data</InfoText>
+              <InfoText>• get_user_trade_summary - User trading history</InfoText>
             </div>
           </InfoBox>
         );

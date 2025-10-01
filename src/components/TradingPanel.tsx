@@ -521,7 +521,8 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         currentTradeData.strikeOffset,
         currentTradeData.expiry,
         currentPrice,
-        currentTradeData.entryPrice
+        currentTradeData.entryPrice,
+        currentTradeData.amount // ✅ FIXED: Pass contract count
       );
       
       // ✅ RECORD: Send result to backend for storage only
