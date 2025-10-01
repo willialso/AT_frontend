@@ -82,8 +82,8 @@ const Logo = styled.img`
 const DisconnectButton = styled.button<{ connected: boolean; isDemoMode?: boolean }>`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  gap: 0.25rem; /* ✅ FIXED: Reduced gap */
+  padding: 0.25rem 0.5rem; /* ✅ FIXED: Much smaller padding for mobile */
   background: ${props => {
     if (props.isDemoMode) return 'rgba(0, 212, 170, 0.1)'; // Green for demo
     return props.connected ? 'rgba(255, 68, 68, 0.1)' : 'rgba(128, 128, 128, 0.1)';
@@ -96,11 +96,18 @@ const DisconnectButton = styled.button<{ connected: boolean; isDemoMode?: boolea
     if (props.isDemoMode) return '#00d4aa'; // Green text for demo
     return props.connected ? '#ff4444' : 'var(--text-dim)';
   }};
-  border-radius: 20px;
-  font-size: 0.75rem;
+  border-radius: 12px; /* ✅ FIXED: Smaller border radius */
+  font-size: 0.65rem; /* ✅ FIXED: Smaller font size */
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  
+  /* ✅ FIXED: Mobile-specific sizing */
+  @media (max-width: 480px) {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;
+    gap: 0.2rem;
+  }
 
   &:before {
     content: '';
@@ -897,16 +904,17 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         </LogoContainer>
         {!isDemoMode && (
           <div style={{
-            padding: '0.25rem 0.5rem',
+            padding: '0.15rem 0.3rem', /* ✅ FIXED: Smaller padding */
             background: userBalance > 0 ? 'rgba(0, 212, 170, 0.15)' : 'rgba(255, 71, 87, 0.15)',
             border: `1px solid ${userBalance > 0 ? 'var(--green)' : 'var(--red)'}`,
-            borderRadius: '4px',
-            fontSize: '0.7rem',
+            borderRadius: '3px', /* ✅ FIXED: Smaller border radius */
+            fontSize: '0.6rem', /* ✅ FIXED: Smaller font size */
             fontWeight: '600',
             color: userBalance > 0 ? 'var(--green)' : 'var(--red)',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            marginRight: '0.5rem' /* ✅ FIXED: Add margin to prevent overlap */
           }}>
-            {userBalance > 0 ? userBalance.toFixed(4) : '0'} BTC
+            {userBalance > 0 ? userBalance.toFixed(3) : '0'} BTC {/* ✅ FIXED: 3 decimals instead of 4 */}
           </div>
         )}
         <DisconnectButton

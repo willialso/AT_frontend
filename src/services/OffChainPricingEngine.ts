@@ -372,9 +372,9 @@ export class OffChainPricingEngine {
       const result = await backendCanister.coreCanister.place_trade_simple(
         Principal.fromText(userPrincipal),
         optionType === 'call' ? 'Call' : 'Put',
-        strikeOffset,
+        Math.round(strikeOffset), // ✅ FIXED: Convert to integer
         expiry,
-        contractCount,
+        Math.round(contractCount), // ✅ FIXED: Convert to integer
         Math.round(currentPrice * 100), // Convert to cents
         Math.round(strikePrice * 100)   // Convert to cents
       );
