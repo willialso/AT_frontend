@@ -78,36 +78,29 @@ export class UnifiedAuth {
   }
 
   /**
-   * Sign in with ICP Identity (using redirect like Google OAuth)
+   * Sign in with ICP Identity (using redirect - no popups)
    */
   async signInWithICP(): Promise<UnifiedUser | null> {
-    console.log('🔧 Starting ICP Identity authentication with REDIRECT...');
-    console.log('🔧 Current domain:', window.location.origin);
+    console.log('🔧 Starting ICP Identity authentication...');
     
     try {
       if (!this.authClient) {
-        throw new Error('Auth client not initialized');
+        await this.initialize();
       }
 
-      // Check if already authenticated (returning from redirect)
-      const isAuthenticated = await this.authClient.isAuthenticated();
+      // Check if already authenticated (returning from Internet Identity)
+      const isAuthenticated = await this.authClient!.isAuthenticated();
       console.log('🔍 Already authenticated?', isAuthenticated);
       
       if (isAuthenticated) {
-        // Get the authenticated user's Principal
-        const identity = this.authClient.getIdentity();
+        const identity = this.authClient!.getIdentity();
         const principal = identity.getPrincipal();
         
-        console.log('🔍 Principal from existing auth:', principal.toString());
+        console.log('🔍 Principal:', principal.toString());
         console.log('🔍 Is anonymous?', principal.isAnonymous());
         
-        // Verify we didn't get the anonymous principal
-        if (principal.isAnonymous()) {
-          // Clear the anonymous session and start fresh
-          await this.authClient.logout();
-          console.log('⚠️ Cleared anonymous session, will redirect to login');
-        } else {
-          // We have a real authenticated principal
+        if (!principal.isAnonymous()) {
+          // Real authenticated principal
           this.user = {
             principal,
             authMethod: 'icp',
@@ -116,54 +109,32 @@ export class UnifiedAuth {
 
           this.currentAuthMethod = 'icp';
 
-          console.log('✅ ICP Identity authentication successful:', {
-            principal: principal.toString(),
-            authMethod: 'icp'
-          });
-
+          console.log('✅ ICP Identity authentication successful');
           return this.user;
+        } else {
+          // Clear anonymous session
+          await this.authClient!.logout();
         }
       }
       
-      // Not authenticated or was anonymous - trigger login
-      console.log('🔧 Opening Internet Identity...');
+      // Start authentication - this will redirect to Internet Identity
+      console.log('🔄 Redirecting to Internet Identity...');
       
-      // ✅ FIXED: Just call login without custom window features (uses default behavior)
-      await this.authClient.login({
+      // Trigger login - this redirects the page
+      this.authClient!.login({
         identityProvider: 'https://identity.ic0.app',
-        maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000) // 7 days
+        maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000), // 7 days
+        onSuccess: () => {
+          console.log('✅ ICP login success callback');
+        }
       });
       
-      // After login completes, get the principal
-      const identity = this.authClient.getIdentity();
-      const principal = identity.getPrincipal();
-      
-      console.log('🔍 Principal after login:', principal.toString());
-      console.log('🔍 Is anonymous?', principal.isAnonymous());
-      
-      // Verify we got a real principal
-      if (principal.isAnonymous()) {
-        throw new Error('Authentication failed - please complete the Internet Identity process');
-      }
-      
-      this.user = {
-        principal,
-        authMethod: 'icp',
-        isAuthenticated: true
-      };
-
-      this.currentAuthMethod = 'icp';
-
-      console.log('✅ ICP Identity authentication successful:', {
-        principal: principal.toString(),
-        authMethod: 'icp'
-      });
-
-      return this.user;
+      // Return null since we're redirecting
+      return null;
       
     } catch (error) {
-      console.error('❌ Failed ICP Identity authentication:', error);
-      throw error instanceof Error ? error : new Error('Failed to authenticate with ICP Identity');
+      console.error('❌ ICP Identity authentication error:', error);
+      throw error instanceof Error ? error : new Error('ICP Identity authentication failed');
     }
   }
 

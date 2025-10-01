@@ -516,7 +516,7 @@ export const WalletConnection: React.FC = () => {
 
       <WalletInfo>
         <InfoRow>
-          <InfoLabel style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+          <InfoLabel style={{ fontSize: '0.95rem', fontWeight: 'bold', marginBottom: '0.75rem', color: 'var(--text)' }}>
             How to Deposit BTC
           </InfoLabel>
         </InfoRow>
@@ -524,41 +524,41 @@ export const WalletConnection: React.FC = () => {
         <InfoRow>
           <div style={{ 
             background: 'var(--bg-panel)', 
-            padding: '1rem', 
-            borderRadius: '8px',
+            padding: '0.875rem', 
+            borderRadius: '6px',
             border: '1px solid var(--border)'
           }}>
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--accent)' }}>
-                1. Copy Your Wallet Address
+            <div style={{ marginBottom: '0.75rem' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.4rem', color: 'var(--text)', fontSize: '0.875rem' }}>
+                1. Copy Wallet Address
               </div>
               <AddressContainer>
-                <AddressValue style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                <AddressValue style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
                   {depositAddress || 'Generating...'}
                 </AddressValue>
                 {depositAddress && (
                   <CopyButton onClick={handleCopyAddress} disabled={copySuccess}>
-                    {copySuccess ? '✓ Copied' : '📋 Copy'}
+                    {copySuccess ? '✓' : '📋'}
                   </CopyButton>
                 )}
               </AddressContainer>
             </div>
             
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--accent)' }}>
+            <div style={{ marginBottom: '0.75rem' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.4rem', color: 'var(--text)', fontSize: '0.875rem' }}>
                 2. Send BTC from Your Wallet or Exchange
               </div>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
-                Paste the address above into your Bitcoin wallet or exchange and send BTC.
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+                Paste address in your Bitcoin wallet/exchange and send
               </div>
             </div>
             
             <div>
-              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--accent)' }}>
-                3. Wait for Confirmation
+              <div style={{ fontWeight: 'bold', marginBottom: '0.4rem', color: 'var(--text)', fontSize: '0.875rem' }}>
+                3. Wait 5-10 Minutes & Refresh
               </div>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
-                Deposit will be available in 5-10 minutes. Tap "Refresh Balance" to check.
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+                Deposit will appear after confirmation. Tap "Refresh Balance"
               </div>
             </div>
           </div>
@@ -580,15 +580,6 @@ export const WalletConnection: React.FC = () => {
         )}
       </ButtonGroup>
 
-      <CustodialNotice>
-        <NoticeTitle>💰 Trading Wallet</NoticeTitle>
-        <NoticeText>
-          Copy address above and deposit funds to your trading wallet.
-        </NoticeText>
-        <NoticeText>
-          Funds are credited within 10-30 minutes. Withdraw anytime.
-        </NoticeText>
-      </CustodialNotice>
 
       {depositAddress && (
         <WalletContainer>

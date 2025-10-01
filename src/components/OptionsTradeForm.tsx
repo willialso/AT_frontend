@@ -555,8 +555,10 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
   // ✅ NEW: Calculate trade validation
   const contractCount = parseInt(localFormData.contracts) || 0;
   const tradeValidation = isDemoMode ? { 
+    isValid: true,
     valid: true, 
     requiredBalance: 0, 
+    requiredAmount: 0,
     tradeCostUSD: 0, 
     tradeCostBTC: 0,
     error: undefined 
@@ -566,14 +568,14 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
     (isDemoMode || isConnected) && 
     !isSubmitting && 
     !isTradeInProgress &&
-    tradeValidation.valid; // ✅ Add balance validation
+    (tradeValidation.isValid || tradeValidation.valid); // ✅ Check both properties for compatibility
 
   return (
     <TradeFormContainer>
       <TradeForm>
 
       {/* ✅ ZERO BALANCE WARNING */}
-      {!isDemoMode && userBalance <=  0 && (
+      {!isDemoMode && userBalance <= 0 && (
         <div style={{
           background: 'rgba(244, 208, 63, 0.1)',
           border: '2px solid var(--accent)',
@@ -585,26 +587,12 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
           <div style={{ color: 'var(--accent)', fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
             💰 No Balance Available
           </div>
-          <div style={{ color: 'var(--text)', marginBottom: '1rem', fontSize: '0.95rem' }}>
+          <div style={{ color: 'var(--text)', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
             You need to deposit BTC to start trading
           </div>
-          {onConnectWallet && (
-            <button
-              onClick={onConnectWallet}
-              style={{
-                background: 'var(--accent)',
-                color: 'var(--bg-primary)',
-                border: 'none',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '1rem'
-              }}
-            >
-              Go to Wallet →
-            </button>
-          )}
+          <div style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>
+            Tap "Wallet" in the menu below to deposit BTC
+          </div>
         </div>
       )}
 
