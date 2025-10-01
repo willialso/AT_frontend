@@ -897,22 +897,16 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         </LogoContainer>
         {!isDemoMode && (
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
+            padding: '0.25rem 0.5rem',
+            background: userBalance > 0 ? 'rgba(0, 212, 170, 0.15)' : 'rgba(255, 71, 87, 0.15)',
+            border: `1px solid ${userBalance > 0 ? 'var(--green)' : 'var(--red)'}`,
+            borderRadius: '4px',
+            fontSize: '0.7rem',
+            fontWeight: '600',
+            color: userBalance > 0 ? 'var(--green)' : 'var(--red)',
+            whiteSpace: 'nowrap'
           }}>
-            <div style={{
-              padding: '0.35rem 0.65rem',
-              background: userBalance > 0 ? 'rgba(0, 212, 170, 0.1)' : 'rgba(255, 71, 87, 0.1)',
-              border: `1px solid ${userBalance > 0 ? 'var(--green)' : 'var(--red)'}`,
-              borderRadius: '4px',
-              fontSize: '0.75rem',
-              fontWeight: '600',
-              color: userBalance > 0 ? 'var(--green)' : 'var(--red)',
-              whiteSpace: 'nowrap'
-            }}>
-              {userBalance > 0 ? userBalance.toFixed(6) : '0.00'} BTC
-            </div>
+            {userBalance > 0 ? userBalance.toFixed(4) : '0'} BTC
           </div>
         )}
         <DisconnectButton

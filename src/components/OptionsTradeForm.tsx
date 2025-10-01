@@ -550,7 +550,7 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
   };
 
 
-  const isFormValid = optionType && strikeOffset > 0 && localFormData.expiry && localFormData.contracts;
+  const isFormValid = !!(optionType && strikeOffset > 0 && localFormData.expiry && localFormData.contracts);
   
   // ✅ NEW: Calculate trade validation
   const contractCount = parseInt(localFormData.contracts) || 0;
