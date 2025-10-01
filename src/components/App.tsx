@@ -192,6 +192,31 @@ const AppContent: React.FC = () => {
   const adminCode = urlParams.get('code');
   const isAdminAccess = adminCode === '040617081822010316';
   
+  // ✅ FIXED: Handle Google OAuth callback on mobile
+  React.useEffect(() => {
+    const handleGoogleCallback = async () => {
+      // Check if we have Google OAuth callback parameters
+      const credential = urlParams.get('credential');
+      const g_csrf_token = urlParams.get('g_csrf_token');
+      
+      if (credential && g_csrf_token) {
+        console.log('🔧 App: Google OAuth callback detected on mobile');
+        try {
+          const credentialResponse = { credential };
+          await handleGoogleSignIn(credentialResponse);
+          
+          // Clean up URL parameters
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, newUrl);
+        } catch (error) {
+          console.error('🔧 App: Google OAuth callback failed:', error);
+        }
+      }
+    };
+    
+    handleGoogleCallback();
+  }, []);
+  
   if (isAdminAccess) {
     console.log('🔧 App: Rendering Admin Panel');
     return (
