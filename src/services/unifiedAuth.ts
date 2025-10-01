@@ -85,28 +85,41 @@ export class UnifiedAuth {
     console.log('🔧 Current domain:', window.location.origin);
     
     try {
-      // ✅ FIXED: Properly trigger Internet Identity login with promise wrapper
-      const loginSuccess = await new Promise<boolean>((resolve, reject) => {
-        this.authClient!.login({
-          identityProvider: 'https://identity.ic0.app/#authorize',
-          maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000), // 7 days in nanoseconds
-          onSuccess: () => {
-            console.log('✅ ICP Identity login callback - success');
-            resolve(true);
-          },
-          onError: (error) => {
-            console.error('❌ ICP Identity login callback - error:', error);
-            reject(new Error('ICP Identity login failed'));
-          }
-        });
-      });
+      if (!this.authClient) {
+        throw new Error('Auth client not initialized');
+      }
+
+      // Check if already authenticated
+      const isAuthenticated = await this.authClient.isAuthenticated();
+      console.log('🔍 Already authenticated?', isAuthenticated);
       
-      if (!loginSuccess) {
-        throw new Error('ICP Identity login was not successful');
+      if (!isAuthenticated) {
+        // ✅ FIXED: Trigger Internet Identity login
+        console.log('🔧 Triggering Internet Identity login popup...');
+        
+        await new Promise<void>((resolve, reject) => {
+          this.authClient!.login({
+            identityProvider: 'https://identity.ic0.app',
+            maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000), // 7 days
+            windowOpenerFeatures: `
+              left=${window.screen.width / 2 - 525 / 2},
+              top=${window.screen.height / 2 - 705 / 2},
+              toolbar=0,location=0,menubar=0,width=525,height=705
+            `,
+            onSuccess: () => {
+              console.log('✅ ICP Identity login successful');
+              resolve();
+            },
+            onError: (error) => {
+              console.error('❌ ICP Identity login failed:', error);
+              reject(error || new Error('Internet Identity authentication failed'));
+            }
+          });
+        });
       }
       
       // Get the authenticated user's Principal (NOT anonymous)
-      const identity = this.authClient!.getIdentity();
+      const identity = this.authClient.getIdentity();
       const principal = identity.getPrincipal();
       
       console.log('🔍 Principal received:', principal.toString());
@@ -114,7 +127,7 @@ export class UnifiedAuth {
       
       // Verify we didn't get the anonymous principal
       if (principal.isAnonymous()) {
-        throw new Error('Failed to authenticate - got anonymous principal. Please complete the Internet Identity authentication.');
+        throw new Error('Authentication failed - please complete the Internet Identity login process');
       }
       
       console.log('✅ Got authenticated Principal:', principal.toString());
@@ -136,7 +149,7 @@ export class UnifiedAuth {
       return this.user;
     } catch (error) {
       console.error('❌ Failed ICP Identity authentication:', error);
-      throw new Error('Failed to authenticate with ICP Identity. Please try again.');
+      throw error instanceof Error ? error : new Error('Failed to authenticate with ICP Identity');
     }
   }
 
