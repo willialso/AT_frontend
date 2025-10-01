@@ -486,6 +486,14 @@ export class OffChainPricingEngine {
       });
       
       // ✅ FIXED: Use correct canister reference
+      console.log('🔍 About to call canister with exact parameters:', {
+        positionId: positionId,
+        outcome: settlementResult.outcome,
+        payout: Math.round(settlementResult.payout * 100),
+        profit: Math.round(settlementResult.profit * 100),
+        finalPrice: Math.round(settlementResult.finalPrice * 100)
+      });
+      
       const result = await backendCanister.recordSettlement(
         positionId, // ✅ FIXED: Pass as number, not BigInt
         settlementResult.outcome,
