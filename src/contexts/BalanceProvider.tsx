@@ -159,12 +159,14 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
    */
   const validateTradeBalance = useCallback((contractCount: number, btcPrice: number) => {
     const currentBalance = new Decimal(userBalance);
-    const requiredAmount = new Decimal(contractCount).mul(btcPrice).mul(0.01); // 1% of trade value
-    const shortfall = requiredAmount.sub(currentBalance);
+    // ✅ FIXED: Use actual premium cost (1 contract = $1, premium = $0.50)
+    const premiumUSD = new Decimal(contractCount).mul(0.50); // $0.50 per contract
+    const requiredBTC = premiumUSD.div(btcPrice); // Convert to BTC
+    const shortfall = requiredBTC.sub(currentBalance);
     
     return {
-      isValid: currentBalance.greaterThanOrEqualTo(requiredAmount),
-      requiredAmount: requiredAmount.toNumber(),
+      isValid: currentBalance.greaterThanOrEqualTo(requiredBTC),
+      requiredAmount: requiredBTC.toNumber(),
       currentBalance: currentBalance.toNumber(),
       shortfall: shortfall.greaterThan(0) ? shortfall.toNumber() : 0
     };
