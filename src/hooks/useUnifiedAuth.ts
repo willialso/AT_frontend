@@ -72,6 +72,13 @@ export const useUnifiedAuth = () => {
       console.log('🔧 useUnifiedAuth: Starting ICP authentication...');
       setError(null);
       const user = await unifiedAuth.signInWithICP();
+      
+      // Handle redirect case (null means redirecting to Internet Identity)
+      if (user === null) {
+        console.log('🔄 ICP authentication redirect initiated');
+        return null;
+      }
+      
       console.log('🔧 useUnifiedAuth: ICP auth successful, setting user:', user);
       setUser(user);
       setAuthMethod(user.authMethod);
