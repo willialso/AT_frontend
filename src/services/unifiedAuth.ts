@@ -125,23 +125,41 @@ export class UnifiedAuth {
         }
       }
       
-      // Not authenticated or was anonymous - redirect to Internet Identity
-      console.log('🔧 Redirecting to Internet Identity...');
+      // Not authenticated or was anonymous - trigger login
+      console.log('🔧 Opening Internet Identity...');
       
-      // ✅ Use redirect mode (no popup!)
+      // ✅ FIXED: Just call login without custom window features (uses default behavior)
       await this.authClient.login({
         identityProvider: 'https://identity.ic0.app',
-        maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000), // 7 days
-        onSuccess: () => {
-          console.log('✅ ICP Identity redirect successful');
-        },
-        onError: (error) => {
-          console.error('❌ ICP Identity redirect failed:', error);
-        }
+        maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000) // 7 days
       });
       
-      // Return null to indicate redirect is happening
-      return null;
+      // After login completes, get the principal
+      const identity = this.authClient.getIdentity();
+      const principal = identity.getPrincipal();
+      
+      console.log('🔍 Principal after login:', principal.toString());
+      console.log('🔍 Is anonymous?', principal.isAnonymous());
+      
+      // Verify we got a real principal
+      if (principal.isAnonymous()) {
+        throw new Error('Authentication failed - please complete the Internet Identity process');
+      }
+      
+      this.user = {
+        principal,
+        authMethod: 'icp',
+        isAuthenticated: true
+      };
+
+      this.currentAuthMethod = 'icp';
+
+      console.log('✅ ICP Identity authentication successful:', {
+        principal: principal.toString(),
+        authMethod: 'icp'
+      });
+
+      return this.user;
       
     } catch (error) {
       console.error('❌ Failed ICP Identity authentication:', error);

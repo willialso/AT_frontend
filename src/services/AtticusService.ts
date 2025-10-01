@@ -162,7 +162,10 @@ export class AtticusService {
             total_trades: IDL.Nat,
             active_trades: IDL.Nat,
             settled_trades: IDL.Nat
-          })], ['query'])
+          })], ['query']),
+          
+          // Admin ledger functions
+          admin_credit_user_balance: IDL.Func([IDL.Principal, IDL.Float64], [IDL.Variant({ ok: IDL.Text, err: IDL.Text })], [])
         });
       };
 
@@ -468,6 +471,28 @@ export class AtticusService {
       };
     } catch (error) {
       console.error('❌ Error getting platform trading summary:', error);
+      throw error;
+    }
+  }
+
+  // ✅ ADMIN CREDIT USER BALANCE
+  public async adminCreditUserBalance(principalText: string, amountBTC: number): Promise<string> {
+    if (!this.isInitialized) throw new Error('Service not initialized');
+    
+    try {
+      console.log(`💰 Crediting ${amountBTC} BTC to user ${principalText}`);
+      const result = await this.coreCanister.admin_credit_user_balance(
+        Principal.fromText(principalText),
+        amountBTC
+      );
+      
+      if ('ok' in result) {
+        return result.ok;
+      } else {
+        throw new Error(result.err);
+      }
+    } catch (error) {
+      console.error('❌ Error crediting user balance:', error);
       throw error;
     }
   }

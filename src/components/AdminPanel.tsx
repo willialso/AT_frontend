@@ -350,11 +350,17 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
         return;
       }
 
-      // For now, we'll simulate the ledger operation since the canister doesn't have these functions
-      // In a real implementation, you would call the canister's credit/debit functions
-      console.log(`Ledger operation: ${ledgerAction} ${amount} to user ${userPrincipal}`);
+      // ✅ REAL: Call actual canister function
+      console.log(`Calling canister: ${ledgerAction} ${amount} BTC to user ${userPrincipal}`);
       
-      setLedgerSuccess(`Successfully ${ledgerAction}ed ${amount} to user ${userPrincipal}`);
+      if (ledgerAction === 'credit') {
+        // Credit user using real canister function
+        const resultMessage = await atticusService.adminCreditUserBalance(userPrincipal.trim(), amount);
+        setLedgerSuccess(`✅ ${resultMessage}`);
+      } else {
+        // Debit not implemented yet
+        setLedgerError('Debit function needs to be implemented in canister');
+      }
       
       // Refresh user data after ledger operation
       await fetchUserData();

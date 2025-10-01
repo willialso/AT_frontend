@@ -73,9 +73,9 @@ export const useUnifiedAuth = () => {
       setError(null);
       const user = await unifiedAuth.signInWithICP();
       
-      // Handle redirect case (null means redirecting to Internet Identity)
+      // Handle null case (shouldn't happen with new implementation)
       if (user === null) {
-        console.log('🔄 ICP authentication redirect initiated');
+        console.log('🔄 ICP authentication in progress');
         return null;
       }
       
@@ -90,7 +90,8 @@ export const useUnifiedAuth = () => {
       console.error('🔧 useUnifiedAuth: ICP authentication failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'ICP authentication failed';
       setError(errorMessage);
-      throw err;
+      // Don't throw - just set error state so user can try again
+      return null;
     }
   }, []);
 
