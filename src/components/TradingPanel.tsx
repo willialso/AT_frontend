@@ -914,7 +914,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
             whiteSpace: 'nowrap',
             marginRight: '0.5rem' /* ✅ FIXED: Add margin to prevent overlap */
           }}>
-            {userBalance > 0 ? userBalance.toFixed(3) : '0'} BTC {/* ✅ FIXED: 3 decimals instead of 4 */}
+            {userBalance > 0 ? userBalance.toFixed(6) : '0'} BTC {/* ✅ FIXED: 6 decimals for more precision */}
           </div>
         )}
         <DisconnectButton

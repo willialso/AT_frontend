@@ -616,6 +616,66 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
                     </tbody>
                   </DataTable>
 
+                  <h4 style={{ color: 'var(--accent)', marginTop: '1.5rem' }}>Liquidity vs Ledger Balance</h4>
+                  <DataTable>
+                    <thead>
+                      <tr>
+                        <TableHeader>Metric</TableHeader>
+                        <TableHeader>Value (BTC)</TableHeader>
+                        <TableHeader>Status</TableHeader>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <TableRow>
+                        <TableCell style={{ fontWeight: 'bold' }}>🏦 Liquidity Balance</TableCell>
+                        <TableCell style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
+                          {blockchainBalance !== null ? blockchainBalance.toFixed(8) : 'Loading...'}
+                        </TableCell>
+                        <TableCell style={{ color: 'var(--green)' }}>✅ Real Blockchain</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell style={{ fontWeight: 'bold' }}>📊 Ledger Balance</TableCell>
+                        <TableCell style={{ color: platformData?.ledger ? 'var(--text)' : 'var(--red)' }}>
+                          {platformData?.ledger ? 
+                            (platformData.ledger.totalWinningTrades - platformData.ledger.totalLosingTrades).toFixed(8) : 
+                            'Loading...'
+                          }
+                        </TableCell>
+                        <TableCell style={{ color: platformData?.ledger ? 'var(--green)' : 'var(--red)' }}>
+                          {platformData?.ledger ? '✅ Calculated' : '❌ Error'}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell style={{ fontWeight: 'bold' }}>⚖️ Reconciliation</TableCell>
+                        <TableCell style={{ 
+                          color: blockchainBalance !== null && platformData?.ledger ? 
+                            (Math.abs(blockchainBalance - (platformData.ledger.totalWinningTrades - platformData.ledger.totalLosingTrades)) < 0.001 ? 'var(--green)' : 'var(--red)') : 
+                            'var(--text-dim)'
+                        }}>
+                          {blockchainBalance !== null && platformData?.ledger ? 
+                            (blockchainBalance - (platformData.ledger.totalWinningTrades - platformData.ledger.totalLosingTrades)).toFixed(8) : 
+                            'Calculating...'
+                          }
+                        </TableCell>
+                        <TableCell style={{ 
+                          color: blockchainBalance !== null && platformData?.ledger ? 
+                            (Math.abs(blockchainBalance - (platformData.ledger.totalWinningTrades - platformData.ledger.totalLosingTrades)) < 0.001 ? 'var(--green)' : 'var(--red)') : 
+                            'var(--text-dim)'
+                        }}>
+                          {blockchainBalance !== null && platformData?.ledger ? 
+                            (Math.abs(blockchainBalance - (platformData.ledger.totalWinningTrades - platformData.ledger.totalLosingTrades)) < 0.001 ? '✅ Balanced' : '❌ Mismatch') : 
+                            'Pending...'
+                          }
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell colSpan={3} style={{ borderTop: '2px solid var(--border)', paddingTop: '1rem', color: 'var(--text-dim)', fontSize: '0.85rem' }}>
+                          ℹ️ Liquidity = Real blockchain balance. Ledger = Net platform obligations (wins - losses). Should match for proper reconciliation.
+                        </TableCell>
+                      </TableRow>
+                    </tbody>
+                  </DataTable>
+
                   <h4 style={{ color: 'var(--accent)', marginTop: '1.5rem' }}>Platform Ledger</h4>
                   <DataTable>
                     <thead>

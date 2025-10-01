@@ -132,6 +132,22 @@ export class AtticusService {
             settled_at: IDL.Opt(IDL.Int),
             settlement_price: IDL.Opt(IDL.Float64)
           }))], ['query']),
+          get_all_positions: IDL.Func([], [IDL.Vec(IDL.Record({
+            id: IDL.Nat,
+            user: IDL.Principal,
+            option_type: IDL.Variant({ Call: IDL.Null, Put: IDL.Null }),
+            strike_price: IDL.Float64,
+            entry_price: IDL.Float64,
+            expiry: IDL.Text,
+            size: IDL.Float64,
+            entry_premium: IDL.Float64,
+            current_value: IDL.Float64,
+            pnl: IDL.Float64,
+            status: IDL.Variant({ Active: IDL.Null, Settled: IDL.Null }),
+            opened_at: IDL.Int,
+            settled_at: IDL.Opt(IDL.Int),
+            settlement_price: IDL.Opt(IDL.Float64)
+          }))], ['query']),
           
           // User trade summary (for frontend history)
           get_user_trade_summary: IDL.Func([IDL.Principal], [IDL.Variant({ 
@@ -399,6 +415,34 @@ export class AtticusService {
       }
     } catch (error) {
       console.error('❌ Error getting user trade summary:', error);
+      throw error;
+    }
+  }
+
+  // ✅ GET ALL POSITIONS (for trade history)
+  public async getAllPositions(): Promise<Array<Position>> {
+    if (!this.isInitialized) throw new Error('Service not initialized');
+    
+    try {
+      const result = await this.coreCanister.get_all_positions();
+      return result.map((pos: any) => ({
+        id: Number(pos.id),
+        user: pos.user.toString(),
+        optionType: pos.option_type.Call ? 'call' : 'put',
+        strikePrice: Number(pos.strike_price),
+        entryPrice: Number(pos.entry_price),
+        expiry: pos.expiry,
+        size: Number(pos.size),
+        entryPremium: Number(pos.entry_premium),
+        currentValue: Number(pos.current_value),
+        pnl: Number(pos.pnl),
+        status: pos.status.Active ? 'active' : 'settled',
+        openedAt: Number(pos.opened_at),
+        settledAt: pos.settled_at ? Number(pos.settled_at[0]) : null,
+        settlementPrice: pos.settlement_price ? Number(pos.settlement_price[0]) : undefined
+      }));
+    } catch (error) {
+      console.error('❌ Error getting all positions:', error);
       throw error;
     }
   }

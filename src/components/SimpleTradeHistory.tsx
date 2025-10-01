@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { useCanister } from '../contexts/CanisterProvider';
 import { useUnifiedAuth } from '../hooks/useUnifiedAuth';
+import { atticusService } from '../services/AtticusService';
 
 // ✅ SIMPLE TRADE HISTORY - Clean and straightforward
 interface SimpleTrade {
@@ -92,7 +93,7 @@ const ErrorText = styled.div`
 `;
 
 export const SimpleTradeHistory: React.FC = () => {
-  const { isConnected, tradingCanister: backend } = useCanister();
+  const { isConnected } = useCanister();
   const { user } = useUnifiedAuth();
   const [trades, setTrades] = useState<SimpleTrade[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,8 +116,8 @@ export const SimpleTradeHistory: React.FC = () => {
 
       console.log('📊 SimpleTradeHistory: Fetching trades for user:', userPrincipal.toString());
       
-      // ✅ SIMPLE: Get all positions from backend
-      const allPositions = await backend.get_all_positions();
+      // ✅ SIMPLE: Get all positions from atticus core canister
+      const allPositions = await atticusService.getAllPositions();
       console.log('📊 SimpleTradeHistory: Total positions:', allPositions.length);
       
       if (allPositions && allPositions.length > 0) {
