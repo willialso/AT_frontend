@@ -887,12 +887,34 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
 
   // ✅ REMOVED: Unused activeTradeData variable that was causing build error
 
+  const { userBalance } = useBalance();
+
   return (
     <TradingContainer>
       <Header>
         <LogoContainer>
           <Logo src="/images/attiminlogo.png" alt="Atticus" />
         </LogoContainer>
+        {!isDemoMode && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            marginRight: '1rem'
+          }}>
+            <div style={{
+              padding: '0.5rem 1rem',
+              background: userBalance > 0 ? 'rgba(0, 212, 170, 0.1)' : 'rgba(255, 71, 87, 0.1)',
+              border: `1px solid ${userBalance > 0 ? 'var(--green)' : 'var(--red)'}`,
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              color: userBalance > 0 ? 'var(--green)' : 'var(--red)'
+            }}>
+              💰 {userBalance.toFixed(8)} BTC
+            </div>
+          </div>
+        )}
         <DisconnectButton
           connected={isFullyConnected}
           isDemoMode={isDemoMode}
