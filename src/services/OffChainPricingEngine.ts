@@ -518,12 +518,23 @@ export class OffChainPricingEngine {
         finalPrice: Math.round(settlementResult.finalPrice * 100)
       });
       
+      // ✅ FIXED: Convert to BigInt for Nat64 compatibility
+      const payoutCents = BigInt(Math.round(settlementResult.payout * 100));
+      const profitCents = BigInt(Math.max(0, Math.round(settlementResult.profit * 100)));
+      const finalPriceCents = BigInt(Math.round(settlementResult.finalPrice * 100));
+      
+      console.log('🔍 BigInt conversion:', {
+        payoutCents: payoutCents.toString(),
+        profitCents: profitCents.toString(),
+        finalPriceCents: finalPriceCents.toString()
+      });
+      
       const result = await backendCanister.recordSettlement(
         positionId, // ✅ FIXED: Pass as number, not BigInt
         outcome, // ✅ FIXED: Ensure outcome is never undefined
-        Math.round(settlementResult.payout * 100), // Convert to cents
-        Math.max(0, Math.round(settlementResult.profit * 100)), // ✅ FIXED: Ensure profit is never negative
-        Math.round(settlementResult.finalPrice * 100) // Convert to cents
+        payoutCents, // ✅ FIXED: Convert to BigInt for Nat64
+        profitCents, // ✅ FIXED: Convert to BigInt for Nat64
+        finalPriceCents // ✅ FIXED: Convert to BigInt for Nat64
       );
       
       if ('ok' in result) {

@@ -331,12 +331,17 @@ export class AtticusService {
     if (!this.isInitialized) throw new Error('Service not initialized');
     
     try {
+      // ✅ FIXED: Convert to BigInt for Nat64 compatibility
+      const payoutCents = BigInt(Math.round(settlementResult.payout * 100));
+      const profitCents = BigInt(Math.max(0, Math.round(settlementResult.profit * 100)));
+      const finalPriceCents = BigInt(Math.round(settlementResult.finalPrice * 100));
+      
       const result = await this.coreCanister.recordSettlement(
         positionId, // ✅ FIXED: Pass as number, not BigInt
         settlementResult.outcome,
-        Math.round(settlementResult.payout * 100), // Convert to cents
-        Math.max(0, Math.round(settlementResult.profit * 100)), // ✅ FIXED: Ensure profit is never negative
-        Math.round(settlementResult.finalPrice * 100) // Convert to cents
+        payoutCents, // ✅ FIXED: Convert to BigInt for Nat64
+        profitCents, // ✅ FIXED: Convert to BigInt for Nat64
+        finalPriceCents // ✅ FIXED: Convert to BigInt for Nat64
       );
       
       if ('err' in result) {
