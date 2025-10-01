@@ -475,6 +475,16 @@ export class OffChainPricingEngine {
         settlementResult
       });
       
+      // ✅ DEBUG: Check each parameter before sending
+      console.log('🔍 Settlement parameters:', {
+        positionId: BigInt(positionId),
+        outcome: settlementResult.outcome,
+        outcomeType: typeof settlementResult.outcome,
+        payout: Math.round(settlementResult.payout * 100),
+        profit: Math.round(settlementResult.profit * 100),
+        finalPrice: Math.round(settlementResult.finalPrice * 100)
+      });
+      
       // ✅ FIXED: Use correct canister reference
       const result = await backendCanister.recordSettlement(
         BigInt(positionId),
