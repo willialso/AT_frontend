@@ -423,6 +423,7 @@ interface OptionsTradeFormProps {
   tradeCountdown?: number | undefined;
   isDemoMode?: boolean;
   tradeStatusMessage?: string | null;
+  onConnectWallet?: () => void;
 }
 
 export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
@@ -440,7 +441,8 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
   activeTrade: _activeTrade,
   settlementResult: _settlementResult,
   tradeCountdown: _tradeCountdown,
-  isDemoMode = false
+  isDemoMode = false,
+  onConnectWallet
 }) => {
   const { user } = useAuth();
   const { tradingCanister } = useCanister();
@@ -569,6 +571,42 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
   return (
     <TradeFormContainer>
       <TradeForm>
+
+      {/* ✅ ZERO BALANCE WARNING */}
+      {!isDemoMode && userBalance <=  0 && (
+        <div style={{
+          background: 'rgba(244, 208, 63, 0.1)',
+          border: '2px solid var(--accent)',
+          borderRadius: '8px',
+          padding: '1rem',
+          marginBottom: '1rem',
+          textAlign: 'center'
+        }}>
+          <div style={{ color: 'var(--accent)', fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+            💰 No Balance Available
+          </div>
+          <div style={{ color: 'var(--text)', marginBottom: '1rem', fontSize: '0.95rem' }}>
+            You need to deposit BTC to start trading
+          </div>
+          {onConnectWallet && (
+            <button
+              onClick={onConnectWallet}
+              style={{
+                background: 'var(--accent)',
+                color: 'var(--bg-primary)',
+                border: 'none',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}
+            >
+              Go to Wallet →
+            </button>
+          )}
+        </div>
+      )}
 
       <FormGroup>
         <LabelWithTooltip>

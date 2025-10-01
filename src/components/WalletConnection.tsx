@@ -332,7 +332,7 @@ export const WalletConnection: React.FC = () => {
     };
 
     autoGenerateWallet();
-  }, [isAuthenticated, user, canisterConnected, walletGenerating, depositAddress, isGeneratingWallet, treasuryService, completeWalletGeneration]);
+  }, [isAuthenticated, user, canisterConnected, walletGenerating, isGeneratingWallet, treasuryService, completeWalletGeneration]);
 
   // ✅ MANUAL WALLET GENERATION
   const handleManualWalletGeneration = async () => {
@@ -516,32 +516,52 @@ export const WalletConnection: React.FC = () => {
 
       <WalletInfo>
         <InfoRow>
-          <InfoLabel>Your Deposit Address:</InfoLabel>
-          <AddressContainer>
-            <AddressValue>
-              {depositAddress ? formatAddress(depositAddress) : 'Generating...'}
-            </AddressValue>
-            {depositAddress && (
-              <CopyButton onClick={handleCopyAddress} disabled={copySuccess}>
-                {copySuccess ? '✓' : '📋'}
-              </CopyButton>
-            )}
-          </AddressContainer>
-          {depositAddress && (
-            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
-              <strong>Full Address:</strong>
-              <div style={{ 
-                background: '#f5f5f5', 
-                padding: '0.5rem', 
-                borderRadius: '4px', 
-                fontFamily: 'monospace',
-                wordBreak: 'break-all',
-                marginTop: '0.25rem'
-              }}>
-                {depositAddress}
+          <InfoLabel style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+            How to Deposit BTC
+          </InfoLabel>
+        </InfoRow>
+        
+        <InfoRow>
+          <div style={{ 
+            background: 'var(--bg-panel)', 
+            padding: '1rem', 
+            borderRadius: '8px',
+            border: '1px solid var(--border)'
+          }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--accent)' }}>
+                1. Copy Your Wallet Address
+              </div>
+              <AddressContainer>
+                <AddressValue style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                  {depositAddress || 'Generating...'}
+                </AddressValue>
+                {depositAddress && (
+                  <CopyButton onClick={handleCopyAddress} disabled={copySuccess}>
+                    {copySuccess ? '✓ Copied' : '📋 Copy'}
+                  </CopyButton>
+                )}
+              </AddressContainer>
+            </div>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--accent)' }}>
+                2. Send BTC from Your Wallet or Exchange
+              </div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
+                Paste the address above into your Bitcoin wallet or exchange and send BTC.
               </div>
             </div>
-          )}
+            
+            <div>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--accent)' }}>
+                3. Wait for Confirmation
+              </div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
+                Deposit will be available in 5-10 minutes. Tap "Refresh Balance" to check.
+              </div>
+            </div>
+          </div>
         </InfoRow>
       </WalletInfo>
 

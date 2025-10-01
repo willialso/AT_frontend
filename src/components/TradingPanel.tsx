@@ -986,6 +986,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
                   settlementResult={tradeState.settlementResult}
                   isDemoMode={isDemoMode}
                   tradeStatusMessage={tradeState.statusMessage}
+                  onConnectWallet={onConnectWallet}
                 />
               </ErrorBoundary>
             )}
