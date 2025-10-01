@@ -487,7 +487,7 @@ export class OffChainPricingEngine {
       
       // ✅ FIXED: Use correct canister reference
       const result = await backendCanister.recordSettlement(
-        BigInt(positionId),
+        positionId, // ✅ FIXED: Pass as number, not BigInt
         settlementResult.outcome,
         Math.round(settlementResult.payout * 100), // Convert to cents
         Math.round(settlementResult.profit * 100), // Convert to cents
