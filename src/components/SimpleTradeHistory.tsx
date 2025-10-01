@@ -172,7 +172,7 @@ export const SimpleTradeHistory: React.FC = () => {
       setTrades([]);
       setLoading(false);
     }
-  }, [isConnected, user, backend]);
+  }, [isConnected, user]);
 
   useEffect(() => {
     fetchTradeHistory();
