@@ -708,9 +708,9 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
       )}
 
       {/* ✅ NEW: Balance Status Display */}
-      {!isDemoMode && userBalance > 0 && (
-        <BalanceStatus status={getBalanceStatus(typeof tradeValidation.requiredBalance === 'number' ? tradeValidation.requiredBalance : tradeValidation.requiredBalance.toNumber(), currentPrice).status}>
-          {getBalanceStatus(typeof tradeValidation.requiredBalance === 'number' ? tradeValidation.requiredBalance : tradeValidation.requiredBalance.toNumber(), currentPrice).message}
+      {!isDemoMode && userBalance > 0 && tradeValidation && tradeValidation.requiredBalance !== undefined && (
+        <BalanceStatus status={getBalanceStatus(typeof tradeValidation.requiredBalance === 'number' ? tradeValidation.requiredBalance : (tradeValidation.requiredBalance as any)?.toNumber?.() || 0, currentPrice).status}>
+          {getBalanceStatus(typeof tradeValidation.requiredBalance === 'number' ? tradeValidation.requiredBalance : (tradeValidation.requiredBalance as any)?.toNumber?.() || 0, currentPrice).message}
           <br />
           <small>Balance: {userBalance.toFixed(8)} BTC (${getBalanceInUSD(currentPrice).toFixed(2)} USD)</small>
         </BalanceStatus>
