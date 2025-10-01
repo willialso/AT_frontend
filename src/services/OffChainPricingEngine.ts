@@ -518,23 +518,23 @@ export class OffChainPricingEngine {
         finalPrice: Math.round(settlementResult.finalPrice * 100)
       });
       
-      // ✅ FIXED: Convert to BigInt for Nat64 compatibility
-      const payoutCents = BigInt(Math.round(settlementResult.payout * 100));
-      const profitCents = BigInt(Math.max(0, Math.round(settlementResult.profit * 100)));
-      const finalPriceCents = BigInt(Math.round(settlementResult.finalPrice * 100));
+      // ✅ FIXED: Convert to numbers for Nat64 compatibility (not BigInt)
+      const payoutCents = Math.round(settlementResult.payout * 100);
+      const profitCents = Math.max(0, Math.round(settlementResult.profit * 100));
+      const finalPriceCents = Math.round(settlementResult.finalPrice * 100);
       
-      console.log('🔍 BigInt conversion:', {
-        payoutCents: payoutCents.toString(),
-        profitCents: profitCents.toString(),
-        finalPriceCents: finalPriceCents.toString()
+      console.log('🔍 Number conversion:', {
+        payoutCents,
+        profitCents,
+        finalPriceCents
       });
       
       const result = await backendCanister.recordSettlement(
-        positionId, // ✅ FIXED: Pass as number, not BigInt
+        positionId, // ✅ FIXED: Pass as number
         outcome, // ✅ FIXED: Ensure outcome is never undefined
-        payoutCents, // ✅ FIXED: Convert to BigInt for Nat64
-        profitCents, // ✅ FIXED: Convert to BigInt for Nat64
-        finalPriceCents // ✅ FIXED: Convert to BigInt for Nat64
+        payoutCents, // ✅ FIXED: Pass as number for Nat64
+        profitCents, // ✅ FIXED: Pass as number for Nat64
+        finalPriceCents // ✅ FIXED: Pass as number for Nat64
       );
       
       if ('ok' in result) {
