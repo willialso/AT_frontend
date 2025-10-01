@@ -85,25 +85,36 @@ export class UnifiedAuth {
     console.log('🔧 Current domain:', window.location.origin);
     
     try {
-      // ✅ FIXED: Properly trigger Internet Identity login
-      await this.authClient!.login({
-        identityProvider: 'https://identity.ic0.app',
-        onSuccess: () => {
-          console.log('✅ ICP Identity login successful');
-        },
-        onError: (error) => {
-          console.error('❌ ICP Identity login failed:', error);
-          throw new Error('ICP Identity login failed');
-        }
+      // ✅ FIXED: Properly trigger Internet Identity login with promise wrapper
+      const loginSuccess = await new Promise<boolean>((resolve, reject) => {
+        this.authClient!.login({
+          identityProvider: 'https://identity.ic0.app/#authorize',
+          maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000), // 7 days in nanoseconds
+          onSuccess: () => {
+            console.log('✅ ICP Identity login callback - success');
+            resolve(true);
+          },
+          onError: (error) => {
+            console.error('❌ ICP Identity login callback - error:', error);
+            reject(new Error('ICP Identity login failed'));
+          }
+        });
       });
+      
+      if (!loginSuccess) {
+        throw new Error('ICP Identity login was not successful');
+      }
       
       // Get the authenticated user's Principal (NOT anonymous)
       const identity = this.authClient!.getIdentity();
       const principal = identity.getPrincipal();
       
+      console.log('🔍 Principal received:', principal.toString());
+      console.log('🔍 Is anonymous?', principal.isAnonymous());
+      
       // Verify we didn't get the anonymous principal
       if (principal.isAnonymous()) {
-        throw new Error('Failed to authenticate - got anonymous principal');
+        throw new Error('Failed to authenticate - got anonymous principal. Please complete the Internet Identity authentication.');
       }
       
       console.log('✅ Got authenticated Principal:', principal.toString());
@@ -118,7 +129,8 @@ export class UnifiedAuth {
 
       console.log('✅ ICP Identity authentication successful:', {
         principal: principal.toString(),
-        authMethod: 'icp'
+        authMethod: 'icp',
+        isAnonymous: principal.isAnonymous()
       });
 
       return this.user;
