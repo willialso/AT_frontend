@@ -187,7 +187,7 @@ interface TradeHistoryProps {
 }
 
 export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) => {
-  const { getUserPositions, isConnected, tradingCanister: backend } = useCanister();
+  const { getUserPositions, isConnected, atticusService } = useCanister();
   const { user } = useUnifiedAuth();
   const [tradeHistory, setTradeHistory] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
@@ -211,10 +211,10 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
       console.log('📊 Fetching trade history for user:', userPrincipal.toString());
       console.log('📊 Current timestamp:', new Date().toISOString());
       
-      // ✅ TEST: Try alternative backend method if available
+      // ✅ TEST: Try alternative atticusService method if available
       try {
-        console.log('📊 Testing alternative backend method: get_active_positions');
-        const activePositions = await backend.get_active_positions(userPrincipal);
+        console.log('📊 Testing alternative atticusService method: get_active_positions');
+        const activePositions = await atticusService.getUserPositions(userPrincipal.toString());
         console.log('📊 Active positions result:', activePositions);
         console.log('📊 Active positions count:', activePositions.length);
         
@@ -236,32 +236,32 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
       
       // ✅ DIRECT: Call get_trade_history only - no fallback
       console.log('📊 Fetching trade history using get_trade_history function - CACHE BUST V2');
-      console.log('📊 Backend object keys:', Object.keys(backend));
-      console.log('📊 Backend has get_trade_history:', 'get_trade_history' in backend);
-      console.log('📊 Backend get_trade_history type:', typeof backend.get_trade_history);
-      console.log('📊 Backend object type:', typeof backend);
-      console.log('📊 Backend object constructor:', backend?.constructor?.name);
-      console.log('📊 Backend object prototype:', Object.getPrototypeOf(backend));
+      console.log('📊 AtticusService object keys:', Object.keys(atticusService));
+      console.log('📊 AtticusService has getAllPositions:', 'getAllPositions' in atticusService);
+      console.log('📊 AtticusService getAllPositions type:', typeof atticusService.getAllPositions);
+      console.log('📊 AtticusService object type:', typeof atticusService);
+      console.log('📊 AtticusService object constructor:', atticusService?.constructor?.name);
+      console.log('📊 AtticusService object prototype:', Object.getPrototypeOf(atticusService));
       
       // ✅ DIRECT CALL: Try calling the function directly
       console.log('📊 Trying direct function call...');
       
-      // Check if get_trade_history is available
-      if (typeof (backend as any).get_trade_history === 'function') {
-        console.log('📊 get_trade_history function found!');
-        const tradeHistory = await (backend as any).get_trade_history(userPrincipal);
-        console.log('📊 Trade history from get_trade_history:', tradeHistory);
-        console.log('📊 Trade history count:', tradeHistory.length);
+      // Check if getAllPositions is available
+      if (typeof atticusService.getAllPositions === 'function') {
+        console.log('📊 getAllPositions function found!');
+        const allPositions = await atticusService.getAllPositions();
+        console.log('📊 All positions from getAllPositions:', allPositions);
+        console.log('📊 All positions count:', allPositions.length);
         
-        // Process the trade history
-        if (tradeHistory && tradeHistory.length > 0) {
-          console.log('📊 First position fields:', Object.keys(tradeHistory[0]));
-          console.log('📊 First position settlement_price field:', tradeHistory[0].settlement_price);
-          console.log('📊 First position has settlement_price?', 'settlement_price' in tradeHistory[0]);
+        // Process the positions
+        if (allPositions && allPositions.length > 0) {
+          console.log('📊 First position fields:', Object.keys(allPositions[0]));
+          console.log('📊 First position settlement_price field:', allPositions[0].settlement_price);
+          console.log('📊 First position has settlement_price?', 'settlement_price' in allPositions[0]);
         }
         
         // Continue with the rest of the processing...
-        const normalizedPositions: Position[] = tradeHistory.map((position: BackendPosition) => {
+        const normalizedPositions: Position[] = allPositions.map((position: BackendPosition) => {
         // ✅ FIXED: Extract option_type from variant format
         const optionType = 'Call' in position.option_type ? 'call' : 'put';
 
@@ -346,7 +346,7 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
         console.log('📊 get_trade_history not available, falling back to get_all_positions');
         
         // ✅ DEBUG: Check ALL positions before user filtering
-        const allPositionsRaw = await backend.get_all_positions();
+        const allPositionsRaw = await atticusService.getAllPositions();
         console.log('📊 ALL positions (before user filtering):', allPositionsRaw.length);
         console.log('📊 ALL position IDs (before filtering):', allPositionsRaw.map((p: any) => p.id));
         console.log('📊 ALL position users (before filtering):', allPositionsRaw.map((p: any) => p.user.toString()));
@@ -405,7 +405,7 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
                 await pricingEngine.recordSettlement(
                   Number(position.id),
                   settlementResult,
-                  backend
+                  atticusService
                 );
                 
                 console.log('✅ Off-chain auto-settlement result:', settlementResult);
@@ -562,8 +562,8 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
 
           console.log('📊 Refreshing trade history for user:', user.toString());
           
-          const allPositions = await backend.get_all_positions();
-          console.log('📊 Refreshed positions from backend:', allPositions);
+          const allPositions = await atticusService.getAllPositions();
+          console.log('📊 Refreshed positions from atticusService:', allPositions);
           
           const userPositions = allPositions.filter((position: BackendPosition) => {
             const userMatch = position.user.toString() === userPrincipal.toString();
@@ -604,7 +604,7 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
       
       refreshData();
     }
-  }, [refreshTrigger, isConnected, user, backend]);
+  }, [refreshTrigger, isConnected, user, atticusService]);
 
   const formatTimestamp = (timestamp: number): string => {
     return new Date(timestamp).toLocaleString();
