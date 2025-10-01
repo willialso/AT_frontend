@@ -477,7 +477,7 @@ export class OffChainPricingEngine {
       
       // ✅ DEBUG: Check each parameter before sending
       console.log('🔍 Settlement parameters:', {
-        positionId: BigInt(positionId),
+        positionId: positionId, // ✅ FIXED: Show actual value being passed
         outcome: settlementResult.outcome,
         outcomeType: typeof settlementResult.outcome,
         payout: Math.round(settlementResult.payout * 100),
