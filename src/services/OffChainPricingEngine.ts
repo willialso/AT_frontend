@@ -510,6 +510,13 @@ export class OffChainPricingEngine {
       }
     } catch (error) {
       console.error('❌ Error recording settlement:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        stack: error.stack,
+        positionId,
+        settlementResult,
+        backendCanister: typeof backendCanister
+      });
       throw error;
     }
   }
