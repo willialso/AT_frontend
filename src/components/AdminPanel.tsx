@@ -575,7 +575,7 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
               
               {platformData && (
                 <>
-                  <h4 style={{ color: 'var(--accent)', marginTop: '1.5rem' }}>Platform Wallet</h4>
+                  <h4 style={{ color: 'var(--accent)', marginTop: '1.5rem' }}>Platform Wallet - LIVE BLOCKCHAIN DATA</h4>
                   <DataTable>
                     <thead>
                       <tr>
@@ -585,40 +585,27 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
                     </thead>
                     <tbody>
                       <TableRow>
-                        <TableCell>Canister Balance (Recorded)</TableCell>
-                        <TableCell>{platformData.wallet.balance.toFixed(8)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Blockchain Balance (Live)</TableCell>
-                        <TableCell style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
-                          {blockchainBalance !== null ? blockchainBalance.toFixed(8) : 'Loading...'}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Discrepancy</TableCell>
-                        <TableCell style={{ 
-                          color: blockchainBalance !== null && Math.abs(blockchainBalance - platformData.wallet.balance) > 0.00000001 
-                            ? 'var(--red)' 
-                            : 'var(--green)' 
-                        }}>
-                          {blockchainBalance !== null 
-                            ? (blockchainBalance - platformData.wallet.balance).toFixed(8) 
-                            : 'N/A'}
+                        <TableCell style={{ fontWeight: 'bold' }}>💎 LIVE Blockchain Balance</TableCell>
+                        <TableCell style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                          {blockchainBalance !== null ? blockchainBalance.toFixed(8) : 'Fetching from blockchain...'}
                         </TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Platform Address</TableCell>
-                        <TableCell style={{ fontSize: '0.75rem' }}>
+                        <TableCell style={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>
                           bc1q9t8fk860xk7hgwggjf8hqdnz0zwtakne6cv5h0n85s0jhzkvxc4qmx3fn0
                         </TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell>Total Deposits (Canister)</TableCell>
-                        <TableCell>{platformData.wallet.totalDeposits.toFixed(8)}</TableCell>
+                        <TableCell>Source</TableCell>
+                        <TableCell style={{ color: 'var(--green)' }}>
+                          {blockchainBalance !== null ? '✅ Bitcoin Blockchain (Blockstream API)' : 'Connecting...'}
+                        </TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell>Total Withdrawals (Canister)</TableCell>
-                        <TableCell>{platformData.wallet.totalWithdrawals.toFixed(8)}</TableCell>
+                        <TableCell colSpan={2} style={{ borderTop: '2px solid var(--border)', paddingTop: '1rem', color: 'var(--text-dim)', fontSize: '0.85rem' }}>
+                          ℹ️ Balance fetched directly from Bitcoin blockchain in real-time
+                        </TableCell>
                       </TableRow>
                     </tbody>
                   </DataTable>

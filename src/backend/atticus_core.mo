@@ -294,4 +294,18 @@ persistent actor AtticusCore {
     public func admin_reconcile_balances() : async Text {
         "Balances reconciled";
     };
+
+    // ✅ ADMIN SET PLATFORM BALANCE - Sync with blockchain reality
+    public func admin_set_platform_balance(balance_btc: Float, total_deposits_btc: Float) : async Result.Result<Text, Text> {
+        platform_wallet := {
+            balance = balance_btc;
+            total_deposits = total_deposits_btc;
+            total_withdrawals = 0.0;
+        };
+        
+        let message = "Platform wallet updated: Balance = " # Float.toText(balance_btc) # " BTC, Deposits = " # Float.toText(total_deposits_btc) # " BTC";
+        admin_logs := Array.append(admin_logs, [message]);
+        
+        #ok(message);
+    };
 }
