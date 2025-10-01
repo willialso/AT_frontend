@@ -25,7 +25,7 @@ export interface TradeResult {
 }
 
 export interface SettlementResult {
-  outcome: 'win' | 'loss';
+  outcome: 'win' | 'loss' | 'tie';
   payout: number;
   profit: number;
   finalPrice: number;
