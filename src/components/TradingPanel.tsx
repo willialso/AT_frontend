@@ -587,12 +587,23 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
       setOptionType(null);
       setStrikeOffset(0);
 
-      // ✅ NEW: Refresh balance after settlement
+      // ✅ NEW: Refresh balance after settlement with delay
       if (!isDemoMode) {
         try {
           console.log('🔄 Attempting to refresh balance after settlement...');
+          // Add small delay to ensure backend has processed the settlement
+          setTimeout(async () => {
+            try {
+              await refreshBalance();
+              console.log('✅ Balance refreshed after settlement (delayed)');
+            } catch (error) {
+              console.warn('⚠️ Failed to refresh balance after settlement (delayed):', error);
+            }
+          }, 1000); // 1 second delay
+          
+          // Also try immediate refresh
           await refreshBalance();
-          console.log('✅ Balance refreshed after settlement');
+          console.log('✅ Balance refreshed after settlement (immediate)');
         } catch (error) {
           console.warn('⚠️ Failed to refresh balance after settlement:', error);
         }

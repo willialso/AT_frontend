@@ -201,23 +201,79 @@ persistent actor AtticusCore {
         let profitFloat = Float.fromInt(Int64.toInt(Int64.fromNat64(profit))) / 100.0;
         let finalPriceFloat = Float.fromInt(Int64.toInt(Int64.fromNat64(finalPrice))) / 100.0;
         
-        // Update position status and settlement data
-        positions := Array.map(positions, func((id, pos)) = 
-            if (id == positionId) {
-                (id, { 
-                    pos with 
-                    status = #Settled;
-                    settled_at = ?Time.now();
-                    settlement_price = ?finalPriceFloat;
-                    pnl = profitFloat;
-                    current_value = payoutFloat;
-                })
-            } else {
-                (id, pos)
-            }
-        );
-        
-        #ok(())
+        // Find the position to get user info
+        let position = Array.find(positions, func((id, _)) = id == positionId);
+        switch (position) {
+            case (?pos) {
+                let (_, positionData) = pos;
+                
+                // Update position status and settlement data
+                positions := Array.map(positions, func((id, pos)) = 
+                    if (id == positionId) {
+                        (id, { 
+                            pos with 
+                            status = #Settled;
+                            settled_at = ?Time.now();
+                            settlement_price = ?finalPriceFloat;
+                            pnl = profitFloat;
+                            current_value = payoutFloat;
+                        })
+                    } else {
+                        (id, pos)
+                    }
+                );
+                
+                // ✅ CRITICAL: Update user balance based on settlement
+                let netGainBTC = if (outcome == "win") {
+                    profitFloat / finalPriceFloat  // Convert USD profit to BTC
+                } else if (outcome == "tie") {
+                    0.0  // No gain/loss for ties
+                } else {
+                    -positionData.entry_premium / finalPriceFloat  // Lose the entry premium in BTC
+                };
+                
+                // Update user balance
+                users := Array.map(users, func((p, userData)) = 
+                    if (p == positionData.user) {
+                        let updatedUser = {
+                            userData with
+                            balance = userData.balance + netGainBTC;
+                            total_wins = if (outcome == "win") { userData.total_wins + (payoutFloat / finalPriceFloat) } else { userData.total_wins };
+                            total_losses = if (outcome == "loss") { userData.total_losses + (positionData.entry_premium / finalPriceFloat) } else { userData.total_losses };
+                            net_pnl = userData.net_pnl + netGainBTC;
+                        };
+                        (p, updatedUser)
+                    } else {
+                        (p, userData)
+                    }
+                );
+                
+                // ✅ CRITICAL: Update platform wallet
+                if (outcome == "win") {
+                    let payoutBTC = payoutFloat / finalPriceFloat;
+                    platform_wallet := {
+                        platform_wallet with
+                        balance = platform_wallet.balance - payoutBTC;
+                    };
+                };
+                
+                // ✅ CRITICAL: Update platform ledger
+                let premiumUSD = positionData.entry_premium;
+                let payoutUSD = if (outcome == "win") { payoutFloat } else { 0.0 };
+                
+                platform_ledger := {
+                    platform_ledger with
+                    total_winning_trades = if (outcome == "loss") { platform_ledger.total_winning_trades + premiumUSD } else { platform_ledger.total_winning_trades };
+                    total_losing_trades = if (outcome == "win") { platform_ledger.total_losing_trades + payoutUSD } else { platform_ledger.total_losing_trades };
+                    net_pnl = platform_ledger.net_pnl + (if (outcome == "win") { -payoutUSD } else { premiumUSD });
+                };
+                
+                #ok(())
+            };
+            case null {
+                #err("Position not found")
+            };
+        };
     };
 
     // ✅ GET POSITION
