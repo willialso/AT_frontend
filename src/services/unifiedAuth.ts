@@ -81,17 +81,32 @@ export class UnifiedAuth {
    * Sign in with ICP Identity (existing method)
    */
   async signInWithICP(): Promise<UnifiedUser> {
-    console.log('🔧 Starting direct canister authentication...');
+    console.log('🔧 Starting ICP Identity authentication...');
     console.log('🔧 Current domain:', window.location.origin);
     
-    // For off-chain frontend, we need to get the user's Principal directly
-    // This is different from on-chain frontend which had automatic Principal access
     try {
-      // Get the user's Principal from the auth client
+      // ✅ FIXED: Properly trigger Internet Identity login
+      await this.authClient!.login({
+        identityProvider: 'https://identity.ic0.app',
+        onSuccess: () => {
+          console.log('✅ ICP Identity login successful');
+        },
+        onError: (error) => {
+          console.error('❌ ICP Identity login failed:', error);
+          throw new Error('ICP Identity login failed');
+        }
+      });
+      
+      // Get the authenticated user's Principal (NOT anonymous)
       const identity = this.authClient!.getIdentity();
       const principal = identity.getPrincipal();
       
-      console.log('✅ Got user Principal:', principal.toString());
+      // Verify we didn't get the anonymous principal
+      if (principal.isAnonymous()) {
+        throw new Error('Failed to authenticate - got anonymous principal');
+      }
+      
+      console.log('✅ Got authenticated Principal:', principal.toString());
       
       this.user = {
         principal,
@@ -101,15 +116,15 @@ export class UnifiedAuth {
 
       this.currentAuthMethod = 'icp';
 
-      console.log('✅ Direct canister authentication successful:', {
+      console.log('✅ ICP Identity authentication successful:', {
         principal: principal.toString(),
         authMethod: 'icp'
       });
 
       return this.user;
     } catch (error) {
-      console.error('❌ Failed to get user Principal:', error);
-      throw new Error('Failed to get user Principal. Please try again.');
+      console.error('❌ Failed ICP Identity authentication:', error);
+      throw new Error('Failed to authenticate with ICP Identity. Please try again.');
     }
   }
 

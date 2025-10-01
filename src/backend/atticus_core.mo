@@ -287,7 +287,9 @@ persistent actor AtticusCore {
 
     // ✅ ADMIN CLEAN TEST ACCOUNTS
     public func admin_clean_test_accounts() : async Text {
-        "Test accounts cleaned";
+        // Remove anonymous principal (2vxsx-fae) from users
+        users := Array.filter(users, func((p, _)) = not Principal.isAnonymous(p));
+        "Test accounts cleaned - removed anonymous principals";
     };
 
     // ✅ ADMIN RECONCILE BALANCES
