@@ -542,15 +542,3 @@ export class OffChainPricingEngine {
 
 // ✅ SINGLETON INSTANCE
 export const pricingEngine = new OffChainPricingEngine();
-
-    if (this.wsConnection) {
-      this.wsConnection.close();
-      this.wsConnection = null;
-    }
-    this.isConnected = false;
-    this.listeners = [];
-  }
-}
-
-// ✅ SINGLETON INSTANCE
-export const pricingEngine = new OffChainPricingEngine();
