@@ -239,22 +239,22 @@ persistent actor AtticusCore {
     };
 
     // ✅ GET PLATFORM LEDGER
-    public func get_platform_ledger() : async PlatformLedger {
+    public query func get_platform_ledger() : async PlatformLedger {
         platform_ledger;
     };
 
     // ✅ GET PLATFORM WALLET
-    public func get_platform_wallet() : async PlatformWallet {
+    public query func get_platform_wallet() : async PlatformWallet {
         platform_wallet;
     };
 
     // ✅ GET ALL USERS
-    public func get_all_users() : async [(Principal, UserData)] {
+    public query func get_all_users() : async [(Principal, UserData)] {
         users;
     };
 
     // ✅ GET USER TRADE SUMMARY
-    public func get_user_trade_summary(user: Principal) : async Result.Result<{ total_trades: Nat; wins: Nat; losses: Nat }, Text> {
+    public query func get_user_trade_summary(user: Principal) : async Result.Result<{ total_trades: Nat; wins: Nat; losses: Nat }, Text> {
         let user_positions = Array.filter(positions, func((_, pos)) = pos.user == user);
         let total_trades = user_positions.size();
         let wins = Array.filter(user_positions, func((_, pos)) = pos.status == #Settled).size();
@@ -263,7 +263,7 @@ persistent actor AtticusCore {
     };
 
     // ✅ GET PLATFORM TRADING SUMMARY
-    public func get_platform_trading_summary() : async { total_trades: Nat; active_trades: Nat; settled_trades: Nat } {
+    public query func get_platform_trading_summary() : async { total_trades: Nat; active_trades: Nat; settled_trades: Nat } {
         let total_trades = positions.size();
         let active_trades = Array.filter(positions, func((_, pos)) = pos.status == #Active).size();
         let settled_trades = total_trades - active_trades;

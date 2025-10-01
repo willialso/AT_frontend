@@ -256,6 +256,47 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
   // Fetch platform data
   const [platformData, setPlatformData] = useState<any>(null);
   const [platformLoading, setPlatformLoading] = useState(false);
+  const [blockchainBalance, setBlockchainBalance] = useState<number | null>(null);
+  
+  // Fetch real Bitcoin balance from blockchain
+  const fetchBlockchainBalance = async (address: string) => {
+    try {
+      const corsProxy = 'https://api.allorigins.win/raw?url=';
+      const apiUrls = [
+        `${corsProxy}${encodeURIComponent(`https://blockstream.info/api/address/${address}`)}`,
+        `${corsProxy}${encodeURIComponent(`https://mempool.space/api/address/${address}`)}`,
+        `https://blockstream.info/api/address/${address}`,
+        `https://mempool.space/api/address/${address}`
+      ];
+
+      for (const url of apiUrls) {
+        try {
+          const response = await fetch(url, { 
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+          });
+          
+          if (!response.ok) continue;
+          
+          const data = await response.json();
+          
+          if (data.chain_stats) {
+            const balanceSatoshis = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
+            const balanceBTC = balanceSatoshis / 100000000;
+            return balanceBTC;
+          }
+        } catch (error) {
+          console.log('Trying next API...');
+          continue;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to fetch blockchain balance:', error);
+      return null;
+    }
+  };
   
   const fetchPlatformData = async () => {
     try {
@@ -271,6 +312,11 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
       const wallet = await atticusService.getPlatformWallet();
       const ledger = await atticusService.getPlatformLedger();
       const tradingSummary = await atticusService.getPlatformTradingSummary();
+      
+      // Get REAL blockchain balance for platform wallet
+      const platformAddress = 'bc1q9t8fk860xk7hgwggjf8hqdnz0zwtakne6cv5h0n85s0jhzkvxc4qmx3fn0';
+      const realBalance = await fetchBlockchainBalance(platformAddress);
+      setBlockchainBalance(realBalance);
       
       setPlatformData({
         wallet,
@@ -539,15 +585,39 @@ export const AdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = ({ onLog
                     </thead>
                     <tbody>
                       <TableRow>
-                        <TableCell>Platform Balance</TableCell>
+                        <TableCell>Canister Balance (Recorded)</TableCell>
                         <TableCell>{platformData.wallet.balance.toFixed(8)}</TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell>Total Deposits</TableCell>
+                        <TableCell>Blockchain Balance (Live)</TableCell>
+                        <TableCell style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
+                          {blockchainBalance !== null ? blockchainBalance.toFixed(8) : 'Loading...'}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Discrepancy</TableCell>
+                        <TableCell style={{ 
+                          color: blockchainBalance !== null && Math.abs(blockchainBalance - platformData.wallet.balance) > 0.00000001 
+                            ? 'var(--red)' 
+                            : 'var(--green)' 
+                        }}>
+                          {blockchainBalance !== null 
+                            ? (blockchainBalance - platformData.wallet.balance).toFixed(8) 
+                            : 'N/A'}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Platform Address</TableCell>
+                        <TableCell style={{ fontSize: '0.75rem' }}>
+                          bc1q9t8fk860xk7hgwggjf8hqdnz0zwtakne6cv5h0n85s0jhzkvxc4qmx3fn0
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Total Deposits (Canister)</TableCell>
                         <TableCell>{platformData.wallet.totalDeposits.toFixed(8)}</TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell>Total Withdrawals</TableCell>
+                        <TableCell>Total Withdrawals (Canister)</TableCell>
                         <TableCell>{platformData.wallet.totalWithdrawals.toFixed(8)}</TableCell>
                       </TableRow>
                     </tbody>
