@@ -494,6 +494,11 @@ export class OffChainPricingEngine {
         finalPrice: Math.round(settlementResult.finalPrice * 100)
       });
       
+      // ✅ TEST: Check if backendCanister has recordSettlement method
+      console.log('🔍 backendCanister type:', typeof backendCanister);
+      console.log('🔍 backendCanister has recordSettlement:', 'recordSettlement' in backendCanister);
+      console.log('🔍 backendCanister recordSettlement type:', typeof backendCanister.recordSettlement);
+      
       const result = await backendCanister.recordSettlement(
         positionId, // ✅ FIXED: Pass as number, not BigInt
         settlementResult.outcome,
