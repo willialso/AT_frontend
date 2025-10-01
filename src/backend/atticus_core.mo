@@ -297,6 +297,27 @@ persistent actor AtticusCore {
         "Balances reconciled";
     };
 
+    // ✅ ADMIN CREDIT USER BALANCE
+    public func admin_credit_user_balance(user: Principal, amount_btc: Float) : async Result.Result<Text, Text> {
+        switch (Array.find(users, func((p, _)) = p == user)) {
+            case (?user_data) {
+                let (_, existing_data) = user_data;
+                let updated: UserData = {
+                    balance = existing_data.balance + amount_btc;
+                    total_wins = existing_data.total_wins;
+                    total_losses = existing_data.total_losses;
+                    net_pnl = existing_data.net_pnl;
+                    created_at = existing_data.created_at;
+                };
+                users := Array.map(users, func((p, u)) = if (p == user) { (p, updated) } else { (p, u) });
+                #ok("User credited: " # Float.toText(amount_btc) # " BTC");
+            };
+            case null {
+                #err("User not found");
+            };
+        };
+    };
+
     // ✅ ADMIN SET PLATFORM BALANCE - Sync with blockchain reality
     public func admin_set_platform_balance(balance_btc: Float, total_deposits_btc: Float) : async Result.Result<Text, Text> {
         platform_wallet := {
