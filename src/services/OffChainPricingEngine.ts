@@ -485,6 +485,15 @@ export class OffChainPricingEngine {
         finalPrice: Math.round(settlementResult.finalPrice * 100)
       });
       
+      // ✅ DEBUG: Check for undefined values
+      console.log('🔍 Parameter validation:', {
+        positionIdValid: positionId !== undefined && positionId !== null,
+        outcomeValid: settlementResult.outcome !== undefined && settlementResult.outcome !== null,
+        payoutValid: !isNaN(settlementResult.payout),
+        profitValid: !isNaN(settlementResult.profit),
+        finalPriceValid: !isNaN(settlementResult.finalPrice)
+      });
+      
       // ✅ FIXED: Use correct canister reference
       console.log('🔍 About to call canister with exact parameters:', {
         positionId: positionId,
@@ -499,9 +508,19 @@ export class OffChainPricingEngine {
       console.log('🔍 backendCanister has recordSettlement:', 'recordSettlement' in backendCanister);
       console.log('🔍 backendCanister recordSettlement type:', typeof backendCanister.recordSettlement);
       
+      // ✅ FIXED: Ensure outcome is never undefined
+      const outcome = settlementResult.outcome || 'loss';
+      console.log('🔍 Final parameters being sent:', {
+        positionId,
+        outcome,
+        payout: Math.round(settlementResult.payout * 100),
+        profit: Math.max(0, Math.round(settlementResult.profit * 100)),
+        finalPrice: Math.round(settlementResult.finalPrice * 100)
+      });
+      
       const result = await backendCanister.recordSettlement(
         positionId, // ✅ FIXED: Pass as number, not BigInt
-        settlementResult.outcome,
+        outcome, // ✅ FIXED: Ensure outcome is never undefined
         Math.round(settlementResult.payout * 100), // Convert to cents
         Math.max(0, Math.round(settlementResult.profit * 100)), // ✅ FIXED: Ensure profit is never negative
         Math.round(settlementResult.finalPrice * 100) // Convert to cents
