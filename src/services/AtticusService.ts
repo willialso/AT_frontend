@@ -335,7 +335,7 @@ export class AtticusService {
         positionId, // ✅ FIXED: Pass as number, not BigInt
         settlementResult.outcome,
         Math.round(settlementResult.payout * 100), // Convert to cents
-        Math.round(settlementResult.profit * 100), // Convert to cents
+        Math.max(0, Math.round(settlementResult.profit * 100)), // ✅ FIXED: Ensure profit is never negative
         Math.round(settlementResult.finalPrice * 100) // Convert to cents
       );
       

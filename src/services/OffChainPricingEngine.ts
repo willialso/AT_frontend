@@ -503,7 +503,7 @@ export class OffChainPricingEngine {
         positionId, // ✅ FIXED: Pass as number, not BigInt
         settlementResult.outcome,
         Math.round(settlementResult.payout * 100), // Convert to cents
-        Math.round(settlementResult.profit * 100), // Convert to cents
+        Math.max(0, Math.round(settlementResult.profit * 100)), // ✅ FIXED: Ensure profit is never negative
         Math.round(settlementResult.finalPrice * 100) // Convert to cents
       );
       
@@ -531,6 +531,18 @@ export class OffChainPricingEngine {
    * Clean up WebSocket connection
    */
   public disconnect(): void {
+    if (this.wsConnection) {
+      this.wsConnection.close();
+      this.wsConnection = null;
+    }
+    this.isConnected = false;
+    this.listeners = [];
+  }
+}
+
+// ✅ SINGLETON INSTANCE
+export const pricingEngine = new OffChainPricingEngine();
+
     if (this.wsConnection) {
       this.wsConnection.close();
       this.wsConnection = null;
