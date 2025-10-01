@@ -97,25 +97,38 @@ export class UnifiedAuth {
         // ✅ FIXED: Trigger Internet Identity login
         console.log('🔧 Triggering Internet Identity login popup...');
         
-        await new Promise<void>((resolve, reject) => {
-          this.authClient!.login({
-            identityProvider: 'https://identity.ic0.app',
-            maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000), // 7 days
-            windowOpenerFeatures: `
-              left=${window.screen.width / 2 - 525 / 2},
-              top=${window.screen.height / 2 - 705 / 2},
-              toolbar=0,location=0,menubar=0,width=525,height=705
-            `,
-            onSuccess: () => {
-              console.log('✅ ICP Identity login successful');
-              resolve();
-            },
-            onError: (error) => {
-              console.error('❌ ICP Identity login failed:', error);
-              reject(error || new Error('Internet Identity authentication failed'));
-            }
+        try {
+          await new Promise<void>((resolve, reject) => {
+            this.authClient!.login({
+              identityProvider: 'https://identity.ic0.app',
+              maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000), // 7 days
+              windowOpenerFeatures: `
+                left=${window.screen.width / 2 - 525 / 2},
+                top=${window.screen.height / 2 - 705 / 2},
+                toolbar=0,location=0,menubar=0,width=525,height=705
+              `,
+              onSuccess: () => {
+                console.log('✅ ICP Identity login successful');
+                resolve();
+              },
+              onError: (error) => {
+                console.error('❌ ICP Identity login failed:', error);
+                // Check for user cancellation
+                if (error === 'UserInterrupt') {
+                  reject(new Error('Authentication cancelled. Please complete the Internet Identity login to continue.'));
+                } else {
+                  reject(error || new Error('Internet Identity authentication failed'));
+                }
+              }
+            });
           });
-        });
+        } catch (loginError: any) {
+          // Handle specific error cases
+          if (loginError.message && loginError.message.includes('cancelled')) {
+            throw new Error('You cancelled the authentication. Please try again and complete the Internet Identity login.');
+          }
+          throw loginError;
+        }
       }
       
       // Get the authenticated user's Principal (NOT anonymous)
