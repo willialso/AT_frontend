@@ -392,7 +392,12 @@ export class UnifiedAuth {
       console.log('🔄 Exchanging authorization code for token...');
       
       const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      const googleClientSecret = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
       const redirectUri = window.location.origin;
+      
+      if (!googleClientSecret) {
+        throw new Error('Google Client Secret not configured');
+      }
       
       const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -401,6 +406,7 @@ export class UnifiedAuth {
         },
         body: new URLSearchParams({
           client_id: googleClientId,
+          client_secret: googleClientSecret,
           code: code,
           grant_type: 'authorization_code',
           redirect_uri: redirectUri
@@ -408,7 +414,9 @@ export class UnifiedAuth {
       });
       
       if (!response.ok) {
-        throw new Error(`Token exchange failed: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Token exchange failed:', response.status, errorText);
+        throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
       }
       
       const tokenData = await response.json();

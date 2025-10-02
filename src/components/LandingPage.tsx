@@ -288,8 +288,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
             {isGoogleConfigured ? (
               <button
                 onClick={() => {
-                  // Use real Google OAuth with proper redirect URI
-                  console.log('🔄 Starting real Google OAuth flow...');
+                  // Use Google OAuth authorization code flow (with client secret)
+                  console.log('🔄 Starting Google OAuth authorization code flow...');
                   
                   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
                   if (!googleClientId) {
@@ -300,7 +300,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                   // Use the current domain as redirect URI
                   const redirectUri = encodeURIComponent(window.location.origin);
                   const scope = encodeURIComponent('openid email profile');
-                  const responseType = 'code';
+                  const responseType = 'code'; // Use authorization code flow
                   const state = Math.random().toString(36).substring(7);
                   
                   // Store state for verification

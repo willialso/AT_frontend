@@ -109,7 +109,7 @@ const AppContent: React.FC = () => {
     console.log('🚀 Email service will be handled by backend canister');
   }, []);
 
-  // Handle Google OAuth callback from redirect
+  // Handle Google OAuth callback from redirect (authorization code flow)
   React.useEffect(() => {
     const handleGoogleCallback = () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -123,7 +123,7 @@ const AppContent: React.FC = () => {
       }
       
       if (code && state) {
-        console.log('🔍 Google OAuth callback received:', { code, state });
+        console.log('🔍 Google OAuth authorization code callback received:', { code, state });
         
         // Store callback data for processing
         const callbackData = {
