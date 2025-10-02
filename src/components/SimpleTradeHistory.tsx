@@ -176,7 +176,7 @@ export const SimpleTradeHistory: React.FC = () => {
 
   useEffect(() => {
     fetchTradeHistory();
-  }, [fetchTradeHistory]);
+  }, [isConnected, user]); // ✅ FIXED: Use actual dependencies instead of function reference
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString();
