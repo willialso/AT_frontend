@@ -119,6 +119,11 @@ const AppContent: React.FC = () => {
       
       if (error) {
         console.error('❌ Google OAuth error:', error);
+        // Send error to parent window
+        if (window.opener) {
+          window.opener.postMessage({ type: 'GOOGLE_OAUTH_ERROR', error }, '*');
+          window.close();
+        }
         return;
       }
       
@@ -133,10 +138,13 @@ const AppContent: React.FC = () => {
         };
         sessionStorage.setItem('google_oauth_callback', JSON.stringify(callbackData));
         
-        // Close the popup window if it's still open
+        // Send success message to parent window
         if (window.opener) {
-          window.close();
+          window.opener.postMessage({ type: 'GOOGLE_OAUTH_SUCCESS', data: callbackData }, '*');
         }
+        
+        // Close the popup window
+        window.close();
       }
     };
     

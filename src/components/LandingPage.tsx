@@ -313,16 +313,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                     'width=500,height=600,scrollbars=yes,resizable=yes'
                   );
                   
-                  // Listen for popup to close or receive message
+                  // Listen for messages from popup
+                  const handleMessage = (event: MessageEvent) => {
+                    if (event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
+                      console.log('🔍 Received OAuth success message from popup:', event.data.data);
+                      
+                      // Create a mock credential response for the callback
+                      const mockCredentialResponse = {
+                        credential: 'popup_callback_' + event.data.data.code
+                      };
+                      
+                      onGoogleSignIn(mockCredentialResponse);
+                      
+                      // Clean up
+                      window.removeEventListener('message', handleMessage);
+                    } else if (event.data.type === 'GOOGLE_OAUTH_ERROR') {
+                      console.error('❌ Received OAuth error from popup:', event.data.error);
+                      window.removeEventListener('message', handleMessage);
+                    }
+                  };
+                  
+                  window.addEventListener('message', handleMessage);
+                  
+                  // Fallback: Listen for popup to close
                   const checkClosed = setInterval(() => {
                     if (popup?.closed) {
                       clearInterval(checkClosed);
-                      // Check if we have the callback data
+                      window.removeEventListener('message', handleMessage);
+                      
+                      // Check if we have the callback data as fallback
                       const callbackData = sessionStorage.getItem('google_oauth_callback');
                       if (callbackData) {
                         try {
                           const data = JSON.parse(callbackData);
-                          console.log('🔍 Popup callback data received:', data);
+                          console.log('🔍 Popup callback data received (fallback):', data);
                           
                           // Create a mock credential response for the callback
                           const mockCredentialResponse = {
