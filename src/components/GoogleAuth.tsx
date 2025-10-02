@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 
 const AuthContainer = styled.div`
@@ -39,103 +39,51 @@ interface GoogleAuthProps {
   isLoading?: boolean;
 }
 
-// Declare Google Identity Services types
-declare global {
-  interface Window {
-    google: any;
-  }
-}
-
 export const GoogleAuth: React.FC<GoogleAuthProps> = ({
   onSuccess,
   onError
 }) => {
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
-
-  // Load Google Identity Services script
-  useEffect(() => {
-    const loadGoogleScript = () => {
-      if (window.google) {
-        setIsGoogleLoaded(true);
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        console.log('✅ Google Identity Services loaded');
-        setIsGoogleLoaded(true);
-      };
-      script.onerror = () => {
-        console.error('❌ Failed to load Google Identity Services');
-        onError('Failed to load Google authentication. Please refresh the page.');
-      };
-      document.head.appendChild(script);
-    };
-
-    loadGoogleScript();
-  }, [onError]);
 
   const handleGoogleSignIn = () => {
-    if (!isGoogleLoaded || !window.google) {
-      onError('Google authentication not ready. Please wait and try again.');
-      return;
-    }
-
     try {
       setIsConnecting(true);
       onError(''); // Clear any previous errors
 
-      console.log('🔄 Starting direct Google OAuth flow...');
+      console.log('🔄 Starting redirect-based Google OAuth flow...');
 
       const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
       if (!googleClientId) {
         throw new Error('Google Client ID not configured');
       }
 
-      // Initialize Google Identity Services
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: handleGoogleCallback,
-        auto_select: false,
-        cancel_on_tap_outside: true
-      });
-
-      // Show the Google sign-in popup
-      window.google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          console.log('Google sign-in was not displayed or skipped');
-          setIsConnecting(false);
-        }
-      });
-
+      // Create a redirect-based Google OAuth URL
+      const redirectUri = encodeURIComponent(window.location.origin);
+      const scope = encodeURIComponent('openid email profile');
+      const responseType = 'code';
+      const state = Math.random().toString(36).substring(7);
+      
+      // Store state for verification
+      sessionStorage.setItem('google_oauth_state', state);
+      
+      const authUrl = `https://accounts.google.com/oauth/authorize?` +
+        `client_id=${googleClientId}&` +
+        `redirect_uri=${redirectUri}&` +
+        `scope=${scope}&` +
+        `response_type=${responseType}&` +
+        `state=${state}&` +
+        `access_type=offline&` +
+        `prompt=select_account`;
+      
+      console.log('🔄 Redirecting to Google OAuth:', authUrl);
+      
+      // Redirect to Google OAuth (no FedCM, no popups)
+      window.location.href = authUrl;
+      
     } catch (error) {
-      console.error('❌ Google sign-in failed:', error);
+      console.error('❌ Google OAuth redirect failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Google authentication failed';
       onError(errorMessage);
-      setIsConnecting(false);
-    }
-  };
-
-  const handleGoogleCallback = (response: any) => {
-    try {
-      console.log('🔍 Google OAuth credential received:', response);
-      console.log('🔍 Google OAuth will create ICP Principal and wallet');
-      
-      // Create a credential response object that matches the expected format
-      const credentialResponse = {
-        credential: response.credential
-      };
-      
-      onSuccess(credentialResponse);
-    } catch (error) {
-      console.error('❌ Google callback failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Google authentication failed';
-      onError(errorMessage);
-    } finally {
       setIsConnecting(false);
     }
   };
