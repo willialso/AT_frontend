@@ -322,7 +322,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                       if (callbackData) {
                         try {
                           const data = JSON.parse(callbackData);
-                          onGoogleSignIn(data);
+                          console.log('🔍 Popup callback data received:', data);
+                          
+                          // Create a mock credential response for the callback
+                          const mockCredentialResponse = {
+                            credential: 'popup_callback_' + data.code
+                          };
+                          
+                          onGoogleSignIn(mockCredentialResponse);
                           sessionStorage.removeItem('google_oauth_callback');
                         } catch (error) {
                           console.error('❌ Failed to parse Google OAuth callback:', error);

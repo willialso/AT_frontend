@@ -359,6 +359,65 @@ export class UnifiedAuth {
    */
   async signInWithGoogle(credentialResponse: GoogleCredentialResponse): Promise<UnifiedUser> {
     try {
+      // Check if this is a popup callback
+      if (credentialResponse.credential && credentialResponse.credential.startsWith('popup_callback_')) {
+        console.log('🔍 Processing popup callback for Google OAuth');
+        
+        // Get the callback data from sessionStorage
+        const callbackData = sessionStorage.getItem('google_oauth_callback');
+        if (!callbackData) {
+          throw new Error('No popup callback data found');
+        }
+        
+        const { code, state } = JSON.parse(callbackData);
+        
+        // Verify state parameter
+        const storedState = sessionStorage.getItem('google_oauth_state');
+        if (state !== storedState) {
+          throw new Error('Invalid state parameter');
+        }
+        
+        // Exchange authorization code for access token
+        const tokenResponse = await this.exchangeCodeForToken(code);
+        
+        if (!tokenResponse) {
+          throw new Error('Failed to exchange code for token');
+        }
+        
+        // Create a proper credential response for googleAuth
+        const properCredentialResponse: GoogleCredentialResponse = {
+          credential: tokenResponse.id_token
+        };
+        
+        const googleUser = await googleAuth.signInWithGoogle(properCredentialResponse);
+        
+        this.user = {
+          principal: googleUser.principal,
+          authMethod: 'google',
+          isAuthenticated: true,
+          googleId: googleUser.googleId,
+          email: googleUser.email,
+          ...(googleUser.name && { name: googleUser.name }),
+          ...(googleUser.picture && { avatar: googleUser.picture })
+        };
+
+        this.currentAuthMethod = 'google';
+        
+        // Clean up session storage
+        sessionStorage.removeItem('google_oauth_callback');
+        sessionStorage.removeItem('google_oauth_state');
+        
+        console.log('✅ Google popup authentication successful:', {
+          principal: googleUser.principal.toString(),
+          authMethod: 'google',
+          googleId: googleUser.googleId,
+          email: googleUser.email
+        });
+
+        return this.user!;
+      }
+      
+      // Regular credential-based authentication
       const googleUser = await googleAuth.signInWithGoogle(credentialResponse);
 
       this.user = {
