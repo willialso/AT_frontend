@@ -3,7 +3,6 @@ import { createGlobalStyle } from 'styled-components';
 import styled from 'styled-components';
 import { LandingPage } from './LandingPage';
 import { TradingPanel } from './TradingPanel';
-import { AdminPanel } from './AdminPanel';
 import { useAuth, AuthProvider } from '../contexts/AuthProvider';
 import { TradeProvider } from '../contexts/TradeContext';
 import { CanisterProvider } from '../contexts/CanisterProvider';
@@ -107,7 +106,7 @@ const AppContent: React.FC = () => {
 
   // ✅ EMAIL SERVICE NOW HANDLED BY BACKEND - NO FRONTEND INITIALIZATION NEEDED
   React.useEffect(() => {
-    // Email service removed - using simple architecture
+    console.log('🚀 Email service will be handled by backend canister');
   }, []);
   
   const [isDemoMode, setIsDemoMode] = useState(false);
@@ -127,46 +126,28 @@ const AppContent: React.FC = () => {
 
   const handleTwitterSignIn = async () => {
     try {
-      console.log('🔧 App: handleTwitterSignIn called');
-      const result = await signInWithTwitter();
-      console.log('🔧 App: Twitter auth result:', result);
-      
-      if (result) {
-        console.log('🔧 App: Twitter authentication successful');
-        
-        // Wait for React state to update
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        console.log('🔧 App: Current auth state after Twitter login (after delay):', { isAuthenticated, user, principal });
-        console.log('🔧 App: isAuthenticated value:', isAuthenticated);
-        console.log('🔧 App: user value:', user);
-        
-        setIsDemoMode(false);
-        
-        // Force a re-render to check auth state
-        console.log('🔧 App: Forcing re-render to check auth state...');
-      } else {
-        console.log('🔄 Twitter OAuth redirect initiated, user will be redirected back');
-        // Don't set demo mode to false for redirect case
-      }
+      await signInWithTwitter();
+      setIsDemoMode(false);
     } catch (err) {
-      console.error('🔧 App: Twitter login failed:', err);
-      alert(`Twitter login failed: ${err.message || 'Unknown error'}`);
+      console.error('Twitter login failed:', err);
     }
   };
 
-  const handleGoogleSignIn = React.useCallback(async (credentialResponse: any) => {
+  const handleGoogleSignIn = async (credentialResponse: any) => {
     try {
-      const result = await signInWithGoogle(credentialResponse);
+      console.log('🔧 App: handleGoogleSignIn called with:', credentialResponse);
+      await signInWithGoogle(credentialResponse);
+      console.log('🔧 App: signInWithGoogle completed successfully');
       
-      if (result) {
-        setIsDemoMode(false);
-      }
+      // Wait for React state to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('🔧 App: Current auth state after Google login (after delay):', { isAuthenticated, user, principal });
+      setIsDemoMode(false);
     } catch (err) {
-      console.error('Google login failed:', err);
-      alert(`Google login failed: ${err.message || 'Unknown error'}`);
+      console.error('🔧 App: Google login failed:', err);
     }
-  }, [signInWithGoogle]);
+  };
 
 
 
@@ -187,52 +168,8 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Check for admin access
-  const urlParams = new URLSearchParams(window.location.search);
-  const adminCode = urlParams.get('code');
-  const isAdminAccess = adminCode === '040617081822010316';
-  
-  // ✅ FIXED: Handle Google OAuth callback on mobile
-  React.useEffect(() => {
-    const handleGoogleCallback = async () => {
-      // Check if we have Google OAuth callback parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const credential = urlParams.get('credential');
-      const g_csrf_token = urlParams.get('g_csrf_token');
-      
-      if (credential && g_csrf_token) {
-        console.log('🔧 App: Google OAuth callback detected on mobile');
-        try {
-          const credentialResponse = { credential };
-          await handleGoogleSignIn(credentialResponse);
-          
-          // Clean up URL parameters
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, document.title, newUrl);
-        } catch (error) {
-          console.error('🔧 App: Google OAuth callback failed:', error);
-        }
-      }
-    };
-    
-    handleGoogleCallback();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ✅ FIXED: Empty dependencies - only run once on mount to check for OAuth callback
-  
-  if (isAdminAccess) {
-    console.log('🔧 App: Rendering Admin Panel');
-    return (
-      <>
-        <GlobalStyle />
-        <AdminPanel />
-      </>
-    );
-  }
-
   // 2. Landing page for unauthenticated users (not in demo mode)
-  console.log('🔧 App: Render decision - isAuthenticated:', isAuthenticated, 'isDemoMode:', isDemoMode);
   if (!isAuthenticated && !isDemoMode) {
-    console.log('🔧 App: Rendering LandingPage because !isAuthenticated && !isDemoMode');
     return (
       <>
         <GlobalStyle />
