@@ -216,7 +216,8 @@ const AppContent: React.FC = () => {
     };
     
     handleGoogleCallback();
-  }, [handleGoogleSignIn]); // ✅ FIXED: Added handleGoogleSignIn to dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ✅ FIXED: Empty dependencies - only run once on mount to check for OAuth callback
   
   if (isAdminAccess) {
     console.log('🔧 App: Rendering Admin Panel');
