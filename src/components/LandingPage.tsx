@@ -18,8 +18,8 @@ const LandingContainer = styled.div`
     justify-content: flex-start;
     padding: 1rem;
     padding-top: 2rem;
-    min-height: auto;
-    height: auto;
+    min-height: 100vh;
+    height: 100vh;
   }
 `;
 
