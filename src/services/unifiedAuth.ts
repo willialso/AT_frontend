@@ -395,6 +395,14 @@ export class UnifiedAuth {
       const googleClientSecret = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
       const redirectUri = window.location.origin;
       
+      console.log('🔧 Google OAuth Debug Info:', {
+        hasClientId: !!googleClientId,
+        hasClientSecret: !!googleClientSecret,
+        clientId: googleClientId ? `${googleClientId.substring(0, 20)}...` : 'Not set',
+        redirectUri,
+        code: code.substring(0, 10) + '...'
+      });
+      
       if (!googleClientSecret) {
         throw new Error('Google Client Secret not configured');
       }
