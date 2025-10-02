@@ -66,20 +66,7 @@ export class UnifiedAuth {
         console.log('🔍 No mobile Twitter OAuth callback found');
       }
       
-      // Check Google OAuth callback
-      const mobileGoogleCallback = await this.checkGoogleCallback();
-      if (mobileGoogleCallback) {
-        console.log('📱 Mobile Google callback user found:', mobileGoogleCallback);
-        this.user = mobileGoogleCallback;
-        this.currentAuthMethod = 'google';
-        console.log('✅ Mobile Google OAuth callback processed, user set:', this.user);
-        
-        // ✅ FIXED: Set a flag to indicate wallet generation should start
-        this.shouldStartWalletGeneration = true;
-        console.log('🏦 Mobile Google callback - wallet generation should start');
-      } else {
-        console.log('🔍 No mobile Google OAuth callback found');
-      }
+      // Note: Google OAuth uses popup mode via @react-oauth/google library
       
       this.isInitialized = true;
       console.log('✅ Unified auth initialized');
@@ -193,102 +180,6 @@ export class UnifiedAuth {
   }
 
 
-  /**
-   * Check for Google OAuth callback in URL parameters
-   */
-  async checkGoogleCallback(): Promise<UnifiedUser | null> {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    const error = urlParams.get('error');
-    
-    console.log('🔍 Checking for Google OAuth callback:', { code, state, error });
-    
-    if (error) {
-      console.error('❌ Google OAuth error:', error);
-      return null;
-    }
-    
-    if (code && state) {
-      try {
-        // Verify state parameter
-        const storedState = sessionStorage.getItem('google_oauth_state');
-        if (state !== storedState) {
-          console.error('❌ Invalid state parameter');
-          return null;
-        }
-        
-        console.log('📱 Google OAuth callback via authorization code');
-        
-        // Exchange authorization code for access token
-        const tokenResponse = await this.exchangeCodeForToken(code);
-        
-        if (tokenResponse) {
-          // Create a mock credential response for compatibility
-          const credentialResponse: GoogleCredentialResponse = {
-            credential: tokenResponse.id_token
-          };
-          
-          const googleUser = await googleAuth.signInWithGoogle(credentialResponse);
-          
-          const user: UnifiedUser = {
-            principal: googleUser.principal,
-            authMethod: 'google',
-            isAuthenticated: true,
-            googleId: googleUser.googleId,
-            email: googleUser.email,
-            ...(googleUser.name && { name: googleUser.name }),
-            ...(googleUser.picture && { avatar: googleUser.picture })
-          };
-          
-          console.log('✅ Google OAuth callback processed successfully:', user);
-          return user;
-        }
-      } catch (error) {
-        console.error('❌ Failed to process Google OAuth callback:', error);
-        return null;
-      }
-    }
-    
-    return null;
-  }
-
-  /**
-   * Exchange authorization code for access token
-   */
-  private async exchangeCodeForToken(code: string): Promise<any> {
-    try {
-      console.log('🔄 Exchanging authorization code for token...');
-      
-      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      const redirectUri = window.location.origin;
-      
-      const response = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          client_id: googleClientId,
-          code: code,
-          grant_type: 'authorization_code',
-          redirect_uri: redirectUri
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Token exchange failed: ${response.status}`);
-      }
-      
-      const tokenData = await response.json();
-      console.log('✅ Token exchange successful:', tokenData);
-      
-      return tokenData;
-    } catch (error) {
-      console.error('❌ Token exchange failed:', error);
-      throw error;
-    }
-  }
 
   /**
    * Sign in with Google using real OAuth
