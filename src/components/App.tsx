@@ -155,7 +155,7 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleGoogleSignIn = async (credentialResponse: any) => {
+  const handleGoogleSignIn = React.useCallback(async (credentialResponse: any) => {
     try {
       const result = await signInWithGoogle(credentialResponse);
       
@@ -166,7 +166,7 @@ const AppContent: React.FC = () => {
       console.error('Google login failed:', err);
       alert(`Google login failed: ${err.message || 'Unknown error'}`);
     }
-  };
+  }, [signInWithGoogle]);
 
 
 
@@ -216,7 +216,7 @@ const AppContent: React.FC = () => {
     };
     
     handleGoogleCallback();
-  }, []); // ✅ FIXED: Empty dependency array to run only once
+  }, [handleGoogleSignIn]); // ✅ FIXED: Added handleGoogleSignIn to dependencies
   
   if (isAdminAccess) {
     console.log('🔧 App: Rendering Admin Panel');
