@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createGlobalStyle } from 'styled-components';
 import styled from 'styled-components';
 import { LandingPage } from './LandingPage';
 import { TradingPanel } from './TradingPanel';
+import { AdminPanel } from './AdminPanel';
 import { useAuth, AuthProvider } from '../contexts/AuthProvider';
 import { TradeProvider } from '../contexts/TradeContext';
 import { CanisterProvider } from '../contexts/CanisterProvider';
@@ -145,6 +146,15 @@ const AppContent: React.FC = () => {
   }, []);
   
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isAdminRoute, setIsAdminRoute] = useState(false);
+
+  // Check if we're on the admin route
+  useEffect(() => {
+    const path = window.location.pathname;
+    const isAdmin = path.includes('admin.html') || path.includes('admin');
+    setIsAdminRoute(isAdmin);
+    console.log('🔍 Route detection:', { path, isAdmin });
+  }, []);
 
   const handleGetStarted = async () => {
     try {
@@ -187,7 +197,53 @@ const AppContent: React.FC = () => {
 
 
 
-  // ✅ STREAMLINED FLOW: Only 3 states needed
+  // ✅ STREAMLINED FLOW: Only 4 states needed
+  
+  // 0. Admin route - handle first
+  if (isAdminRoute) {
+    // Check for admin access code in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const adminCode = urlParams.get('code');
+    const validAdminCode = '040617081822010316';
+    
+    // If no code or wrong code, show access denied
+    if (!adminCode || adminCode !== validAdminCode) {
+      return (
+        <>
+          <GlobalStyle />
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh',
+            background: '#0f1419',
+            color: '#ffffff',
+            fontFamily: 'Inter, sans-serif',
+            textAlign: 'center',
+            padding: '2rem'
+          }}>
+            <h1 style={{ color: '#ff4444', fontSize: '2rem', marginBottom: '1rem' }}>🔒 Access Denied</h1>
+            <p style={{ color: '#cccccc', fontSize: '1.1rem', marginBottom: '2rem', maxWidth: '600px', lineHeight: '1.6' }}>
+              This admin panel requires proper authorization. 
+              Please contact the system administrator for access credentials.
+            </p>
+            <p style={{ fontSize: '0.9rem', color: '#888' }}>
+              Unauthorized access attempts are logged and monitored.
+            </p>
+          </div>
+        </>
+      );
+    }
+    
+    // Valid code - show admin panel
+    return (
+      <>
+        <GlobalStyle />
+        <AdminPanel />
+      </>
+    );
+  }
   
   // 1. Initial loading
   if (isLoading) {
