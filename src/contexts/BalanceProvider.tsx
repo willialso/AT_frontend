@@ -128,6 +128,7 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
   }, [user, atticusService, isConnected]);
 
   // ✅ CRITICAL: Auto-initialize balance when user/canister becomes available
+  // ✅ FIXED: Removed refreshBalance from dependencies to prevent infinite re-render
   useEffect(() => {
     if (user && atticusService && isConnected && userBalance === 0) {
       console.log('🔄 Auto-initializing balance on mount...');
@@ -135,9 +136,11 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
         console.warn('⚠️ Auto-balance refresh failed:', error);
       });
     }
-  }, [user, atticusService, isConnected, userBalance, refreshBalance]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.principal, atticusService, isConnected, userBalance]); // ✅ FIXED: Use user.principal for stability
 
   // ✅ PHASE 4: Auto-refresh balance every 30 seconds when connected
+  // ✅ FIXED: Removed refreshBalance from dependencies to prevent infinite re-render
   useEffect(() => {
     if (!user || !atticusService || !isConnected) return;
     
@@ -152,7 +155,8 @@ export const BalanceProvider: React.FC<BalanceProviderProps> = React.memo(({ chi
       console.log('🔄 Stopping auto-refresh for balance updates...');
       clearInterval(interval);
     };
-  }, [user, atticusService, isConnected, refreshBalance]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.principal, atticusService, isConnected]); // ✅ FIXED: Use user.principal for stability
 
   /**
    * Validate trade balance
