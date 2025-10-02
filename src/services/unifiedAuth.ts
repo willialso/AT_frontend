@@ -66,22 +66,7 @@ export class UnifiedAuth {
         console.log('🔍 No mobile Twitter OAuth callback found');
       }
       
-      // Check Google OAuth callback
-      const mobileGoogleCallback = await this.checkGoogleCallback();
-      if (mobileGoogleCallback) {
-        console.log('📱 Mobile Google callback user found:', mobileGoogleCallback);
-        this.user = mobileGoogleCallback;
-        this.currentAuthMethod = 'google';
-        console.log('✅ Mobile Google OAuth callback processed, user set:', this.user);
-        
-        // ✅ FIXED: Set a flag to indicate wallet generation should start
-        this.shouldStartWalletGeneration = true;
-        console.log('🏦 Mobile Google callback - wallet generation should start');
-      } else {
-        console.log('🔍 No mobile Google OAuth callback found');
-      }
-      
-      // Both Twitter and Google OAuth now use redirect mode for better mobile compatibility
+      // Note: Google OAuth uses popup mode via @react-oauth/google library
       
       this.isInitialized = true;
       console.log('✅ Unified auth initialized');
@@ -194,64 +179,6 @@ export class UnifiedAuth {
     }
   }
 
-  /**
-   * Check for Google OAuth callback in URL parameters
-   */
-  async checkGoogleCallback(): Promise<UnifiedUser | null> {
-    const urlParams = new URLSearchParams(window.location.search);
-    const googleAuth = urlParams.get('google_auth');
-    const credential = urlParams.get('credential');
-    const error = urlParams.get('error');
-    
-    console.log('🔍 Checking for Google OAuth callback:', { googleAuth, credential, error });
-    
-    if (error) {
-      console.error('❌ Google OAuth error:', error);
-      return null;
-    }
-    
-    let credentialResponse: GoogleCredentialResponse | null = null;
-    
-    if (credential) {
-      console.log('📱 Google OAuth callback via credential parameter');
-      credentialResponse = { credential };
-    } else if (googleAuth) {
-      try {
-        const authData = JSON.parse(decodeURIComponent(googleAuth));
-        console.log('📱 Google OAuth callback via google_auth parameter:', authData);
-        if (authData.credential) {
-          credentialResponse = { credential: authData.credential };
-        }
-      } catch (error) {
-        console.error('❌ Failed to parse google_auth parameter:', error);
-        return null;
-      }
-    }
-    
-    if (credentialResponse) {
-      try {
-        const googleUser = await googleAuth.signInWithGoogle(credentialResponse);
-        
-        const user: UnifiedUser = {
-          principal: googleUser.principal,
-          authMethod: 'google',
-          isAuthenticated: true,
-          googleId: googleUser.googleId,
-          email: googleUser.email,
-          ...(googleUser.name && { name: googleUser.name }),
-          ...(googleUser.picture && { avatar: googleUser.picture })
-        };
-        
-        console.log('✅ Google OAuth callback processed successfully:', user);
-        return user;
-      } catch (error) {
-        console.error('❌ Failed to process Google OAuth callback:', error);
-        return null;
-      }
-    }
-    
-    return null;
-  }
 
   /**
    * Sign in with Google using real OAuth
