@@ -288,7 +288,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
             {isGoogleConfigured ? (
               <button
                 onClick={() => {
-                  // Use redirect-based Google OAuth (no FedCM)
+                  // Use popup-based Google OAuth (no FedCM)
                   const redirectUri = encodeURIComponent(window.location.origin);
                   const scope = encodeURIComponent('openid email profile');
                   const responseType = 'code';
@@ -306,8 +306,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                     `access_type=offline&` +
                     `prompt=select_account`;
                   
-                  // Redirect to Google OAuth
-                  window.location.href = authUrl;
+                  // Open popup window for OAuth
+                  const popup = window.open(
+                    authUrl,
+                    'google-oauth',
+                    'width=500,height=600,scrollbars=yes,resizable=yes'
+                  );
+                  
+                  // Listen for popup to close or receive message
+                  const checkClosed = setInterval(() => {
+                    if (popup?.closed) {
+                      clearInterval(checkClosed);
+                      // Check if we have the callback data
+                      const callbackData = sessionStorage.getItem('google_oauth_callback');
+                      if (callbackData) {
+                        try {
+                          const data = JSON.parse(callbackData);
+                          onGoogleSignIn(data);
+                          sessionStorage.removeItem('google_oauth_callback');
+                        } catch (error) {
+                          console.error('❌ Failed to parse Google OAuth callback:', error);
+                        }
+                      }
+                    }
+                  }, 1000);
                 }}
                 style={{
                   display: 'flex',

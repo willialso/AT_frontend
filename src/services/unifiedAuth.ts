@@ -66,8 +66,10 @@ export class UnifiedAuth {
         console.log('🔍 No mobile Twitter OAuth callback found');
       }
       
-      // Check Google OAuth callback
+      // Check Google OAuth callback (both popup and redirect)
       const mobileGoogleCallback = await this.checkGoogleCallback();
+      const popupGoogleCallback = await this.checkGooglePopupCallback();
+      
       if (mobileGoogleCallback) {
         console.log('📱 Mobile Google callback user found:', mobileGoogleCallback);
         this.user = mobileGoogleCallback;
@@ -77,8 +79,17 @@ export class UnifiedAuth {
         // ✅ FIXED: Set a flag to indicate wallet generation should start
         this.shouldStartWalletGeneration = true;
         console.log('🏦 Mobile Google callback - wallet generation should start');
+      } else if (popupGoogleCallback) {
+        console.log('📱 Popup Google callback user found:', popupGoogleCallback);
+        this.user = popupGoogleCallback;
+        this.currentAuthMethod = 'google';
+        console.log('✅ Popup Google OAuth callback processed, user set:', this.user);
+        
+        // ✅ FIXED: Set a flag to indicate wallet generation should start
+        this.shouldStartWalletGeneration = true;
+        console.log('🏦 Popup Google callback - wallet generation should start');
       } else {
-        console.log('🔍 No mobile Google OAuth callback found');
+        console.log('🔍 No Google OAuth callback found');
       }
       
       this.isInitialized = true;
@@ -193,6 +204,58 @@ export class UnifiedAuth {
   }
 
 
+
+  /**
+   * Check for Google OAuth callback from popup
+   */
+  async checkGooglePopupCallback(): Promise<UnifiedUser | null> {
+    const callbackData = sessionStorage.getItem('google_oauth_callback');
+    if (!callbackData) {
+      return null;
+    }
+    
+    try {
+      const { code, state } = JSON.parse(callbackData);
+      
+      // Verify state parameter
+      const storedState = sessionStorage.getItem('google_oauth_state');
+      if (state !== storedState) {
+        console.error('❌ Invalid state parameter');
+        return null;
+      }
+      
+      console.log('📱 Google OAuth popup callback received');
+      
+      // Exchange authorization code for access token
+      const tokenResponse = await this.exchangeCodeForToken(code);
+      
+      if (tokenResponse) {
+        // Create a mock credential response for compatibility
+        const credentialResponse: GoogleCredentialResponse = {
+          credential: tokenResponse.id_token
+        };
+        
+        const googleUser = await googleAuth.signInWithGoogle(credentialResponse);
+        
+        const user: UnifiedUser = {
+          principal: googleUser.principal,
+          authMethod: 'google',
+          isAuthenticated: true,
+          googleId: googleUser.googleId,
+          email: googleUser.email,
+          ...(googleUser.name && { name: googleUser.name }),
+          ...(googleUser.picture && { avatar: googleUser.picture })
+        };
+        
+        console.log('✅ Google OAuth popup callback processed successfully:', user);
+        return user;
+      }
+    } catch (error) {
+      console.error('❌ Failed to process Google OAuth popup callback:', error);
+    }
+    
+    return null;
+  }
 
   /**
    * Check for Google OAuth callback in URL parameters

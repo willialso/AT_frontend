@@ -108,6 +108,40 @@ const AppContent: React.FC = () => {
   React.useEffect(() => {
     console.log('🚀 Email service will be handled by backend canister');
   }, []);
+
+  // Handle Google OAuth callback from popup
+  React.useEffect(() => {
+    const handleGoogleCallback = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Google OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        console.log('🔍 Google OAuth callback received:', { code, state });
+        
+        // Store callback data for popup to read
+        const callbackData = {
+          code,
+          state,
+          timestamp: Date.now()
+        };
+        sessionStorage.setItem('google_oauth_callback', JSON.stringify(callbackData));
+        
+        // Close the popup window if it's still open
+        if (window.opener) {
+          window.close();
+        }
+      }
+    };
+    
+    handleGoogleCallback();
+  }, []);
   
   const [isDemoMode, setIsDemoMode] = useState(false);
 
