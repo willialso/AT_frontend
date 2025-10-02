@@ -385,27 +385,52 @@ export class UnifiedAuth {
   }
 
   /**
-   * Exchange authorization code for access token (simplified approach)
+   * Exchange authorization code for access token
    */
   private async exchangeCodeForToken(code: string): Promise<any> {
     try {
       console.log('🔄 Exchanging authorization code for token...');
       
-      // For now, let's create a mock token response to get the flow working
-      // This avoids the client secret requirement
-      console.log('⚠️ Using simplified token approach (no client secret needed)');
+      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      const googleClientSecret = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
+      const redirectUri = window.location.origin;
       
-      // Create a mock token response that will work with the existing flow
-      const mockTokenData = {
-        access_token: 'mock_access_token_' + Date.now(),
-        id_token: 'mock_id_token_' + Date.now(),
-        token_type: 'Bearer',
-        expires_in: 3600
-      };
+      console.log('🔧 Google OAuth Debug Info:', {
+        hasClientId: !!googleClientId,
+        hasClientSecret: !!googleClientSecret,
+        clientId: googleClientId ? `${googleClientId.substring(0, 20)}...` : 'Not set',
+        redirectUri,
+        code: code.substring(0, 10) + '...'
+      });
       
-      console.log('✅ Mock token exchange successful:', mockTokenData);
+      if (!googleClientSecret) {
+        throw new Error('Google Client Secret not configured');
+      }
       
-      return mockTokenData;
+      const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: googleClientId,
+          client_secret: googleClientSecret,
+          code: code,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Token exchange failed:', response.status, errorText);
+        throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
+      }
+      
+      const tokenData = await response.json();
+      console.log('✅ Token exchange successful:', tokenData);
+      
+      return tokenData;
     } catch (error) {
       console.error('❌ Token exchange failed:', error);
       throw error;
