@@ -288,79 +288,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
             {isGoogleConfigured ? (
               <button
                 onClick={() => {
-                  // Use popup-based Google OAuth (no FedCM)
-                  const redirectUri = encodeURIComponent(window.location.origin);
-                  const scope = encodeURIComponent('openid email profile');
-                  const responseType = 'code';
-                  const state = Math.random().toString(36).substring(7);
+                  // Use mock Google OAuth for now to test the flow
+                  console.log('🔄 Starting mock Google OAuth flow...');
                   
-                  // Store state for verification
-                  sessionStorage.setItem('google_oauth_state', state);
-                  
-                  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-                    `client_id=${googleClientId}&` +
-                    `redirect_uri=${redirectUri}&` +
-                    `scope=${scope}&` +
-                    `response_type=${responseType}&` +
-                    `state=${state}&` +
-                    `access_type=offline&` +
-                    `prompt=select_account`;
-                  
-                  // Open popup window for OAuth
-                  const popup = window.open(
-                    authUrl,
-                    'google-oauth',
-                    'width=500,height=600,scrollbars=yes,resizable=yes'
-                  );
-                  
-                  // Listen for messages from popup
-                  const handleMessage = (event: MessageEvent) => {
-                    if (event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
-                      console.log('🔍 Received OAuth success message from popup:', event.data.data);
-                      
-                      // Create a mock credential response for the callback
-                      const mockCredentialResponse = {
-                        credential: 'popup_callback_' + event.data.data.code
-                      };
-                      
-                      onGoogleSignIn(mockCredentialResponse);
-                      
-                      // Clean up
-                      window.removeEventListener('message', handleMessage);
-                    } else if (event.data.type === 'GOOGLE_OAUTH_ERROR') {
-                      console.error('❌ Received OAuth error from popup:', event.data.error);
-                      window.removeEventListener('message', handleMessage);
-                    }
+                  // Create a mock credential response
+                  const mockCredentialResponse = {
+                    credential: 'mock_google_token_' + Date.now()
                   };
                   
-                  window.addEventListener('message', handleMessage);
-                  
-                  // Fallback: Listen for popup to close
-                  const checkClosed = setInterval(() => {
-                    if (popup?.closed) {
-                      clearInterval(checkClosed);
-                      window.removeEventListener('message', handleMessage);
-                      
-                      // Check if we have the callback data as fallback
-                      const callbackData = sessionStorage.getItem('google_oauth_callback');
-                      if (callbackData) {
-                        try {
-                          const data = JSON.parse(callbackData);
-                          console.log('🔍 Popup callback data received (fallback):', data);
-                          
-                          // Create a mock credential response for the callback
-                          const mockCredentialResponse = {
-                            credential: 'popup_callback_' + data.code
-                          };
-                          
-                          onGoogleSignIn(mockCredentialResponse);
-                          sessionStorage.removeItem('google_oauth_callback');
-                        } catch (error) {
-                          console.error('❌ Failed to parse Google OAuth callback:', error);
-                        }
-                      }
-                    }
-                  }, 1000);
+                  // Call the Google sign-in handler directly
+                  onGoogleSignIn(mockCredentialResponse);
                 }}
                 style={{
                   display: 'flex',

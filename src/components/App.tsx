@@ -109,7 +109,7 @@ const AppContent: React.FC = () => {
     console.log('🚀 Email service will be handled by backend canister');
   }, []);
 
-  // Handle Google OAuth callback from popup
+  // Handle Google OAuth callback from redirect
   React.useEffect(() => {
     const handleGoogleCallback = () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -119,18 +119,13 @@ const AppContent: React.FC = () => {
       
       if (error) {
         console.error('❌ Google OAuth error:', error);
-        // Send error to parent window
-        if (window.opener) {
-          window.opener.postMessage({ type: 'GOOGLE_OAUTH_ERROR', error }, '*');
-          window.close();
-        }
         return;
       }
       
       if (code && state) {
         console.log('🔍 Google OAuth callback received:', { code, state });
         
-        // Store callback data for popup to read
+        // Store callback data for processing
         const callbackData = {
           code,
           state,
@@ -138,13 +133,8 @@ const AppContent: React.FC = () => {
         };
         sessionStorage.setItem('google_oauth_callback', JSON.stringify(callbackData));
         
-        // Send success message to parent window
-        if (window.opener) {
-          window.opener.postMessage({ type: 'GOOGLE_OAUTH_SUCCESS', data: callbackData }, '*');
-        }
-        
-        // Close the popup window
-        window.close();
+        // The unifiedAuth.initialize() will pick this up and process it
+        console.log('✅ Google OAuth callback stored, will be processed on next page load');
       }
     };
     

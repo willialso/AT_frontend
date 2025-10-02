@@ -359,6 +359,41 @@ export class UnifiedAuth {
    */
   async signInWithGoogle(credentialResponse: GoogleCredentialResponse): Promise<UnifiedUser> {
     try {
+      // Check if this is a mock Google OAuth
+      if (credentialResponse.credential && credentialResponse.credential.startsWith('mock_google_token_')) {
+        console.log('🔍 Processing mock Google OAuth');
+        
+        // Create a mock Google user
+        const mockGoogleUser = {
+          principal: 'mock_principal_' + Date.now(),
+          googleId: 'mock_google_id_' + Date.now(),
+          email: 'test@example.com',
+          name: 'Test User',
+          picture: 'https://via.placeholder.com/150'
+        };
+        
+        this.user = {
+          principal: mockGoogleUser.principal,
+          authMethod: 'google',
+          isAuthenticated: true,
+          googleId: mockGoogleUser.googleId,
+          email: mockGoogleUser.email,
+          name: mockGoogleUser.name,
+          avatar: mockGoogleUser.picture
+        };
+
+        this.currentAuthMethod = 'google';
+        
+        console.log('✅ Mock Google authentication successful:', {
+          principal: mockGoogleUser.principal,
+          authMethod: 'google',
+          googleId: mockGoogleUser.googleId,
+          email: mockGoogleUser.email
+        });
+
+        return this.user!;
+      }
+      
       // Check if this is a popup callback
       if (credentialResponse.credential && credentialResponse.credential.startsWith('popup_callback_')) {
         console.log('🔍 Processing popup callback for Google OAuth');
