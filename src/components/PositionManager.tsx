@@ -537,9 +537,12 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
     }
   }, [getUserPositions, isConnected, user]);
 
+  // ✅ FIXED: Remove fetchPositions from dependencies to prevent infinite re-render
+  // fetchPositions is recreated when user changes, causing the useEffect to run infinitely
+  // Instead, directly depend on the actual state that matters
   React.useEffect(() => {
     fetchPositions();
-  }, [fetchPositions]);
+  }, [isConnected, user]); // ✅ FIXED: Use actual dependencies instead of function reference
 
   // ✅ ADDED: Refresh trade history when trigger changes
   React.useEffect(() => {
