@@ -3,7 +3,6 @@ import './polyfills';
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { GoogleOAuthProvider } from '@react-oauth/google'
 import { App } from './components/App.tsx'
 
 
@@ -20,19 +19,6 @@ console.log('🔧 Google OAuth Configuration:', {
 });
 
 const AppWrapper: React.FC = () => {
-  if (isValidGoogleClientId) {
-    return (
-      <GoogleOAuthProvider 
-        clientId={GOOGLE_CLIENT_ID}
-        onScriptLoadError={() => console.error('❌ Google OAuth script failed to load')}
-        onScriptLoadSuccess={() => console.log('✅ Google OAuth script loaded successfully')}
-      >
-        <App />
-      </GoogleOAuthProvider>
-    );
-  }
-  
-  console.warn('⚠️ Google OAuth not configured - Google sign-in will be disabled');
   return <App />;
 };
 

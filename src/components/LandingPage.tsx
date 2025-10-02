@@ -288,20 +288,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
             {isGoogleConfigured ? (
               <button
                 onClick={() => {
-                  // Use Google Identity Services directly with redirect
-                  if (window.google && window.google.accounts && window.google.accounts.id) {
-                    window.google.accounts.id.initialize({
-                      client_id: googleClientId,
-                      callback: (response: any) => {
-                        onGoogleSignIn(response);
-                      },
-                      ux_mode: 'redirect',
-                      redirect_uri: window.location.origin
-                    });
-                    
-                    // Trigger the redirect
-                    window.google.accounts.id.prompt();
-                  }
+                  // Use redirect-based Google OAuth (no FedCM)
+                  const redirectUri = encodeURIComponent(window.location.origin);
+                  const scope = encodeURIComponent('openid email profile');
+                  const responseType = 'code';
+                  const state = Math.random().toString(36).substring(7);
+                  
+                  // Store state for verification
+                  sessionStorage.setItem('google_oauth_state', state);
+                  
+                  const authUrl = `https://accounts.google.com/oauth/authorize?` +
+                    `client_id=${googleClientId}&` +
+                    `redirect_uri=${redirectUri}&` +
+                    `scope=${scope}&` +
+                    `response_type=${responseType}&` +
+                    `state=${state}&` +
+                    `access_type=offline&` +
+                    `prompt=select_account`;
+                  
+                  // Redirect to Google OAuth
+                  window.location.href = authUrl;
                 }}
                 style={{
                   display: 'flex',
