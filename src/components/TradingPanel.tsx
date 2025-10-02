@@ -879,8 +879,8 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
 
   const handleDisconnectClick = () => {
     if (isDemoMode) {
-      // ✅ FIX: In demo mode, always go back to landing page
-      onConnectWallet?.();
+      // ✅ FIX: In demo mode, go back to landing page by logging out
+      onLogout?.();
     } else if (isFullyConnected) {
       if (tradeState.isActive) {
         handleTradeClose();
