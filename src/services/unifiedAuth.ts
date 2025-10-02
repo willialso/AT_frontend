@@ -66,9 +66,10 @@ export class UnifiedAuth {
         console.log('🔍 No mobile Twitter OAuth callback found');
       }
       
-      // Check Google OAuth callback (both popup and redirect)
+      // Check Google OAuth callback (redirect, popup, and session storage)
       const mobileGoogleCallback = await this.checkGoogleCallback();
       const popupGoogleCallback = await this.checkGooglePopupCallback();
+      const sessionGoogleCallback = await this.checkGoogleSessionCallback();
       
       if (mobileGoogleCallback) {
         console.log('📱 Mobile Google callback user found:', mobileGoogleCallback);
@@ -88,6 +89,15 @@ export class UnifiedAuth {
         // ✅ FIXED: Set a flag to indicate wallet generation should start
         this.shouldStartWalletGeneration = true;
         console.log('🏦 Popup Google callback - wallet generation should start');
+      } else if (sessionGoogleCallback) {
+        console.log('📱 Session Google callback user found:', sessionGoogleCallback);
+        this.user = sessionGoogleCallback;
+        this.currentAuthMethod = 'google';
+        console.log('✅ Session Google OAuth callback processed, user set:', this.user);
+        
+        // ✅ FIXED: Set a flag to indicate wallet generation should start
+        this.shouldStartWalletGeneration = true;
+        console.log('🏦 Session Google callback - wallet generation should start');
       } else {
         console.log('🔍 No Google OAuth callback found');
       }
@@ -204,6 +214,63 @@ export class UnifiedAuth {
   }
 
 
+
+  /**
+   * Check for Google OAuth callback from session storage (redirect callback)
+   */
+  async checkGoogleSessionCallback(): Promise<UnifiedUser | null> {
+    const callbackData = sessionStorage.getItem('google_oauth_callback');
+    if (!callbackData) {
+      return null;
+    }
+    
+    try {
+      const { code, state } = JSON.parse(callbackData);
+      
+      // Verify state parameter
+      const storedState = sessionStorage.getItem('google_oauth_state');
+      if (state !== storedState) {
+        console.error('❌ Invalid state parameter');
+        return null;
+      }
+      
+      console.log('📱 Google OAuth session callback received');
+      
+      // Exchange authorization code for access token
+      const tokenResponse = await this.exchangeCodeForToken(code);
+      
+      if (tokenResponse) {
+        // Create a mock credential response for compatibility
+        const credentialResponse: GoogleCredentialResponse = {
+          credential: tokenResponse.id_token
+        };
+        
+        const googleUser = await googleAuth.signInWithGoogle(credentialResponse);
+        
+        const user: UnifiedUser = {
+          principal: googleUser.principal,
+          authMethod: 'google',
+          isAuthenticated: true,
+          googleId: googleUser.googleId,
+          email: googleUser.email,
+          ...(googleUser.name && { name: googleUser.name }),
+          ...(googleUser.picture && { avatar: googleUser.picture })
+        };
+        
+        console.log('✅ Google OAuth session callback processed successfully:', user);
+        
+        // Clean up session storage
+        sessionStorage.removeItem('google_oauth_callback');
+        sessionStorage.removeItem('google_oauth_state');
+        
+        return user;
+      }
+    } catch (error) {
+      console.error('❌ Failed to process Google OAuth session callback:', error);
+    }
+    
+    return null;
+  }
 
   /**
    * Check for Google OAuth callback from popup

@@ -133,6 +133,9 @@ const AppContent: React.FC = () => {
         };
         sessionStorage.setItem('google_oauth_callback', JSON.stringify(callbackData));
         
+        // Clean up the URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
         // The unifiedAuth.initialize() will pick this up and process it
         console.log('✅ Google OAuth callback stored, will be processed on next page load');
       }

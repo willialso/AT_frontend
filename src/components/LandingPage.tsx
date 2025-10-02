@@ -288,16 +288,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
             {isGoogleConfigured ? (
               <button
                 onClick={() => {
-                  // Use mock Google OAuth for now to test the flow
-                  console.log('🔄 Starting mock Google OAuth flow...');
+                  // Use real Google OAuth with proper redirect URI
+                  console.log('🔄 Starting real Google OAuth flow...');
                   
-                  // Create a mock credential response
-                  const mockCredentialResponse = {
-                    credential: 'mock_google_token_' + Date.now()
-                  };
+                  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+                  if (!googleClientId) {
+                    console.error('❌ Google Client ID not configured');
+                    return;
+                  }
                   
-                  // Call the Google sign-in handler directly
-                  onGoogleSignIn(mockCredentialResponse);
+                  // Use the current domain as redirect URI
+                  const redirectUri = encodeURIComponent(window.location.origin);
+                  const scope = encodeURIComponent('openid email profile');
+                  const responseType = 'code';
+                  const state = Math.random().toString(36).substring(7);
+                  
+                  // Store state for verification
+                  sessionStorage.setItem('google_oauth_state', state);
+                  
+                  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+                    `client_id=${googleClientId}&` +
+                    `redirect_uri=${redirectUri}&` +
+                    `scope=${scope}&` +
+                    `response_type=${responseType}&` +
+                    `state=${state}&` +
+                    `access_type=offline&` +
+                    `prompt=select_account`;
+                  
+                  console.log('🔄 Redirecting to Google OAuth:', authUrl);
+                  
+                  // Direct redirect to Google OAuth
+                  window.location.href = authUrl;
                 }}
                 style={{
                   display: 'flex',
