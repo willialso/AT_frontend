@@ -297,7 +297,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onTryDem
                   // Store state for verification
                   sessionStorage.setItem('google_oauth_state', state);
                   
-                  const authUrl = `https://accounts.google.com/oauth/authorize?` +
+                  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
                     `client_id=${googleClientId}&` +
                     `redirect_uri=${redirectUri}&` +
                     `scope=${scope}&` +
