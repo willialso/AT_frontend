@@ -198,51 +198,52 @@ export class UnifiedAuth {
    */
   async checkGoogleCallback(): Promise<UnifiedUser | null> {
     const urlParams = new URLSearchParams(window.location.search);
-    const googleAuth = urlParams.get('google_auth');
-    const credential = urlParams.get('credential');
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
     const error = urlParams.get('error');
     
-    console.log('🔍 Checking for Google OAuth callback:', { googleAuth, credential, error });
+    console.log('🔍 Checking for Google OAuth callback:', { code, state, error });
     
     if (error) {
       console.error('❌ Google OAuth error:', error);
       return null;
     }
     
-    let credentialResponse: GoogleCredentialResponse | null = null;
-    
-    if (credential) {
-      console.log('📱 Google OAuth callback via credential parameter');
-      credentialResponse = { credential };
-    } else if (googleAuth) {
+    if (code && state) {
       try {
-        const authData = JSON.parse(decodeURIComponent(googleAuth));
-        console.log('📱 Google OAuth callback via google_auth parameter:', authData);
-        if (authData.credential) {
-          credentialResponse = { credential: authData.credential };
+        // Verify state parameter
+        const storedState = sessionStorage.getItem('google_oauth_state');
+        if (state !== storedState) {
+          console.error('❌ Invalid state parameter');
+          return null;
         }
-      } catch (error) {
-        console.error('❌ Failed to parse google_auth parameter:', error);
-        return null;
-      }
-    }
-    
-    if (credentialResponse) {
-      try {
-        const googleUser = await googleAuth.signInWithGoogle(credentialResponse);
         
-        const user: UnifiedUser = {
-          principal: googleUser.principal,
-          authMethod: 'google',
-          isAuthenticated: true,
-          googleId: googleUser.googleId,
-          email: googleUser.email,
-          ...(googleUser.name && { name: googleUser.name }),
-          ...(googleUser.picture && { avatar: googleUser.picture })
-        };
+        console.log('📱 Google OAuth callback via authorization code');
         
-        console.log('✅ Google OAuth callback processed successfully:', user);
-        return user;
+        // Exchange authorization code for access token
+        const tokenResponse = await this.exchangeCodeForToken(code);
+        
+        if (tokenResponse) {
+          // Create a mock credential response for compatibility
+          const credentialResponse: GoogleCredentialResponse = {
+            credential: tokenResponse.id_token
+          };
+          
+          const googleUser = await googleAuth.signInWithGoogle(credentialResponse);
+          
+          const user: UnifiedUser = {
+            principal: googleUser.principal,
+            authMethod: 'google',
+            isAuthenticated: true,
+            googleId: googleUser.googleId,
+            email: googleUser.email,
+            ...(googleUser.name && { name: googleUser.name }),
+            ...(googleUser.picture && { avatar: googleUser.picture })
+          };
+          
+          console.log('✅ Google OAuth callback processed successfully:', user);
+          return user;
+        }
       } catch (error) {
         console.error('❌ Failed to process Google OAuth callback:', error);
         return null;
@@ -250,6 +251,43 @@ export class UnifiedAuth {
     }
     
     return null;
+  }
+
+  /**
+   * Exchange authorization code for access token
+   */
+  private async exchangeCodeForToken(code: string): Promise<any> {
+    try {
+      console.log('🔄 Exchanging authorization code for token...');
+      
+      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      const redirectUri = window.location.origin;
+      
+      const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: googleClientId,
+          code: code,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Token exchange failed: ${response.status}`);
+      }
+      
+      const tokenData = await response.json();
+      console.log('✅ Token exchange successful:', tokenData);
+      
+      return tokenData;
+    } catch (error) {
+      console.error('❌ Token exchange failed:', error);
+      throw error;
+    }
   }
 
   /**
