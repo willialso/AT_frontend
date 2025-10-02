@@ -84,8 +84,9 @@ export const GoogleAuth: React.FC<GoogleAuthProps> = ({
         logo_alignment="left"
         width="280"
         useOneTap={false}
-        ux_mode="popup"
+        ux_mode="redirect"
         auto_select={false}
+        redirect_uri={window.location.origin}
       />
       
       {isConnecting && (
