@@ -530,16 +530,24 @@ export class OffChainPricingEngine {
         finalPriceCents
       });
       
-      // ✅ FIXED: Use correct backend function - settleTrade instead of recordSettlement
-      // Backend expects: settleTrade(positionId: nat, finalPrice: nat64, user: principal)
-      const userPrincipalToUse = userPrincipal || settlementResult.userPrincipal || 'anonymous';
-      console.log('🔍 Using user principal for settlement:', userPrincipalToUse);
+      // ✅ FIXED: Use the actual backend function - recordSettlement
+      // Backend expects: recordSettlement(positionId: nat, outcome: text, payout: nat64, profit: nat64, finalPrice: nat64)
+      const outcome = settlementResult.outcome || 'loss';
+      console.log('🔍 Using recordSettlement with parameters:', {
+        positionId,
+        outcome,
+        payoutCents,
+        profitCents,
+        finalPriceCents
+      });
       
-      // ✅ FIXED: Call settleTrade on the coreCanister, not the service wrapper
-      const result = await backendCanister.coreCanister.settleTrade(
+      // ✅ FIXED: Call recordSettlement on the coreCanister
+      const result = await backendCanister.coreCanister.recordSettlement(
         positionId, // nat
-        finalPriceCents, // nat64 (final price in cents)
-        Principal.fromText(userPrincipalToUse) // principal
+        outcome, // text
+        payoutCents, // nat64
+        profitCents, // nat64
+        finalPriceCents // nat64
       );
       
       if ('ok' in result) {
