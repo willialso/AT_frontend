@@ -663,15 +663,27 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
   };
 
   // ✅ COMPLETELY FIXED: Use trading service instead of direct canister calls
-  const handleTradeStart = async (contracts: number) => {
+  const handleTradeStart = async (contracts: number, overrideParams?: {
+    optionType?: 'call' | 'put';
+    strikeOffset?: number;
+    expiry?: string;
+  }) => {
     // ✅ DEBUG: Log what TradingPanel receives
     console.log('🔍 TradingPanel: handleTradeStart called with contracts =', contracts);
     console.log('🔍 TradingPanel: typeof contracts =', typeof contracts);
+    console.log('🔍 TradingPanel: overrideParams =', overrideParams);
     
-    if (!priceState.isValid || !optionType) {
+    // ✅ FIX: Use override params if provided, otherwise use state
+    const finalOptionType = overrideParams?.optionType || optionType;
+    const finalStrikeOffset = overrideParams?.strikeOffset || strikeOffset;
+    const finalExpiry = overrideParams?.expiry || selectedExpiry;
+    
+    if (!priceState.isValid || !finalOptionType) {
       console.error('Cannot start trade: missing price data or option type', {
         priceStateIsValid: priceState.isValid,
+        finalOptionType: finalOptionType,
         optionType: optionType,
+        overrideParams: overrideParams,
         priceState: priceState
       });
       return;
@@ -710,27 +722,27 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
       }
 
       // ✅ SINGLE CALCULATION: Calculate once and reuse
-      const strikePrice = optionType === 'call'
-        ? tradeStartPrice + strikeOffset
-        : tradeStartPrice - strikeOffset;
+      const strikePrice = finalOptionType === 'call'
+        ? tradeStartPrice + finalStrikeOffset
+        : tradeStartPrice - finalStrikeOffset;
 
       console.log('🎯 Strike price calculation:', {
         tradeStartPrice,
-        strikeOffset,
-        optionType,
+        finalStrikeOffset,
+        finalOptionType,
         calculatedStrikePrice: strikePrice
       });
 
       // ✅ FIXED: 1 contract = 1 USD worth of BTC, not 1 BTC
 
       const tradeRequest: TradeRequest = {
-        optionType: optionType,
-        strikeOffset: strikeOffset, // ✅ FIXED: Use strike offset instead of strike price
-        expiry: selectedExpiry,  // ✅ Use selected expiry
+        optionType: finalOptionType,
+        strikeOffset: finalStrikeOffset, // ✅ FIXED: Use strike offset instead of strike price
+        expiry: finalExpiry,  // ✅ Use final expiry
         size: contracts  // ✅ FIXED: Pass actual contract count (1, 2, 3, etc.)
       };
 
-      console.log('🕐 Trade request with expiry:', selectedExpiry);
+      console.log('🕐 Trade request with expiry:', finalExpiry);
 
       console.log('🔍 Debug - Calling pricingEngine.placeTrade with:', {
         userPrincipal: isDemoMode ? 'demo-user' : user?.principal.toString(),
@@ -747,9 +759,9 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
       // ✅ NEW: Use off-chain trade placement (faster, more accurate)
       const tradePromise = pricingEngine.placeTrade(
         isDemoMode ? 'demo-user' : user!.principal.toString(),
-        optionType,
-        strikeOffset,
-        selectedExpiry,
+        finalOptionType,
+        finalStrikeOffset,
+        finalExpiry,
         contracts,
         atticusService,
         isDemoMode
@@ -775,14 +787,14 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         id: orderId.toString(),
         positionId: orderId, // ✅ ADDED: Store actual backend position ID
         entryPrice: tradeStartPrice, // ✅ FIXED: Use actual captured price, not 0!
-        strikeOffset: strikeOffset, // ✅ FIXED: Use strike offset instead of strike price
+        strikeOffset: finalStrikeOffset, // ✅ FIXED: Use strike offset instead of strike price
         startTime: Date.now(),
-        expiry: selectedExpiry,  // ✅ Use selected expiry
-        type: optionType,
+        expiry: finalExpiry,  // ✅ Use final expiry
+        type: finalOptionType,
         amount: contracts
       };
 
-      console.log('🕐 Trade data with expiry:', selectedExpiry);
+      console.log('🕐 Trade data with expiry:', finalExpiry);
 
       // ✅ OPTIMIZED: Single state update with captured price for perfect synchronization
       setTradeState({
@@ -793,7 +805,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         countdown: 0,
         statusMessage: 'Trade successful!',
         result: {
-          message: `Trade started: ${optionType.toUpperCase()}`,
+          message: `Trade started: ${finalOptionType.toUpperCase()}`,
           type: 'success'
         },
         settlementResult: null

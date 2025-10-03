@@ -539,7 +539,11 @@ interface OptionsTradeFormProps {
   onOptionTypeSelect?: (type: 'call' | 'put') => void;
   onStrikeOffsetSelect?: (offset: number) => void;
   onExpirySelect?: (expiry: string) => void;
-  onTradeStart?: (contracts: number) => Promise<void>;
+  onTradeStart?: (contracts: number, overrideParams?: {
+    optionType?: 'call' | 'put';
+    strikeOffset?: number;
+    expiry?: string;
+  }) => Promise<void>;
   onTradeClose?: () => Promise<void>;
   isConnected?: boolean;
   activeTrade?: {
@@ -713,38 +717,27 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
   };
 
   const handleExecuteRecommendation = async () => {
-    if (!currentRecommendation || !onOptionTypeSelect || !onStrikeOffsetSelect || !onExpirySelect || !onTradeStart) {
+    if (!currentRecommendation || !onTradeStart) {
       return;
     }
 
     console.log('🔍 Best Odds: Starting execution with recommendation:', currentRecommendation);
-    console.log('🔍 Best Odds: Current form state before update:', {
-      optionType,
-      strikeOffset,
-      localFormData
-    });
 
-    // ✅ FIX: Set the recommended parameters in BOTH local and parent state
-    onOptionTypeSelect(currentRecommendation.optionType);
-    onStrikeOffsetSelect(currentRecommendation.strikeOffset);
-    
-    // ✅ CRITICAL: Update localFormData.expiry to match parent state
-    setLocalFormData(prev => ({ ...prev, expiry: currentRecommendation.expiry }));
-    onExpirySelect(currentRecommendation.expiry);
-    
-    // ✅ FIX: Wait for React state updates to propagate
-    console.log('🔍 Best Odds: Waiting for state propagation...');
-    await new Promise(resolve => setTimeout(resolve, 100));
-    console.log('🔍 Best Odds: State propagation delay complete');
+    // ✅ FIX: Pass recommendation data directly to handleTradeStart
+    const overrideParams = {
+      optionType: currentRecommendation.optionType,
+      strikeOffset: currentRecommendation.strikeOffset,
+      expiry: currentRecommendation.expiry
+    };
     
     // Close modal
     setShowRecommendation(false);
     
-    // Execute trade with 1 contract
+    // Execute trade with 1 contract and override parameters
     const contractCount = 1;
     setIsSubmitting(true);
     try {
-      await onTradeStart(contractCount);
+      await onTradeStart(contractCount, overrideParams);
     } catch (error) {
       console.error('Recommended trade failed:', error);
     } finally {
