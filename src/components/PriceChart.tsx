@@ -410,8 +410,19 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     const now = chartTimeRef.current;
     const numTimeTicks = 6;
     const timeLabels = [];
+    
+    // ✅ FIX: Dynamic time interval based on selected range
+    const getTimeInterval = (rangeMinutes: number) => {
+      if (rangeMinutes <= 1) return 10; // 10 seconds for 1m
+      if (rangeMinutes <= 5) return 30; // 30 seconds for 5m  
+      if (rangeMinutes <= 10) return 60; // 1 minute for 10m
+      return 300; // 5 minutes for 30m
+    };
+    
+    const timeIntervalMs = getTimeInterval(selectedTimeRange) * 1000;
+    
     for (let i = 0; i < numTimeTicks; i++) {
-      const time = now - ((numTimeTicks - 1 - i) * 1000);
+      const time = now - ((numTimeTicks - 1 - i) * timeIntervalMs);
       timeLabels.push(new Date(time));
     }
 
@@ -429,11 +440,12 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       ctx.font = '9px Inter, sans-serif';
       ctx.textAlign = 'center';
       
+      // ✅ FIX: Adaptive time formatting based on range
       const timeStr = time.toLocaleTimeString([], {
         hour12: false,
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
+        second: selectedTimeRange <= 5 ? '2-digit' : undefined // Hide seconds for longer ranges
       });
       ctx.fillText(timeStr, x, height - padding.bottom + 20);
     });
