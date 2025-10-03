@@ -98,6 +98,13 @@ export class AtticusService {
           recordSettlement: IDL.Func([
             IDL.Nat, IDL.Text, IDL.Nat64, IDL.Nat64, IDL.Nat64
           ], [IDL.Variant({ ok: IDL.Null, err: IDL.Text })], []),
+          settleTrade: IDL.Func([
+            IDL.Nat, IDL.Nat64, IDL.Principal
+          ], [IDL.Variant({ ok: IDL.Record({
+            outcome: IDL.Text,
+            payout: IDL.Float64,
+            profit: IDL.Float64
+          }), err: IDL.Text })], []),
           
           // Position management
           get_position: IDL.Func([IDL.Nat], [IDL.Variant({ ok: IDL.Record({

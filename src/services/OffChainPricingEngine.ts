@@ -535,7 +535,8 @@ export class OffChainPricingEngine {
       const userPrincipalToUse = userPrincipal || settlementResult.userPrincipal || 'anonymous';
       console.log('🔍 Using user principal for settlement:', userPrincipalToUse);
       
-      const result = await backendCanister.settleTrade(
+      // ✅ FIXED: Call settleTrade on the coreCanister, not the service wrapper
+      const result = await backendCanister.coreCanister.settleTrade(
         positionId, // nat
         finalPriceCents, // nat64 (final price in cents)
         Principal.fromText(userPrincipalToUse) // principal
