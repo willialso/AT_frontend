@@ -717,9 +717,12 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
       return;
     }
 
-    // Set the recommended parameters
+    // ✅ FIX: Set the recommended parameters in BOTH local and parent state
     onOptionTypeSelect(currentRecommendation.optionType);
     onStrikeOffsetSelect(currentRecommendation.strikeOffset);
+    
+    // ✅ CRITICAL: Update localFormData.expiry to match parent state
+    setLocalFormData(prev => ({ ...prev, expiry: currentRecommendation.expiry }));
     onExpirySelect(currentRecommendation.expiry);
     
     // Close modal
