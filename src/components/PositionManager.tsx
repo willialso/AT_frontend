@@ -405,7 +405,8 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
                 await pricingEngine.recordSettlement(
                   Number(position.id),
                   settlementResult,
-                  atticusService
+                  atticusService,
+                  position.user?.toString() // Pass user principal
                 );
                 
                 console.log('✅ Off-chain auto-settlement result:', settlementResult);

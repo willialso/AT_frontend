@@ -467,7 +467,8 @@ export class OffChainPricingEngine {
   public async recordSettlement(
     positionId: number,
     settlementResult: SettlementResult,
-    backendCanister: any
+    backendCanister: any,
+    userPrincipal?: string
   ): Promise<void> {
     try {
       console.log('📝 Recording settlement to backend:', {
@@ -529,12 +530,15 @@ export class OffChainPricingEngine {
         finalPriceCents
       });
       
-      const result = await backendCanister.recordSettlement(
-        positionId, // ✅ FIXED: Pass as number
-        outcome, // ✅ FIXED: Ensure outcome is never undefined
-        payoutCents, // ✅ FIXED: Pass as number for Nat64
-        profitCents, // ✅ FIXED: Pass as number for Nat64
-        finalPriceCents // ✅ FIXED: Pass as number for Nat64
+      // ✅ FIXED: Use correct backend function - settleTrade instead of recordSettlement
+      // Backend expects: settleTrade(positionId: nat, finalPrice: nat64, user: principal)
+      const userPrincipalToUse = userPrincipal || settlementResult.userPrincipal || 'anonymous';
+      console.log('🔍 Using user principal for settlement:', userPrincipalToUse);
+      
+      const result = await backendCanister.settleTrade(
+        positionId, // nat
+        finalPriceCents, // nat64 (final price in cents)
+        Principal.fromText(userPrincipalToUse) // principal
       );
       
       if ('ok' in result) {

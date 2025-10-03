@@ -530,7 +530,8 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         await pricingEngine.recordSettlement(
           positionId,
           result,
-          atticusService
+          atticusService,
+          user?.principal.toString() // Pass user principal
         );
         console.log('✅ Settlement recorded to backend');
       } catch (error) {
