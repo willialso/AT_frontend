@@ -725,6 +725,9 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
     setLocalFormData(prev => ({ ...prev, expiry: currentRecommendation.expiry }));
     onExpirySelect(currentRecommendation.expiry);
     
+    // ✅ FIX: Wait for React state updates to propagate
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
     // Close modal
     setShowRecommendation(false);
     
