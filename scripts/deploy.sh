@@ -39,7 +39,7 @@ dfx deploy atticus_frontend
 # Get canister IDs
 echo "📋 Canister IDs:"
 echo "Trading Canister: $(dfx canister id trading_canister)"
-echo "Price Oracle: $(dfx canister id price_oracle)"
+echo "Price Oracle: Removed (using WebSocket feeds)"
 echo "Frontend: $(dfx canister id atticus_frontend)"
 
 echo "✅ Deployment complete!"
