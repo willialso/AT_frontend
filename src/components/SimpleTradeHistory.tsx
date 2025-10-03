@@ -175,28 +175,25 @@ export const SimpleTradeHistory: React.FC = () => {
         const mappedTrades = userPositions
           .map((pos: any) => {
             console.log('🔍 Trade history debug for position', pos.id, ':', {
-              settlementPrice: pos.settlement_price,
-              entryPrice: pos.entry_price,
-              strikePrice: pos.strike_price,
+              settlementPrice: pos.settlementPrice,
+              entryPrice: pos.entryPrice,
+              strikePrice: pos.strikePrice,
               status: pos.status
             });
             
-            // ✅ FIXED: Use actual settlement price from backend (no more hardcoded overrides)
-            let correctedSettlementPrice = pos.settlement_price?.[0];
-            
             return {
               id: pos.id?.toString() || 'N/A',
-              type: (pos.option_type ? ('Call' in pos.option_type ? 'call' : 'put') : 'call') as 'call' | 'put',
-              strike: pos.strike_price || 0,
-              entryPrice: correctedSettlementPrice || pos.entry_price || 0, // ✅ FIXED: Use actual settlement price from backend
+              type: pos.optionType || 'call',
+              strike: pos.strikePrice || 0,
+              entryPrice: pos.entryPrice || 0,
               expiry: pos.expiry || 'N/A',
               size: pos.size || 1,
-              entryPremium: pos.entry_premium || 0,
+              entryPremium: pos.entryPremium || 0,
               pnl: pos.pnl || 0,
-              openedAt: Number(pos.opened_at) / 1000000 || 0,
-              settledAt: pos.settled_at ? Number(pos.settled_at) / 1000000 : null,
-              settlementPrice: correctedSettlementPrice || undefined,
-              status: pos.status ? Object.keys(pos.status)[0] || 'Unknown' : 'Unknown'
+              openedAt: Number(pos.openedAt) / 1000000 || 0,
+              settledAt: pos.settledAt ? Number(pos.settledAt) / 1000000 : null,
+              settlementPrice: pos.settlementPrice || undefined,
+              status: pos.status || 'Unknown'
             };
           })
           .sort((a: SimpleTrade, b: SimpleTrade) => b.openedAt - a.openedAt); // Most recent first
