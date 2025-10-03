@@ -717,6 +717,13 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
       return;
     }
 
+    console.log('🔍 Best Odds: Starting execution with recommendation:', currentRecommendation);
+    console.log('🔍 Best Odds: Current form state before update:', {
+      optionType,
+      strikeOffset,
+      localFormData
+    });
+
     // ✅ FIX: Set the recommended parameters in BOTH local and parent state
     onOptionTypeSelect(currentRecommendation.optionType);
     onStrikeOffsetSelect(currentRecommendation.strikeOffset);
@@ -726,7 +733,9 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
     onExpirySelect(currentRecommendation.expiry);
     
     // ✅ FIX: Wait for React state updates to propagate
-    await new Promise(resolve => setTimeout(resolve, 50));
+    console.log('🔍 Best Odds: Waiting for state propagation...');
+    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log('🔍 Best Odds: State propagation delay complete');
     
     // Close modal
     setShowRecommendation(false);

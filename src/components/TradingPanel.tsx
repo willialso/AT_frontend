@@ -669,7 +669,11 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
     console.log('🔍 TradingPanel: typeof contracts =', typeof contracts);
     
     if (!priceState.isValid || !optionType) {
-      console.error('Cannot start trade: missing price data or option type');
+      console.error('Cannot start trade: missing price data or option type', {
+        priceStateIsValid: priceState.isValid,
+        optionType: optionType,
+        priceState: priceState
+      });
       return;
     }
 
