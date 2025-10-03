@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthProvider';
 import { useCanister } from '../contexts/CanisterProvider';
 import { useBalance } from '../contexts/BalanceProvider';
 import { Tooltip } from './Tooltip';
+import { bestOddsPredictor, TradeRecommendation } from '../services/BestOddsPredictor';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
@@ -393,6 +394,142 @@ const PriceInfo = styled.div`
   margin-top: 0.5rem;
 `;
 
+// ✅ BEST ODDS BUTTON
+const BestOddsButton = styled.button`
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: linear-gradient(135deg, #218838, #1ea085);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+  }
+`;
+
+// ✅ RECOMMENDATION MODAL
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+`;
+
+const ModalHeader = styled.div`
+  text-align: center;
+  margin-bottom: 1rem;
+`;
+
+const ModalTitle = styled.h3`
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1.2rem;
+`;
+
+const WinRateDisplay = styled.div<{ confidence: string }>`
+  font-size: 2rem;
+  font-weight: bold;
+  color: ${props => 
+    props.confidence === 'high' ? '#28a745' : 
+    props.confidence === 'medium' ? '#ffc107' : '#dc3545'
+  };
+  text-align: center;
+  margin: 1rem 0;
+`;
+
+const RecommendationDetails = styled.div`
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+`;
+
+const DetailRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const DetailLabel = styled.span`
+  font-weight: 500;
+  color: #666;
+`;
+
+const DetailValue = styled.span`
+  font-weight: bold;
+  color: #333;
+`;
+
+const ModalButtons = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+`;
+
+const ModalButton = styled.button<{ variant?: 'primary' | 'secondary' }>`
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  
+  ${props => props.variant === 'primary' ? `
+    background: #007bff;
+    color: white;
+    
+    &:hover {
+      background: #0056b3;
+    }
+  ` : `
+    background: #6c757d;
+    color: white;
+    
+    &:hover {
+      background: #545b62;
+    }
+  `}
+`;
+
 interface OptionsTradeFormProps {
   currentPrice: number;
   optionType?: 'call' | 'put' | null;
@@ -454,6 +591,11 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // ✅ BEST ODDS STATE
+  const [showRecommendation, setShowRecommendation] = useState(false);
+  const [currentRecommendation, setCurrentRecommendation] = useState<TradeRecommendation | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     setLocalFormData({
@@ -461,6 +603,13 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
       contracts: '1'
     });
   }, []);
+
+  // ✅ UPDATE PRICE DATA FOR BEST ODDS ANALYSIS
+  useEffect(() => {
+    if (currentPrice > 0) {
+      bestOddsPredictor.updatePrice(currentPrice);
+    }
+  }, [currentPrice]);
 
   const expiryOptions = [
     { value: '5s', label: '5s' },
@@ -547,6 +696,50 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // ✅ BEST ODDS HANDLERS
+  const handleBestOddsClick = async () => {
+    setIsAnalyzing(true);
+    try {
+      const recommendation = bestOddsPredictor.getBestRecommendation();
+      setCurrentRecommendation(recommendation);
+      setShowRecommendation(true);
+    } catch (error) {
+      console.error('Best odds analysis failed:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleExecuteRecommendation = async () => {
+    if (!currentRecommendation || !onOptionTypeSelect || !onStrikeOffsetSelect || !onExpirySelect || !onTradeStart) {
+      return;
+    }
+
+    // Set the recommended parameters
+    onOptionTypeSelect(currentRecommendation.optionType);
+    onStrikeOffsetSelect(currentRecommendation.strikeOffset);
+    onExpirySelect(currentRecommendation.expiry);
+    
+    // Close modal
+    setShowRecommendation(false);
+    
+    // Execute trade with 1 contract
+    const contractCount = 1;
+    setIsSubmitting(true);
+    try {
+      await onTradeStart(contractCount);
+    } catch (error) {
+      console.error('Recommended trade failed:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseRecommendation = () => {
+    setShowRecommendation(false);
+    setCurrentRecommendation(null);
   };
 
 
@@ -748,6 +941,31 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
         </SummaryBox>
       )}
 
+      {/* ✅ BEST ODDS BUTTON */}
+      <BestOddsButton
+        type="button"
+        onClick={handleBestOddsClick}
+        disabled={isAnalyzing || isSubmitting || isTradeInProgress}
+      >
+        {isAnalyzing ? (
+          <>
+            <div style={{
+              width: '16px',
+              height: '16px',
+              border: '2px solid transparent',
+              borderTop: '2px solid currentColor',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
+            Analyzing...
+          </>
+        ) : (
+          <>
+            🎯 Best Odds
+          </>
+        )}
+      </BestOddsButton>
+
       {/* ✅ NEW: Balance Status Display */}
       {!isDemoMode && userBalance > 0 && tradeValidation && tradeValidation.requiredBalance !== undefined && (
         <BalanceStatus status={getBalanceStatus(typeof tradeValidation.requiredBalance === 'number' ? tradeValidation.requiredBalance : (tradeValidation.requiredBalance as any)?.toNumber?.() || 0, currentPrice).status}>
@@ -820,6 +1038,64 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
           </StatusMessage>
         )}
       </TradeFormOverlay>
+
+      {/* ✅ BEST ODDS RECOMMENDATION MODAL */}
+      {showRecommendation && currentRecommendation && (
+        <ModalOverlay onClick={handleCloseRecommendation}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>🎯 Best Odds Recommendation</ModalTitle>
+            </ModalHeader>
+            
+            <WinRateDisplay confidence={currentRecommendation.confidence}>
+              {(currentRecommendation.winRate * 100).toFixed(1)}% Win Rate
+            </WinRateDisplay>
+            
+            <RecommendationDetails>
+              <DetailRow>
+                <DetailLabel>Option Type:</DetailLabel>
+                <DetailValue>{currentRecommendation.optionType.toUpperCase()}</DetailValue>
+              </DetailRow>
+              <DetailRow>
+                <DetailLabel>Expiry:</DetailLabel>
+                <DetailValue>{currentRecommendation.expiry}</DetailValue>
+              </DetailRow>
+              <DetailRow>
+                <DetailLabel>Strike Offset:</DetailLabel>
+                <DetailValue>${currentRecommendation.strikeOffset.toFixed(2)}</DetailValue>
+              </DetailRow>
+              <DetailRow>
+                <DetailLabel>Confidence:</DetailLabel>
+                <DetailValue style={{ 
+                  color: currentRecommendation.confidence === 'high' ? '#28a745' : 
+                         currentRecommendation.confidence === 'medium' ? '#ffc107' : '#dc3545'
+                }}>
+                  {currentRecommendation.confidence.toUpperCase()}
+                </DetailValue>
+              </DetailRow>
+            </RecommendationDetails>
+            
+            <div style={{ 
+              fontSize: '0.9rem', 
+              color: '#666', 
+              textAlign: 'center', 
+              margin: '1rem 0',
+              fontStyle: 'italic'
+            }}>
+              {currentRecommendation.reasoning}
+            </div>
+            
+            <ModalButtons>
+              <ModalButton variant="secondary" onClick={handleCloseRecommendation}>
+                Cancel
+              </ModalButton>
+              <ModalButton variant="primary" onClick={handleExecuteRecommendation}>
+                Trade Now
+              </ModalButton>
+            </ModalButtons>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </TradeFormContainer>
   );
 };
