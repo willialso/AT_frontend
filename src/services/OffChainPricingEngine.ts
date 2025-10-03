@@ -532,7 +532,6 @@ export class OffChainPricingEngine {
       
       // ✅ FIXED: Use the actual backend function - recordSettlement
       // Backend expects: recordSettlement(positionId: nat, outcome: text, payout: nat64, profit: nat64, finalPrice: nat64)
-      const outcome = settlementResult.outcome || 'loss';
       console.log('🔍 Using recordSettlement with parameters:', {
         positionId,
         outcome,
