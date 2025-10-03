@@ -34,6 +34,49 @@ const Title = styled.h3`
   font-size: 1.2rem;
 `;
 
+const HeaderContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+`;
+
+const RefreshButton = styled.button`
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &:hover {
+    background: #0056b3;
+  }
+  
+  &:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+  }
+`;
+
+const LoadingSpinner = styled.div`
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
 const TradeItem = styled.div`
   background: white;
   border: 1px solid #ddd;
@@ -178,6 +221,23 @@ export const SimpleTradeHistory: React.FC = () => {
     fetchTradeHistory();
   }, [isConnected, user]); // ✅ FIXED: Use actual dependencies instead of function reference
 
+  // ✅ AUTO-REFRESH: Add 30-second polling for trade history updates
+  useEffect(() => {
+    if (!user || !isConnected) return;
+    
+    console.log('🔄 Starting auto-refresh for trade history...');
+    const interval = setInterval(() => {
+      fetchTradeHistory().catch(error => {
+        console.warn('⚠️ Auto-refresh trade history failed:', error);
+      });
+    }, 30000); // Every 30 seconds
+    
+    return () => {
+      console.log('🔄 Stopping auto-refresh for trade history...');
+      clearInterval(interval);
+    };
+  }, [user, isConnected, fetchTradeHistory]);
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString();
   };
@@ -186,10 +246,16 @@ export const SimpleTradeHistory: React.FC = () => {
     return `$${price.toFixed(2)}`;
   };
 
-  if (loading) {
+  if (loading && trades.length === 0) {
     return (
       <Container>
-        <Title>Trade History</Title>
+        <HeaderContainer>
+          <Title>Trade History</Title>
+          <RefreshButton disabled>
+            <LoadingSpinner />
+            Loading...
+          </RefreshButton>
+        </HeaderContainer>
         <LoadingText>Loading trades...</LoadingText>
       </Container>
     );
@@ -198,7 +264,12 @@ export const SimpleTradeHistory: React.FC = () => {
   if (error) {
     return (
       <Container>
-        <Title>Trade History</Title>
+        <HeaderContainer>
+          <Title>Trade History</Title>
+          <RefreshButton onClick={fetchTradeHistory}>
+            🔄 Refresh
+          </RefreshButton>
+        </HeaderContainer>
         <ErrorText>Error: {error}</ErrorText>
       </Container>
     );
@@ -207,7 +278,12 @@ export const SimpleTradeHistory: React.FC = () => {
   if (trades.length === 0) {
     return (
       <Container>
-        <Title>Trade History</Title>
+        <HeaderContainer>
+          <Title>Trade History</Title>
+          <RefreshButton onClick={fetchTradeHistory}>
+            🔄 Refresh
+          </RefreshButton>
+        </HeaderContainer>
         <LoadingText>No trades found</LoadingText>
       </Container>
     );
@@ -215,7 +291,13 @@ export const SimpleTradeHistory: React.FC = () => {
 
   return (
     <Container>
-      <Title>Trade History ({trades.length} trades)</Title>
+      <HeaderContainer>
+        <Title>Trade History ({trades.length} trades)</Title>
+        <RefreshButton onClick={fetchTradeHistory} disabled={loading}>
+          {loading ? <LoadingSpinner /> : '🔄'}
+          {loading ? 'Refreshing...' : 'Refresh'}
+        </RefreshButton>
+      </HeaderContainer>
       {trades.map((trade) => (
         <TradeItem key={trade.id}>
           <TradeInfo>
