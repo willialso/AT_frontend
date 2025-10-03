@@ -369,11 +369,11 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
               openedAt: new Date(openedAt),
               expirySeconds,
               expiryTime: new Date(expiryTime),
-              isExpired: currentTime > (expiryTime + 60000)
+              isExpired: currentTime > expiryTime
             });
             
-            // If position is expired (more than 1 minute past expiry), settle it
-            if (currentTime > (expiryTime + 60000)) {
+            // If position is expired, settle it immediately
+            if (currentTime > expiryTime) {
               console.log('🔄 Auto-settling expired position:', position.id, 'expired at:', new Date(expiryTime));
               try {
                 // ✅ FIXED: Use off-chain settlement instead of old settleTrade
@@ -476,7 +476,7 @@ export const TradeHistory: React.FC<TradeHistoryProps> = ({ refreshTrigger }) =>
             const expiryTime = openedAt + (expirySeconds * 1000);
             
             // If position is expired (more than 1 minute past expiry), don't show it
-            const isExpired = currentTime > (expiryTime + 60000); // 1 minute grace period
+            const isExpired = currentTime > expiryTime; // Settle immediately when expired
             if (isExpired) {
               console.log('📊 Filtering out expired position:', backendPos.id, 'expired at:', new Date(expiryTime));
               return false;
