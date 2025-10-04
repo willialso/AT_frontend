@@ -677,6 +677,17 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
     const finalOptionType = overrideParams?.optionType || optionType;
     const finalStrikeOffset = overrideParams?.strikeOffset || strikeOffset;
     const finalExpiry = overrideParams?.expiry || selectedExpiry;
+
+    // ✅ DEBUG: Log final parameters for verification
+    console.log('🎯 TradingPanel Final Params:', {
+      overrideParams,
+      finalOptionType,
+      finalStrikeOffset,
+      finalExpiry,
+      stateOptionType: optionType,
+      stateStrikeOffset: strikeOffset,
+      stateExpiry: selectedExpiry
+    });
     
     if (!priceState.isValid || !finalOptionType) {
       console.error('Cannot start trade: missing price data or option type', {
@@ -794,7 +805,14 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         amount: contracts
       };
 
-      console.log('🕐 Trade data with expiry:', finalExpiry);
+      // ✅ DEBUG: Log trade data creation for verification
+      console.log('🎯 Trade Data Created:', {
+        tradeData,
+        finalOptionType,
+        finalStrikeOffset,
+        finalExpiry,
+        strikePrice: finalOptionType === 'call' ? tradeStartPrice + finalStrikeOffset : tradeStartPrice - finalStrikeOffset
+      });
 
       // ✅ OPTIMIZED: Single state update with captured price for perfect synchronization
       setTradeState({
@@ -911,15 +929,25 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
 
   const isFullyConnected = isDemoMode ? true : (priceConnected && canisterConnected);
 
-  // ✅ SIMPLIFIED: Direct props object - no useMemo overhead, no timer props
+  // ✅ FIXED: Use actual trade data when trade is active, otherwise use state
   const chartProps = {
     priceData: priceState,
     isConnected: priceConnected,
-    optionType,
-    strikeOffset,
+    optionType: tradeState.isActive && tradeState.data ? tradeState.data.type : optionType,
+    strikeOffset: tradeState.isActive && tradeState.data ? tradeState.data.strikeOffset : strikeOffset,
     isTradeActive: tradeState.isActive,
     ...(tradeState.entryPrice !== undefined && { entryPrice: tradeState.entryPrice })
   };
+
+  // ✅ DEBUG: Log chart props to track data flow
+  console.log('🎯 Chart Props Debug:', {
+    optionType: chartProps.optionType,
+    strikeOffset: chartProps.strikeOffset,
+    isTradeActive: chartProps.isTradeActive,
+    tradeData: tradeState.data,
+    stateOptionType: optionType,
+    stateStrikeOffset: strikeOffset
+  });
 
   // ✅ REMOVED: Unused activeTradeData variable that was causing build error
 

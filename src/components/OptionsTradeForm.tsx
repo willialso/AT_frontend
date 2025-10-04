@@ -729,6 +729,9 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
       strikeOffset: currentRecommendation.strikeOffset,
       expiry: currentRecommendation.expiry
     };
+
+    // ✅ DEBUG: Log override parameters for verification
+    console.log('🎯 Best Odds Override Params:', overrideParams);
     
     // Close modal
     setShowRecommendation(false);

@@ -325,6 +325,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     
     if (isTradeActive && chartState.frozenStrikePrice) {
       strikePrice = chartState.frozenStrikePrice;
+      console.log('🎯 PriceChart: Using frozen strike price:', strikePrice);
     } else if (optionType && strikeOffset > 0) {
       strikePrice = optionType === 'call' 
         ? currentPrice + strikeOffset 
@@ -336,6 +337,21 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       if (optionType === 'put' && strikePrice >= currentPrice) {
         strikePrice = currentPrice - strikeOffset;
       }
+      
+      console.log('🎯 PriceChart: Calculated strike price:', {
+        optionType,
+        strikeOffset,
+        currentPrice,
+        calculatedStrikePrice: strikePrice,
+        isTradeActive
+      });
+    } else {
+      console.log('🎯 PriceChart: No strike line - missing data:', {
+        optionType,
+        strikeOffset,
+        isTradeActive,
+        frozenStrikePrice: chartState.frozenStrikePrice
+      });
     }
 
     // Calculate bounds
@@ -490,6 +506,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     if (strikePrice !== null) {
       const strikeY = height - padding.bottom -
         ((strikePrice - dynamicBounds.min) / dynamicBounds.range) * chartHeight;
+      
+      console.log('🎯 PriceChart: Drawing strike line:', {
+        strikePrice,
+        strikeY,
+        chartHeight,
+        dynamicBounds,
+        isInBounds: strikeY >= padding.top && strikeY <= height - padding.bottom
+      });
       
       if (strikeY >= padding.top && strikeY <= height - padding.bottom) {
         ctx.save();
