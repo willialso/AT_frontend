@@ -277,6 +277,17 @@ const SummaryRow = styled.div`
   }
 `;
 
+/* 
+ * 🚨 MOBILE TRADE BUTTON FIX - EASY REVERT INSTRUCTIONS:
+ * 
+ * IF THIS BREAKS MOBILE LAYOUT:
+ * 1. Change z-index back to: z-index: 100;
+ * 2. Change bottom back to: bottom: 60px;
+ * 
+ * CURRENT FIX:
+ * - z-index: 1100 (higher than footer's 1000)
+ * - bottom: 70px (extra spacing above footer)
+ */
 const TradeButton = styled.button<{ disabled: boolean; isTradeInProgress?: boolean }>`
   padding: 1rem; /* ✅ FIX: Reduced padding for tighter UI */
   background: ${(props: { disabled: boolean; isTradeInProgress?: boolean }) => {
@@ -328,8 +339,8 @@ const TradeButton = styled.button<{ disabled: boolean; isTradeInProgress?: boole
     font-size: 0.95rem;
     margin-bottom: 1rem;
     position: sticky;
-    bottom: 60px; /* ✅ FIX: Position above mobile footer (60px height) */
-    z-index: 100;
+    bottom: 70px; /* ✅ FIX: Increased from 60px to 70px for better spacing */
+    z-index: 1100; /* ✅ FIX: Higher than footer z-index (1000) to prevent overlap */
     margin-bottom: 1.5rem; /* ✅ FIX: Extra spacing above footer */
     background: ${(props: { disabled: boolean; isTradeInProgress?: boolean }) => {
       if (props.disabled) return 'rgba(128, 128, 128, 0.3)';

@@ -236,6 +236,8 @@ const TabContent = styled.div`
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  /* ✅ FIX: Ensure sticky positioning works properly on mobile */
+  position: relative;
 
   &::-webkit-scrollbar {
     width: 6px;
