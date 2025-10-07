@@ -688,6 +688,13 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
     const finalStrikeOffset = overrideParams?.strikeOffset || strikeOffset;
     const finalExpiry = overrideParams?.expiry || selectedExpiry;
     
+    // ✅ FIX: Update state to match override params for chart synchronization
+    if (overrideParams) {
+      if (overrideParams.optionType) setOptionType(overrideParams.optionType);
+      if (overrideParams.strikeOffset !== undefined) setStrikeOffset(overrideParams.strikeOffset);
+      if (overrideParams.expiry) setSelectedExpiry(overrideParams.expiry);
+    }
+    
     if (!priceState.isValid || !finalOptionType) {
       console.error('Cannot start trade: missing price data or option type', {
         priceStateIsValid: priceState.isValid,

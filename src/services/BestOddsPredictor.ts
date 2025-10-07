@@ -50,11 +50,11 @@ export class EnhancedBestOddsPredictor {
   private lastStatsFetch: number = 0;
   private readonly STATS_CACHE_TIME = 30000; // 30 seconds cache
   
-  // Improved default win rates (more realistic)
+  // ✅ REALISTIC default win rates (based on binary options baseline ~50%)
   private readonly DEFAULT_WIN_RATES = {
-    '5s': { 2.5: 0.60, 5: 0.55, 10: 0.42, 15: 0.28 },
-    '10s': { 2.5: 0.65, 5: 0.60, 10: 0.47, 15: 0.33 },
-    '15s': { 2.5: 0.70, 5: 0.65, 10: 0.52, 15: 0.38 }
+    '5s': { 2.5: 0.48, 5: 0.46, 10: 0.40, 15: 0.32 },
+    '10s': { 2.5: 0.50, 5: 0.48, 10: 0.43, 15: 0.36 },
+    '15s': { 2.5: 0.52, 5: 0.50, 10: 0.45, 15: 0.38 }
   };
 
   // Reference to backend service (injected)
@@ -255,24 +255,27 @@ export class EnhancedBestOddsPredictor {
     // Sample size penalty for small datasets
     const samplePenalty = Math.min(1.0, sampleSize / 50); // Full confidence at 50+ trades
     
-    // Volatility adjustment curve
+    // ✅ ADJUSTED: More conservative volatility curve (asymmetric: penalty > bonus)
     let volatilityMultiplier = 1.0;
     if (volatility < 0.3) {
-      // Low volatility - more predictable
-      volatilityMultiplier = 1.0 + (0.3 - volatility) * 0.5; // Up to +15% boost
+      // Low volatility - more predictable (reduced from 15% to 6% max boost)
+      volatilityMultiplier = 1.0 + (0.3 - volatility) * 0.2; // Up to +6% boost
     } else if (volatility > 0.6) {
-      // High volatility - less predictable  
-      volatilityMultiplier = 1.0 - (volatility - 0.6) * 0.3; // Up to -12% penalty
+      // High volatility - less predictable (increased from 12% to 20% max penalty)
+      volatilityMultiplier = 1.0 - (volatility - 0.6) * 0.5; // Up to -20% penalty
     }
 
     // Trend strength bonus (strong trends are more reliable)
     const trendBonus = 1.0 + trendStrength * 0.1; // Up to +10% for strong trends
 
+    // ✅ ADDED: Default penalty for when using non-real data
+    const defaultPenalty = sampleSize > 0 ? samplePenalty : 0.85; // -15% for defaults
+
     // Combined adjustment
-    let adjustedRate = baseRate * volatilityMultiplier * trendBonus * (sampleSize > 0 ? samplePenalty : 1.0);
+    let adjustedRate = baseRate * volatilityMultiplier * trendBonus * defaultPenalty;
     
-    // Cap at reasonable maximum
-    adjustedRate = Math.min(adjustedRate, 0.85); // Max 85% win rate
+    // ✅ ADJUSTED: Lower cap to more realistic maximum (reduced from 85% to 72%)
+    adjustedRate = Math.min(adjustedRate, 0.72); // Max 72% win rate
 
     // Confidence levels based on multiple factors
     const confidenceScore = (volatilityMultiplier + (sampleSize > 0 ? samplePenalty : 0.5) + trendStrength) / 3;
@@ -316,24 +319,21 @@ export class EnhancedBestOddsPredictor {
 
     for (const expiry of expiries) {
       for (const strike of strikes) {
-        // Determine option type based on trend
+        // ✅ FIXED: Determine option type based on trend (no bonus here)
         let optionType: 'call' | 'put' = 'call';
-        let trendBonus = 1.0;
         
         if (trend.direction === 'up') {
           optionType = 'call';
-          trendBonus = 1.0 + (trend.strength * 0.1); // Up to +10%
         } else if (trend.direction === 'down') {
           optionType = 'put';
-          trendBonus = 1.0 + (trend.strength * 0.1); // Up to +10%
         }
 
         // Get base win rate from real data or defaults
         const { rate: baseRate, sampleSize } = this.getWinRate(expiry, strike, optionType);
         
-        // Apply volatility and trend adjustments
+        // ✅ FIXED: Apply volatility and trend adjustments (trend applied once inside function)
         const { adjustedRate, confidence } = this.calculateVolatilityAdjustedWinRate(
-          baseRate * trendBonus,
+          baseRate,  // No trendBonus multiplication here
           trend.strength,
           trend.volatility,
           sampleSize

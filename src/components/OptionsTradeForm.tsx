@@ -978,7 +978,7 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
           </>
         ) : (
           <>
-            🎯 Best Odds
+            🧠 Smart Trade
           </>
         )}
       </BestOddsButton>
@@ -1061,7 +1061,7 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
         <ModalOverlay onClick={handleCloseRecommendation}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <ModalTitle>🎯 Best Odds Recommendation</ModalTitle>
+              <ModalTitle>🧠 Smart Trade Recommendation</ModalTitle>
             </ModalHeader>
             
             <WinRateDisplay confidence={currentRecommendation.confidence}>
