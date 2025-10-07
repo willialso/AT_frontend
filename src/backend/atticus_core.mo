@@ -201,6 +201,10 @@ persistent actor AtticusCore {
         let profitFloat = Float.fromInt(Int64.toInt(Int64.fromNat64(profit))) / 100.0;
         let finalPriceFloat = Float.fromInt(Int64.toInt(Int64.fromNat64(finalPrice))) / 100.0;
         
+        // ✅ ADD: Settlement logging for debugging
+        let logMessage = "Settlement: Position " # Nat.toText(positionId) # " | Outcome: " # outcome # " | Profit: $" # Float.toText(profitFloat) # " | Payout: $" # Float.toText(payoutFloat) # " | Final Price: $" # Float.toText(finalPriceFloat);
+        admin_logs := Array.append(admin_logs, [logMessage]);
+        
         // Find the position to get user info
         let position = Array.find(positions, func((id, _)) = id == positionId);
         switch (position) {
@@ -224,25 +228,43 @@ persistent actor AtticusCore {
                 );
                 
                 // ✅ CRITICAL: Update user balance based on settlement
+                // FIXED: No double deduction - balance was already deducted at trade placement
                 let netGainBTC = if (outcome == "win") {
                     profitFloat / finalPriceFloat  // Convert USD profit to BTC
                 } else if (outcome == "tie") {
-                    0.0  // No gain/loss for ties
+                    positionData.entry_premium / finalPriceFloat  // Return premium for ties
                 } else {
-                    -positionData.entry_premium / finalPriceFloat  // Lose the entry premium in BTC
+                    0.0  // No additional deduction for losses (premium already deducted)
                 };
                 
-                // Update user balance
+                // Update user balance with validation
                 users := Array.map(users, func((p, userData)) = 
                     if (p == positionData.user) {
-                        let updatedUser = {
-                            userData with
-                            balance = userData.balance + netGainBTC;
-                            total_wins = if (outcome == "win") { userData.total_wins + (payoutFloat / finalPriceFloat) } else { userData.total_wins };
-                            total_losses = if (outcome == "loss") { userData.total_losses + (positionData.entry_premium / finalPriceFloat) } else { userData.total_losses };
-                            net_pnl = userData.net_pnl + netGainBTC;
-                        };
-                        (p, updatedUser)
+                        let newBalance = userData.balance + netGainBTC;
+                        
+                        // ✅ ADD: Balance validation to prevent negative balances
+                        if (newBalance < 0.0) {
+                            let errorMsg = "Settlement error: User balance would be negative (" # Float.toText(newBalance) # "). Current: " # Float.toText(userData.balance) # ", Gain: " # Float.toText(netGainBTC);
+                            admin_logs := Array.append(admin_logs, [errorMsg]);
+                            // Set balance to 0 instead of negative
+                            let updatedUser = {
+                                userData with
+                                balance = 0.0;
+                                total_wins = if (outcome == "win") { userData.total_wins + (payoutFloat / finalPriceFloat) } else { userData.total_wins };
+                                total_losses = if (outcome == "loss") { userData.total_losses + (positionData.entry_premium / finalPriceFloat) } else { userData.total_losses };
+                                net_pnl = userData.net_pnl + netGainBTC;
+                            };
+                            (p, updatedUser)
+                        } else {
+                            let updatedUser = {
+                                userData with
+                                balance = newBalance;
+                                total_wins = if (outcome == "win") { userData.total_wins + (payoutFloat / finalPriceFloat) } else { userData.total_wins };
+                                total_losses = if (outcome == "loss") { userData.total_losses + (positionData.entry_premium / finalPriceFloat) } else { userData.total_losses };
+                                net_pnl = userData.net_pnl + netGainBTC;
+                            };
+                            (p, updatedUser)
+                        }
                     } else {
                         (p, userData)
                     }
@@ -271,7 +293,10 @@ persistent actor AtticusCore {
                 #ok(())
             };
             case null {
-                #err("Position not found")
+                // ✅ ADD: Enhanced error logging for missing position
+                let errorMsg = "Settlement failed: Position " # Nat.toText(positionId) # " not found";
+                admin_logs := Array.append(admin_logs, [errorMsg]);
+                #err("Position not found: " # Nat.toText(positionId))
             };
         };
     };
