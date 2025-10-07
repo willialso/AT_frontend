@@ -52,6 +52,19 @@ persistent actor AtticusCore {
         total_withdrawals: Float;
     };
 
+    // ✅ BEST ODDS: Trade statistics type for prediction accuracy
+    public type TradeStats = {
+        expiry: Text;           // "5s", "10s", "15s"
+        strike_offset: Float;   // 2.5, 5, 10, 15
+        option_type: Text;      // "call", "put"
+        total_trades: Nat;
+        wins: Nat;
+        losses: Nat;
+        ties: Nat;
+        win_rate: Float;        // Simple: wins / (wins + losses)
+        last_updated: Int;
+    };
+
     // Trading state
     private stable var next_order_id: Nat = 1;
     private stable var positions: [(Nat, Position)] = [];
@@ -68,6 +81,9 @@ persistent actor AtticusCore {
         total_withdrawals = 0.0 
     };
     private stable var admin_logs: [Text] = [];
+    
+    // ✅ BEST ODDS: Trade statistics storage (persistent)
+    private stable var trade_statistics: [(Text, TradeStats)] = [];
 
     // Migration function for stable variables
     system func preupgrade() {
@@ -290,6 +306,22 @@ persistent actor AtticusCore {
                     net_pnl = platform_ledger.net_pnl + (if (outcome == "win") { -payoutUSD } else { premiumUSD });
                 };
                 
+                // ✅ BEST ODDS: Update trade statistics for prediction improvement
+                // Calculate strike offset from position data
+                let strike_offset = Float.abs(positionData.strike_price - positionData.entry_price);
+                let option_type_text = switch (positionData.option_type) {
+                    case (#Call) { "call" };
+                    case (#Put) { "put" };
+                };
+                
+                // Async call to update statistics (non-blocking)
+                ignore update_trade_statistics(
+                    positionData.expiry,
+                    strike_offset,
+                    option_type_text,
+                    outcome
+                );
+                
                 #ok(())
             };
             case null {
@@ -359,6 +391,92 @@ persistent actor AtticusCore {
     // ✅ GET ADMIN LOGS
     public func get_admin_logs() : async [Text] {
         admin_logs;
+    };
+
+    // ✅ BEST ODDS: Update trade statistics after settlement
+    public func update_trade_statistics(
+        expiry: Text,
+        strike_offset: Float,
+        option_type: Text,
+        outcome: Text
+    ) : async () {
+        // Create unique key for this combination
+        let key = expiry # "_" # Float.toText(strike_offset) # "_" # option_type;
+        
+        // Find existing entry
+        let existing = Array.find<(Text, TradeStats)>(
+            trade_statistics,
+            func((k, _)) = k == key
+        );
+        
+        switch (existing) {
+            case (?entry) {
+                // Update existing statistics
+                let (_, stats) = entry;
+                let new_total = stats.total_trades + 1;
+                let new_wins = if (outcome == "win") { stats.wins + 1 } else { stats.wins };
+                let new_losses = if (outcome == "loss") { stats.losses + 1 } else { stats.losses };
+                let new_ties = if (outcome == "tie") { stats.ties + 1 } else { stats.ties };
+                
+                // Calculate new win rate
+                let total_decided = new_wins + new_losses;
+                let new_win_rate = if (total_decided > 0) {
+                    Float.fromInt(new_wins) / Float.fromInt(total_decided)
+                } else {
+                    0.0
+                };
+                
+                let updated_stats: TradeStats = {
+                    expiry = stats.expiry;
+                    strike_offset = stats.strike_offset;
+                    option_type = stats.option_type;
+                    total_trades = new_total;
+                    wins = new_wins;
+                    losses = new_losses;
+                    ties = new_ties;
+                    win_rate = new_win_rate;
+                    last_updated = Time.now();
+                };
+                
+                // Update array with new stats
+                trade_statistics := Array.map<(Text, TradeStats), (Text, TradeStats)>(
+                    trade_statistics,
+                    func((k, s)) = if (k == key) { (k, updated_stats) } else { (k, s) }
+                );
+            };
+            case null {
+                // Create new entry
+                let new_stats: TradeStats = {
+                    expiry = expiry;
+                    strike_offset = strike_offset;
+                    option_type = option_type;
+                    total_trades = 1;
+                    wins = if (outcome == "win") { 1 } else { 0 };
+                    losses = if (outcome == "loss") { 1 } else { 0 };
+                    ties = if (outcome == "tie") { 1 } else { 0 };
+                    win_rate = if (outcome == "win") { 1.0 } else if (outcome == "loss") { 0.0 } else { 0.0 };
+                    last_updated = Time.now();
+                };
+                trade_statistics := Array.append<(Text, TradeStats)>(
+                    trade_statistics,
+                    [(key, new_stats)]
+                );
+            };
+        };
+        
+        // Log the update
+        let logMessage = "Stats updated: " # key # " | Outcome: " # outcome # " | Total: " # Nat.toText(
+            switch (Array.find<(Text, TradeStats)>(trade_statistics, func((k, _)) = k == key)) {
+                case (?entry) { entry.1.total_trades };
+                case null { 0 };
+            }
+        );
+        admin_logs := Array.append<Text>(admin_logs, [logMessage]);
+    };
+
+    // ✅ BEST ODDS: Get trade statistics (query function)
+    public query func get_trade_statistics() : async [(Text, TradeStats)] {
+        trade_statistics
     };
 
     // ✅ ADMIN RESET PLATFORM DATA

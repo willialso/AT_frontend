@@ -277,17 +277,6 @@ const SummaryRow = styled.div`
   }
 `;
 
-/* 
- * 🚨 MOBILE TRADE BUTTON FIX - EASY REVERT INSTRUCTIONS:
- * 
- * IF THIS BREAKS MOBILE LAYOUT:
- * 1. Change z-index back to: z-index: 100;
- * 2. Change bottom back to: bottom: 60px;
- * 
- * CURRENT FIX:
- * - z-index: 1100 (higher than footer's 1000)
- * - bottom: 70px (extra spacing above footer)
- */
 const TradeButton = styled.button<{ disabled: boolean; isTradeInProgress?: boolean }>`
   padding: 1rem; /* ✅ FIX: Reduced padding for tighter UI */
   background: ${(props: { disabled: boolean; isTradeInProgress?: boolean }) => {
@@ -339,8 +328,8 @@ const TradeButton = styled.button<{ disabled: boolean; isTradeInProgress?: boole
     font-size: 0.95rem;
     margin-bottom: 1rem;
     position: sticky;
-    bottom: 70px; /* ✅ FIX: Increased from 60px to 70px for better spacing */
-    z-index: 1100; /* ✅ FIX: Higher than footer z-index (1000) to prevent overlap */
+    bottom: 60px; /* ✅ FIX: Position above mobile footer (60px height) */
+    z-index: 100;
     margin-bottom: 1.5rem; /* ✅ FIX: Extra spacing above footer */
     background: ${(props: { disabled: boolean; isTradeInProgress?: boolean }) => {
       if (props.disabled) return 'rgba(128, 128, 128, 0.3)';
@@ -619,6 +608,14 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
     });
   }, []);
 
+  // ✅ INITIALIZE BACKEND SERVICE FOR BEST ODDS
+  useEffect(() => {
+    if (tradingCanister) {
+      bestOddsPredictor.initializeBackendService(tradingCanister);
+      console.log('✅ Best Odds: Backend service initialized');
+    }
+  }, [tradingCanister]);
+
   // ✅ UPDATE PRICE DATA FOR BEST ODDS ANALYSIS
   useEffect(() => {
     if (currentPrice > 0) {
@@ -713,15 +710,16 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
     }
   };
 
-  // ✅ BEST ODDS HANDLERS
+  // ✅ BEST ODDS HANDLERS (ENHANCED WITH BACKEND STATS)
   const handleBestOddsClick = async () => {
     setIsAnalyzing(true);
     try {
-      const recommendation = bestOddsPredictor.getBestRecommendation();
+      const recommendation = await bestOddsPredictor.getBestRecommendation();
       setCurrentRecommendation(recommendation);
       setShowRecommendation(true);
+      console.log('✅ Best Odds recommendation:', recommendation);
     } catch (error) {
-      console.error('Best odds analysis failed:', error);
+      console.error('❌ Best odds analysis failed:', error);
     } finally {
       setIsAnalyzing(false);
     }
@@ -740,9 +738,6 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
       strikeOffset: currentRecommendation.strikeOffset,
       expiry: currentRecommendation.expiry
     };
-
-    // ✅ DEBUG: Log override parameters for verification
-    console.log('🎯 Best Odds Override Params:', overrideParams);
     
     // Close modal
     setShowRecommendation(false);
@@ -1095,6 +1090,12 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
                   {currentRecommendation.confidence.toUpperCase()}
                 </DetailValue>
               </DetailRow>
+              {currentRecommendation.sampleSize !== undefined && currentRecommendation.sampleSize > 0 && (
+                <DetailRow>
+                  <DetailLabel>Sample Size:</DetailLabel>
+                  <DetailValue>{currentRecommendation.sampleSize} trades</DetailValue>
+                </DetailRow>
+              )}
             </RecommendationDetails>
             
             <div style={{ 
