@@ -1092,34 +1092,23 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
               </DetailRow>
               {currentRecommendation.sampleSize !== undefined && currentRecommendation.sampleSize > 0 && (
                 <DetailRow>
-                  <DetailLabel>Sample Size:</DetailLabel>
+                  <DetailLabel>Data Sample:</DetailLabel>
                   <DetailValue>{currentRecommendation.sampleSize} trades</DetailValue>
                 </DetailRow>
               )}
             </RecommendationDetails>
             
             <div style={{ 
-              fontSize: '0.85rem', 
+              fontSize: '0.8rem', 
               color: '#666', 
               textAlign: 'center', 
-              margin: '0.75rem 0',
-              fontStyle: 'italic',
-              lineHeight: '1.4'
-            }}>
-              {currentRecommendation.reasoning}
-            </div>
-            
-            <div style={{ 
-              fontSize: '0.75rem', 
-              color: '#999', 
-              textAlign: 'center', 
-              margin: '0.5rem 0 1rem 0',
-              padding: '0.5rem',
+              margin: '1rem 0',
+              padding: '0.75rem',
               background: '#f8f9fa',
-              borderRadius: '4px',
-              lineHeight: '1.4'
+              borderRadius: '6px',
+              lineHeight: '1.5'
             }}>
-              ⚠️ Recommendations are based on statistical analysis and historical trends. Past performance does not guarantee future results. Trade at your own risk.
+              ⚠️ Recommendations use statistical analysis and market trends. Past performance does not guarantee future results. Trade responsibly.
             </div>
             
             <ModalButtons>
