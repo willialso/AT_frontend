@@ -435,6 +435,8 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
     statusMessage: string | null;
     result: { message: string; type: 'success' | 'error' } | null;
     settlementResult: { outcome: 'win' | 'loss' | 'tie'; profit: number; payout: number } | null;
+    activeOptionType?: 'call' | 'put';  // ✅ ADDED: Store active trade's option type
+    activeStrikeOffset?: number;         // ✅ ADDED: Store active trade's strike offset
   }>({
     isActive: false,
     isInProgress: false,
@@ -825,7 +827,9 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
           message: `Trade started: ${finalOptionType.toUpperCase()}`,
           type: 'success'
         },
-        settlementResult: null
+        settlementResult: null,
+        activeOptionType: finalOptionType,    // ✅ ADDED: Store for chart
+        activeStrikeOffset: finalStrikeOffset  // ✅ ADDED: Store for chart
       });
 
       // Clear status message after 3 seconds using requestAnimationFrame
@@ -928,12 +932,12 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
 
   const isFullyConnected = isDemoMode ? true : (priceConnected && canisterConnected);
 
-  // ✅ SIMPLIFIED: Direct props object - no useMemo overhead, no timer props
+  // ✅ FIXED: Use active trade params when trade is running, otherwise use form state
   const chartProps = {
     priceData: priceState,
     isConnected: priceConnected,
-    optionType,
-    strikeOffset,
+    optionType: tradeState.isActive && tradeState.activeOptionType ? tradeState.activeOptionType : optionType,
+    strikeOffset: tradeState.isActive && tradeState.activeStrikeOffset !== undefined ? tradeState.activeStrikeOffset : strikeOffset,
     isTradeActive: tradeState.isActive,
     ...(tradeState.entryPrice !== undefined && { entryPrice: tradeState.entryPrice })
   };
