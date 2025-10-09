@@ -435,7 +435,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
     countdown: number;
     statusMessage: string | null;
     result: { message: string; type: 'success' | 'error' } | null;
-    settlementResult: { outcome: 'win' | 'loss' | 'tie'; profit: number; payout: number } | null;
+    settlementResult: { outcome: 'win' | 'loss' | 'tie'; profit: number; payout: number; finalPrice: number } | null;
     activeOptionType?: 'call' | 'put';  // ✅ ADDED: Store active trade's option type
     activeStrikeOffset?: number;         // ✅ ADDED: Store active trade's strike offset
   }>({
@@ -538,8 +538,9 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         );
         console.log('✅ Settlement recorded to backend');
       } catch (error) {
-        console.error('❌ Failed to record settlement:', error);
-        // Continue with UI update even if backend recording fails
+        console.warn('⚠️ Backend settlement recording failed, but settlement calculation succeeded:', error);
+        // ✅ Continue with frontend settlement display even if backend fails
+        // Frontend calculation is authoritative for user experience
       }
 
       console.log('✅ Settlement result:', result);
@@ -552,7 +553,8 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         settlementResult: {
           outcome: result.outcome,
           profit: result.profit || 0,
-          payout: result.payout || 0
+          payout: result.payout || 0,
+          finalPrice: result.finalPrice || 0
         },
         result: {
           message: result.outcome === 'win' 
@@ -574,7 +576,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         setTimeout(clearResult, 3000);
       });
 
-      // ✅ FIXED: Trade cleanup without clearing result (let timeout handle it)
+      // ✅ FIXED: Trade cleanup without clearing settlement result (let timeout handle it)
       setTradeState(prev => ({
         ...prev,
         isActive: false,
@@ -582,10 +584,17 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         data: null,
         entryPrice: undefined,
         countdown: 0,
-        statusMessage: null,
-        settlementResult: null
-        // ✅ KEEP: result stays visible until timeout clears it
+        statusMessage: null
+        // ✅ KEEP: result and settlementResult stay visible until timeout clears them
       }));
+
+      // ✅ ADDED: Separate timeout for settlement result clearing
+      const clearSettlementResult = () => {
+        setTradeState(prev => ({ ...prev, settlementResult: null }));
+      };
+      requestAnimationFrame(() => {
+        setTimeout(clearSettlementResult, 5000);
+      });
       
       // Reset form state
       setOptionType(null);
