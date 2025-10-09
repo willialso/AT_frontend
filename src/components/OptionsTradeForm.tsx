@@ -1057,10 +1057,10 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
                   gap: '1rem'
                 }}>
                   <div>
-                    <strong>Strike:</strong> ${currentPrice ? (currentPrice + strikeOffset).toFixed(2) : 'N/A'}
+                    <strong>Strike:</strong> ${currentPrice ? ((currentPrice || 0) + (strikeOffset || 0)).toFixed(2) : 'N/A'}
                   </div>
                   <div>
-                    <strong>Entry:</strong> ${currentPrice?.toFixed(2) || 'N/A'}
+                    <strong>Entry:</strong> ${(currentPrice || 0).toFixed(2)}
                   </div>
                   <div>
                     <strong>Type:</strong> {optionType?.toUpperCase() || 'N/A'}

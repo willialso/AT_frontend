@@ -14,7 +14,7 @@ const Header = styled.header`
   justify-content: space-between;
   align-items: center;
   padding: 0.375rem 1rem;
-  background: var(--bg-panel);
+  background: #121212; /* ✅ FIX: Completely opaque background */
   border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 4px var(--shadow);
   min-height: 45px;
@@ -34,7 +34,7 @@ const LogoContainer = styled.div`
     width: auto;
     object-fit: contain;
     max-width: 150px;
-    opacity: 0.9;
+    opacity: 1; /* ✅ FIX: Remove opacity for full visibility */
   }
 `;
 

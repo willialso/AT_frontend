@@ -32,7 +32,7 @@ const Header = styled.header`
   justify-content: space-between;
   align-items: center;
   padding: 0.375rem 1rem; /* ✅ FIX: Reduced padding for tighter UI */
-  background: rgba(18, 18, 18, 0.95); /* ✅ FIX: Solid background with slight transparency for glass effect */
+  background: #121212; /* ✅ FIX: Completely opaque background */
   border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 4px var(--shadow);
   min-height: 45px; /* ✅ FIX: Reduced height */
@@ -40,8 +40,7 @@ const Header = styled.header`
   position: sticky; /* ✅ FIX: Make header sticky for better navigation */
   top: 0;
   z-index: 1000; /* ✅ FIX: Ensure header stays above other content */
-  backdrop-filter: blur(8px); /* ✅ FIX: Add blur effect for modern glass appearance */
-  -webkit-backdrop-filter: blur(8px); /* ✅ FIX: Safari support */
+  /* ✅ REMOVED: backdrop-filter not widely supported and causes transparency issues */
 
   @media (min-width: 768px) {
     padding: 0.5rem 1.5rem; /* ✅ FIX: Reduced desktop padding */
@@ -716,8 +715,11 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
     }
 
     // ✅ CRITICAL: Capture price at the exact moment trade starts for perfect synchronization
-    const tradeStartPrice = priceState.current;
+    const tradeStartPrice = priceState.current || priceState.price || 0;
     console.log('🎯 Trade started at price:', tradeStartPrice);
+    if (!tradeStartPrice) {
+      throw new Error('Price not available for trade - please refresh and try again');
+    }
 
     try {
       setTradeState(prev => ({
@@ -807,7 +809,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
       const tradeData: TradeData = {
         id: orderId.toString(),
         positionId: orderId, // ✅ ADDED: Store actual backend position ID
-        entryPrice: tradeStartPrice, // ✅ FIXED: Use actual captured price, not 0!
+        entryPrice: tradeStartPrice || 0, // ✅ FIXED: Prevent undefined crash with fallback
         strikeOffset: finalStrikeOffset, // ✅ FIXED: Use strike offset instead of strike price
         startTime: Date.now(),
         expiry: finalExpiry,  // ✅ Use final expiry
@@ -822,7 +824,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         isActive: true,
         isInProgress: false,
         data: tradeData,
-        entryPrice: tradeStartPrice, // ✅ PERFECT SYNC: Entry line shows captured BTC price at trade start
+        entryPrice: tradeStartPrice || 0, // ✅ PERFECT SYNC: Entry line shows captured BTC price at trade start
         countdown: 0,
         statusMessage: 'Trade successful!',
         result: {
@@ -1030,10 +1032,10 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
                   <strong>Outcome:</strong> {tradeState.settlementResult.outcome.toUpperCase()}
                 </div>
                 <div>
-                  <strong>Profit:</strong> {tradeState.settlementResult.profit > 0 ? '+' : ''}{tradeState.settlementResult.profit.toFixed(4)} BTC
+                  <strong>Profit:</strong> {(tradeState.settlementResult.profit || 0) > 0 ? '+' : ''}{(tradeState.settlementResult.profit || 0).toFixed(4)} BTC
                 </div>
                 <div>
-                  <strong>Payout:</strong> {tradeState.settlementResult.payout.toFixed(4)} BTC
+                  <strong>Payout:</strong> {(tradeState.settlementResult.payout || 0).toFixed(4)} BTC
                 </div>
               </div>
             )}
@@ -1052,10 +1054,10 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
                 maxWidth: '400px'
               }}>
                 <div>
-                  <strong>Strike:</strong> ${tradeState.data.strike.toFixed(2)}
+                  <strong>Strike:</strong> ${(tradeState.data.strike || 0).toFixed(2)}
                 </div>
                 <div>
-                  <strong>Entry:</strong> ${tradeState.entryPrice?.toFixed(2) || 'N/A'}
+                  <strong>Entry:</strong> ${(tradeState.entryPrice || 0).toFixed(2)}
                 </div>
                 <div>
                   <strong>Type:</strong> {tradeState.data.type.toUpperCase()}
