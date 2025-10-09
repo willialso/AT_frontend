@@ -1045,6 +1045,27 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
               <>
                 ⚡ Trade in Progress
                 <small>Please wait for completion</small>
+                {/* ✅ ENHANCED: Show trade details during active trade */}
+                <div style={{ 
+                  marginTop: '0.75rem', 
+                  padding: '0.5rem', 
+                  background: 'rgba(255, 255, 255, 0.1)', 
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: '1rem'
+                }}>
+                  <div>
+                    <strong>Strike:</strong> ${currentPrice ? (currentPrice + strikeOffset).toFixed(2) : 'N/A'}
+                  </div>
+                  <div>
+                    <strong>Entry:</strong> ${currentPrice?.toFixed(2) || 'N/A'}
+                  </div>
+                  <div>
+                    <strong>Type:</strong> {optionType?.toUpperCase() || 'N/A'}
+                  </div>
+                </div>
               </>
             ) : (
               <>

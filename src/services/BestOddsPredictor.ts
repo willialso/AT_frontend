@@ -277,13 +277,12 @@ export class EnhancedBestOddsPredictor {
     // ✅ ADJUSTED: Lower cap to more realistic maximum (reduced from 85% to 72%)
     adjustedRate = Math.min(adjustedRate, 0.72); // Max 72% win rate
 
-    // Confidence levels based on multiple factors
+    // Confidence levels based on multiple factors - ✅ FIX: No low confidence for smart trades
     const confidenceScore = (volatilityMultiplier + (sampleSize > 0 ? samplePenalty : 0.5) + trendStrength) / 3;
     let confidence: 'high' | 'medium' | 'low';
     
-    if (confidenceScore >= 0.8 && sampleSize >= 30) confidence = 'high';
-    else if (confidenceScore >= 0.6 && sampleSize >= 15) confidence = 'medium';
-    else confidence = 'low';
+    if (confidenceScore >= 0.7 && sampleSize >= 20) confidence = 'high';
+    else confidence = 'medium'; // ✅ FIX: Minimum confidence is medium for smart trades
 
     return { adjustedRate, confidence };
   }
@@ -299,7 +298,7 @@ export class EnhancedBestOddsPredictor {
         expiry: '15s',
         strikeOffset: 2.5,
         winRate: 0.70,
-        confidence: 'low',
+        confidence: 'medium', // ✅ FIX: No low confidence for smart trades
         reasoning: 'Insufficient price data - using conservative defaults',
         sampleSize: 0
       };

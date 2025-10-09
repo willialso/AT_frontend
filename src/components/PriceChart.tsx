@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { PriceData } from '../services/priceFeedManager';
+import { PriceData } from '../types/trading.types';
 import { Tooltip } from './Tooltip';
 import { externalPriceService, HistoricalPricePoint } from '../services/externalPriceService';
 
@@ -325,7 +325,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     
     if (isTradeActive && chartState.frozenStrikePrice) {
       strikePrice = chartState.frozenStrikePrice;
-      console.log('🎯 PriceChart: Using frozen strike price:', strikePrice);
     } else if (optionType && strikeOffset > 0) {
       strikePrice = optionType === 'call' 
         ? currentPrice + strikeOffset 
@@ -337,21 +336,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       if (optionType === 'put' && strikePrice >= currentPrice) {
         strikePrice = currentPrice - strikeOffset;
       }
-      
-      console.log('🎯 PriceChart: Calculated strike price:', {
-        optionType,
-        strikeOffset,
-        currentPrice,
-        calculatedStrikePrice: strikePrice,
-        isTradeActive
-      });
-    } else {
-      console.log('🎯 PriceChart: No strike line - missing data:', {
-        optionType,
-        strikeOffset,
-        isTradeActive,
-        frozenStrikePrice: chartState.frozenStrikePrice
-      });
     }
 
     // Calculate bounds
@@ -507,14 +491,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       const strikeY = height - padding.bottom -
         ((strikePrice - dynamicBounds.min) / dynamicBounds.range) * chartHeight;
       
-      console.log('🎯 PriceChart: Drawing strike line:', {
-        strikePrice,
-        strikeY,
-        chartHeight,
-        dynamicBounds,
-        isInBounds: strikeY >= padding.top && strikeY <= height - padding.bottom
-      });
-      
       if (strikeY >= padding.top && strikeY <= height - padding.bottom) {
         ctx.save();
         const strikeColor = optionType === 'call' ? '#00cc44' : '#ff4444';
@@ -530,14 +506,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         ctx.stroke();
 
         ctx.shadowBlur = 0;
-        ctx.fillStyle = strikeColor;
-        ctx.font = 'bold 12px Inter, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(
-          `Strike: $${formatNumberCSV(strikePrice!)}`,
-          padding.left + 10,
-          strikeY - 8
-        );
+        // ✅ FIX: Remove text rendering from chart - text now appears in status area
         ctx.restore();
       }
     }
@@ -561,14 +530,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         ctx.stroke();
 
         ctx.shadowBlur = 0;
-        ctx.fillStyle = entryColor;
-        ctx.font = 'bold 12px Inter, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(
-          `Entry: $${formatNumberCSV(entryPrice)}`,
-          padding.left + 10,
-          entryY - 8
-        );
+        // ✅ FIX: Remove text rendering from chart - text now appears in status area
         ctx.restore();
       }
     }

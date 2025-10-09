@@ -32,7 +32,7 @@ const Header = styled.header`
   justify-content: space-between;
   align-items: center;
   padding: 0.375rem 1rem; /* ✅ FIX: Reduced padding for tighter UI */
-  background: var(--bg-panel);
+  background: rgba(18, 18, 18, 0.95); /* ✅ FIX: Solid background with slight transparency for glass effect */
   border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 4px var(--shadow);
   min-height: 45px; /* ✅ FIX: Reduced height */
@@ -40,6 +40,8 @@ const Header = styled.header`
   position: sticky; /* ✅ FIX: Make header sticky for better navigation */
   top: 0;
   z-index: 1000; /* ✅ FIX: Ensure header stays above other content */
+  backdrop-filter: blur(8px); /* ✅ FIX: Add blur effect for modern glass appearance */
+  -webkit-backdrop-filter: blur(8px); /* ✅ FIX: Safari support */
 
   @media (min-width: 768px) {
     padding: 0.5rem 1.5rem; /* ✅ FIX: Reduced desktop padding */
@@ -56,7 +58,7 @@ const LogoContainer = styled.div`
     width: auto;
     object-fit: contain;
     max-width: 150px;
-    opacity: 0.9;
+    opacity: 1; /* ✅ FIX: Remove opacity for full visibility */
   }
 
   @media (min-width: 768px) {
@@ -995,6 +997,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
         {tradeState.result && (
           <div style={{
             display: 'flex',
+            flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             padding: '0.75rem 1rem',
@@ -1008,7 +1011,57 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
             textAlign: 'center',
             minHeight: '2.5rem'
           }}>
-            {tradeState.result.message}
+            <div>{tradeState.result.message}</div>
+            {/* ✅ ENHANCED: Show settlement details if available */}
+            {tradeState.settlementResult && (
+              <div style={{
+                marginTop: '0.5rem',
+                padding: '0.5rem',
+                background: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '1rem',
+                width: '100%',
+                maxWidth: '400px'
+              }}>
+                <div>
+                  <strong>Outcome:</strong> {tradeState.settlementResult.outcome.toUpperCase()}
+                </div>
+                <div>
+                  <strong>Profit:</strong> {tradeState.settlementResult.profit > 0 ? '+' : ''}{tradeState.settlementResult.profit.toFixed(4)} BTC
+                </div>
+                <div>
+                  <strong>Payout:</strong> {tradeState.settlementResult.payout.toFixed(4)} BTC
+                </div>
+              </div>
+            )}
+            {/* ✅ ENHANCED: Show trade details if available */}
+            {tradeState.isActive && tradeState.data && (
+              <div style={{
+                marginTop: '0.5rem',
+                padding: '0.5rem',
+                background: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '1rem',
+                width: '100%',
+                maxWidth: '400px'
+              }}>
+                <div>
+                  <strong>Strike:</strong> ${tradeState.data.strike.toFixed(2)}
+                </div>
+                <div>
+                  <strong>Entry:</strong> ${tradeState.entryPrice?.toFixed(2) || 'N/A'}
+                </div>
+                <div>
+                  <strong>Type:</strong> {tradeState.data.type.toUpperCase()}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
