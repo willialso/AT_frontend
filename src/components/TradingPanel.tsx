@@ -32,7 +32,7 @@ const Header = styled.header`
   justify-content: space-between;
   align-items: center;
   padding: 0.375rem 1rem; /* ✅ FIX: Reduced padding for tighter UI */
-  background: #121212; /* ✅ FIX: Completely opaque background */
+  background: var(--bg-panel); /* ✅ FIX: Match footer color for consistency */
   border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 4px var(--shadow);
   min-height: 45px; /* ✅ FIX: Reduced height */
@@ -847,13 +847,8 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
       // ✅ REMOVED: Balance refresh during trade to prevent oscillation
       // Balance will be refreshed after trade completion
 
-      // Auto-clear trade start message after 2 seconds using requestAnimationFrame
-      const clearStartMessage = () => {
-        setTradeState(prev => ({ ...prev, result: null }));
-      };
-      requestAnimationFrame(() => {
-        setTimeout(clearStartMessage, 2000);
-      });
+      // ✅ REMOVED: Auto-clear trade start message - keep status visible during entire trade
+      // Status will only be cleared when trade ends or user manually closes
 
       // Auto-scroll to show chart on mobile
       if (window.innerWidth <= 767) {
@@ -1029,13 +1024,21 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
                 maxWidth: '400px'
               }}>
                 <div>
-                  <strong>Outcome:</strong> {tradeState.settlementResult.outcome.toUpperCase()}
+                  <strong>Result:</strong> {tradeState.settlementResult.outcome.toUpperCase()}
                 </div>
                 <div>
-                  <strong>Profit:</strong> {(tradeState.settlementResult.profit || 0) > 0 ? '+' : ''}{(tradeState.settlementResult.profit || 0).toFixed(4)} BTC
+                  <strong>Settlement:</strong> ${(tradeState.settlementResult.finalPrice || 0).toFixed(2)}
                 </div>
                 <div>
-                  <strong>Payout:</strong> {(tradeState.settlementResult.payout || 0).toFixed(4)} BTC
+                  <strong>Strike:</strong> ${(() => {
+                    const entryPrice = tradeState.entryPrice || 0;
+                    const strikeOffset = tradeState.data?.strikeOffset || 0;
+                    const optionType = tradeState.data?.type;
+                    const strikePrice = optionType === 'call' 
+                      ? entryPrice + strikeOffset 
+                      : entryPrice - strikeOffset;
+                    return strikePrice.toFixed(2);
+                  })()}
                 </div>
               </div>
             )}
@@ -1054,7 +1057,15 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
                 maxWidth: '400px'
               }}>
                 <div>
-                  <strong>Strike:</strong> ${(tradeState.data.strike || 0).toFixed(2)}
+                  <strong>Strike:</strong> ${(() => {
+                    const entryPrice = tradeState.entryPrice || 0;
+                    const strikeOffset = tradeState.data.strikeOffset || 0;
+                    const optionType = tradeState.data.type;
+                    const strikePrice = optionType === 'call' 
+                      ? entryPrice + strikeOffset 
+                      : entryPrice - strikeOffset;
+                    return strikePrice.toFixed(2);
+                  })()}
                 </div>
                 <div>
                   <strong>Entry:</strong> ${(tradeState.entryPrice || 0).toFixed(2)}
