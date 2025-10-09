@@ -435,7 +435,15 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
     countdown: number;
     statusMessage: string | null;
     result: { message: string; type: 'success' | 'error' } | null;
-    settlementResult: { outcome: 'win' | 'loss' | 'tie'; profit: number; payout: number; finalPrice: number } | null;
+    settlementResult: { 
+      outcome: 'win' | 'loss' | 'tie'; 
+      profit: number; 
+      payout: number; 
+      finalPrice: number;
+      entryPrice?: number;
+      strikeOffset?: number;
+      optionType?: 'call' | 'put';
+    } | null;
     activeOptionType?: 'call' | 'put';  // ✅ ADDED: Store active trade's option type
     activeStrikeOffset?: number;         // ✅ ADDED: Store active trade's strike offset
   }>({
@@ -554,7 +562,10 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
           outcome: result.outcome,
           profit: result.profit || 0,
           payout: result.payout || 0,
-          finalPrice: result.finalPrice || 0
+          finalPrice: result.finalPrice || 0,
+          entryPrice: tradeState.entryPrice,  // ✅ Preserve for strike calculation
+          strikeOffset: tradeState.data?.strikeOffset,  // ✅ Preserve for strike calculation
+          optionType: tradeState.data?.type  // ✅ Preserve for strike calculation
         },
         result: {
           message: result.outcome === 'win' 
@@ -1036,17 +1047,23 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
                   <strong>Result:</strong> {tradeState.settlementResult.outcome.toUpperCase()}
                 </div>
                 <div>
-                  <strong>Settlement:</strong> ${(tradeState.settlementResult.finalPrice || 0).toFixed(2)}
+                  <strong>Settlement:</strong> ${(tradeState.settlementResult.finalPrice || 0).toLocaleString('en-US', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  })}
                 </div>
                 <div>
                   <strong>Strike:</strong> ${(() => {
-                    const entryPrice = tradeState.entryPrice || 0;
-                    const strikeOffset = tradeState.data?.strikeOffset || 0;
-                    const optionType = tradeState.data?.type;
+                    const entryPrice = tradeState.settlementResult.entryPrice || 0;
+                    const strikeOffset = tradeState.settlementResult.strikeOffset || 0;
+                    const optionType = tradeState.settlementResult.optionType;
                     const strikePrice = optionType === 'call' 
                       ? entryPrice + strikeOffset 
                       : entryPrice - strikeOffset;
-                    return strikePrice.toFixed(2);
+                    return strikePrice.toLocaleString('en-US', { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    });
                   })()}
                 </div>
               </div>
@@ -1073,11 +1090,17 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
                     const strikePrice = optionType === 'call' 
                       ? entryPrice + strikeOffset 
                       : entryPrice - strikeOffset;
-                    return strikePrice.toFixed(2);
+                    return strikePrice.toLocaleString('en-US', { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    });
                   })()}
                 </div>
                 <div>
-                  <strong>Entry:</strong> ${(tradeState.entryPrice || 0).toFixed(2)}
+                  <strong>Entry:</strong> ${(tradeState.entryPrice || 0).toLocaleString('en-US', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  })}
                 </div>
                 <div>
                   <strong>Type:</strong> {tradeState.data.type.toUpperCase()}
