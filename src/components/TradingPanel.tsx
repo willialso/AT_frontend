@@ -440,6 +440,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
       profit: number; 
       payout: number; 
       finalPrice: number;
+      strikePrice?: number;
       entryPrice?: number;
       strikeOffset?: number;
       optionType?: 'call' | 'put';
@@ -563,6 +564,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
           profit: result.profit || 0,
           payout: result.payout || 0,
           finalPrice: result.finalPrice || 0,
+          strikePrice: result.strikePrice || 0,  // ✅ Add strike price from settlement calculation
           entryPrice: tradeState.entryPrice,  // ✅ Preserve for strike calculation
           strikeOffset: tradeState.data?.strikeOffset,  // ✅ Preserve for strike calculation
           optionType: tradeState.data?.type  // ✅ Preserve for strike calculation
@@ -1053,18 +1055,10 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ onLogout, isDemoMode
                   })}
                 </div>
                 <div>
-                  <strong>Strike:</strong> ${(() => {
-                    const entryPrice = tradeState.settlementResult.entryPrice || 0;
-                    const strikeOffset = tradeState.settlementResult.strikeOffset || 0;
-                    const optionType = tradeState.settlementResult.optionType;
-                    const strikePrice = optionType === 'call' 
-                      ? entryPrice + strikeOffset 
-                      : entryPrice - strikeOffset;
-                    return strikePrice.toLocaleString('en-US', { 
-                      minimumFractionDigits: 2, 
-                      maximumFractionDigits: 2 
-                    });
-                  })()}
+                  <strong>Strike:</strong> ${(tradeState.settlementResult.strikePrice || 0).toLocaleString('en-US', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  })}
                 </div>
               </div>
             )}

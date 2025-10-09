@@ -26,6 +26,7 @@ export interface SettlementResult {
   payout: number;
   profit: number;
   finalPrice: number;
+  strikePrice: number;
 }
 
 export interface TradeData {
@@ -299,7 +300,8 @@ export class OffChainPricingEngine {
       outcome,
       payout,
       profit,
-      finalPrice
+      finalPrice,
+      strikePrice
     };
   }
 
