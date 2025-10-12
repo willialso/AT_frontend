@@ -5,7 +5,7 @@ import './polyfills';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import styled from 'styled-components';
-import { AdminPanel } from './components/AdminPanel';
+import { ImprovedAdminPanel } from './components/ImprovedAdminPanel';
 import { CanisterProvider } from './contexts/CanisterProvider';
 
 const AppContainer = styled.div`
@@ -68,7 +68,7 @@ const AdminApp: React.FC = () => {
   return (
     <AppContainer>
       <CanisterProvider>
-        <AdminPanel />
+        <ImprovedAdminPanel />
       </CanisterProvider>
     </AppContainer>
   );
