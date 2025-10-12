@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
-import { AdminPanel } from '../components/AdminPanel';
+import { ImprovedAdminPanel } from '../components/ImprovedAdminPanel';
 import { useCanister } from '../contexts/CanisterProvider';
 
 const GlobalStyle = createGlobalStyle`
@@ -132,7 +132,7 @@ export const AdminApp: React.FC = () => {
         </ConnectionStatus>
 
         {isInitialized ? (
-          <AdminPanel />
+          <ImprovedAdminPanel />
         ) : (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>
             <p>Loading admin interface...</p>
