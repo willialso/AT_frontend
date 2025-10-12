@@ -66,6 +66,10 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       // ✅ ADDED: Force cache busting with timestamp
       rollupOptions: {
+        input: {
+          main: './index.html',
+          admin: './admin.html'
+        },
         output: {
           manualChunks: {
             'dfinity': ['@dfinity/auth-client', '@dfinity/agent', '@dfinity/principal', '@dfinity/identity']
