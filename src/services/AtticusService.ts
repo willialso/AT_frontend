@@ -370,7 +370,7 @@ export class AtticusService {
         return {
           id: Number(result.ok.id),
           user: result.ok.user.toString(),
-          optionType: result.ok.option_type.Call ? 'call' : 'put',
+          optionType: result.ok.option_type.Call !== undefined ? 'call' : 'put',
           strikePrice: Number(result.ok.strike_price),
           entryPrice: Number(result.ok.entry_price),
           expiry: result.ok.expiry,
@@ -396,7 +396,7 @@ export class AtticusService {
       return positions.map((pos: any) => ({
         id: Number(pos.id),
         user: pos.user.toString(),
-        optionType: pos.option_type.Call ? 'call' : 'put',
+        optionType: pos.option_type.Call !== undefined ? 'call' : 'put',
         strikePrice: Number(pos.strike_price),
         entryPrice: Number(pos.entry_price),
         expiry: pos.expiry,
@@ -440,7 +440,7 @@ export class AtticusService {
       return result.map((pos: any) => ({
         id: Number(pos.id),
         user: pos.user.toString(),
-        optionType: pos.option_type.Call ? 'call' : 'put',
+        optionType: pos.option_type.Call !== undefined ? 'call' : 'put',
         strikePrice: Number(pos.strike_price),
         entryPrice: Number(pos.entry_price),
         expiry: pos.expiry,

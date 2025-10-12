@@ -245,12 +245,16 @@ export class AdminAnalyticsService {
   }
 
   private calculateStrikeOffset(strikePrice: number, entryPrice: number): number {
-    const percentDiff = Math.abs((strikePrice - entryPrice) / entryPrice) * 100;
-    // Round to nearest standard offset (2.5, 5, 10, 15)
-    if (percentDiff < 3.75) return 2.5;
-    if (percentDiff < 7.5) return 5;
-    if (percentDiff < 12.5) return 10;
-    return 15;
+    // Return actual dollar difference
+    return Math.abs(strikePrice - entryPrice);
+  }
+  
+  private getStrikeOffsetBucket(dollarDiff: number): string {
+    // Group into dollar ranges for better display
+    if (dollarDiff < 3750) return '$0-$3,750';
+    if (dollarDiff < 7500) return '$3,750-$7,500';
+    if (dollarDiff < 12500) return '$7,500-$12,500';
+    return '$12,500+';
   }
 
   private determineOutcome(pos: Position): 'win' | 'loss' | 'active' {
@@ -350,7 +354,7 @@ export class AdminAnalyticsService {
       // Strike breakdown
       const strikeBreakdown: { [key: string]: number } = {};
       bets.forEach(b => {
-        const key = `${b.strikeOffset}%`;
+        const key = this.getStrikeOffsetBucket(b.strikeOffset);
         strikeBreakdown[key] = (strikeBreakdown[key] || 0) + 1;
       });
       
@@ -445,7 +449,7 @@ export class AdminAnalyticsService {
     // Strike breakdown
     const strikeBreakdown: { [key: string]: number } = {};
     betDetails.forEach(b => {
-      const key = `${b.strikeOffset}%`;
+      const key = this.getStrikeOffsetBucket(b.strikeOffset);
       strikeBreakdown[key] = (strikeBreakdown[key] || 0) + 1;
     });
     
@@ -544,7 +548,7 @@ export class AdminAnalyticsService {
       new Date(bet.timestamp).toISOString(),
       bet.betType,
       bet.strikePrice.toFixed(2),
-      `${bet.strikeOffset}%`,
+      `$${bet.strikeOffset.toFixed(2)}`,
       bet.expiry,
       bet.entryPrice.toFixed(2),
       bet.settlementPrice?.toFixed(2) || 'N/A',

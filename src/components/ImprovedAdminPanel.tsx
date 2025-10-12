@@ -269,6 +269,7 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [tradesSearchTerm, setTradesSearchTerm] = useState('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   
@@ -394,30 +395,86 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
   // ============================================================================
 
   const handleExportBets = () => {
-    const csv = adminAnalyticsService.exportBetDetailsToCSV(betDetails);
-    downloadCSV(csv, 'bet_details');
+    try {
+      console.log('🔄 Export bets clicked, betDetails length:', betDetails.length);
+      
+      if (betDetails.length === 0) {
+        alert('No bet data to export! Please refresh and ensure trades exist.');
+        return;
+      }
+      
+      const csv = adminAnalyticsService.exportBetDetailsToCSV(betDetails);
+      console.log('✅ CSV generated, length:', csv.length);
+      
+      downloadCSV(csv, 'bet_details');
+    } catch (error) {
+      console.error('❌ Export error:', error);
+      alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const handleExportUsers = () => {
-    const csv = adminAnalyticsService.exportUserSummariesToCSV(userSummaries);
-    downloadCSV(csv, 'user_summaries');
+    try {
+      console.log('🔄 Export users clicked, userSummaries length:', userSummaries.length);
+      
+      if (userSummaries.length === 0) {
+        alert('No user data to export! Please refresh and ensure users exist.');
+        return;
+      }
+      
+      const csv = adminAnalyticsService.exportUserSummariesToCSV(userSummaries);
+      console.log('✅ CSV generated, length:', csv.length);
+      
+      downloadCSV(csv, 'user_summaries');
+    } catch (error) {
+      console.error('❌ Export error:', error);
+      alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const handleExportPlatform = () => {
-    if (platformSummary) {
+    try {
+      console.log('🔄 Export platform clicked, platformSummary:', !!platformSummary);
+      
+      if (!platformSummary) {
+        alert('No platform data to export! Please refresh first.');
+        return;
+      }
+      
       const csv = adminAnalyticsService.exportPlatformSummaryToCSV(platformSummary);
+      console.log('✅ CSV generated, length:', csv.length);
+      
       downloadCSV(csv, 'platform_summary');
+    } catch (error) {
+      console.error('❌ Export error:', error);
+      alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const downloadCSV = (csvContent: string, filename: string) => {
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      // Add BOM for UTF-8 encoding (helps Excel open properly)
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+      
+      console.log('✅ Download initiated');
+      alert(`✅ ${filename} exported successfully! Check your Downloads folder.`);
+    } catch (error) {
+      console.error('❌ Download error:', error);
+      throw new Error(`Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   // ============================================================================
@@ -512,11 +569,18 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
     const startTimestamp = startDate ? new Date(startDate).getTime() : undefined;
     const endTimestamp = endDate ? new Date(endDate).getTime() : undefined;
     
-    const filteredBets = adminAnalyticsService.filterByDateRange(
+    let filteredBets = adminAnalyticsService.filterByDateRange(
       betDetails, 
       startTimestamp, 
       endTimestamp
     );
+    
+    // Filter by user if search term provided
+    if (tradesSearchTerm) {
+      filteredBets = filteredBets.filter(bet => 
+        bet.userId.toLowerCase().includes(tradesSearchTerm.toLowerCase())
+      );
+    }
 
     // Pagination
     const totalPages = Math.ceil(filteredBets.length / itemsPerPage);
@@ -527,6 +591,15 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
     return (
       <>
         <ActionBar>
+          <SearchInput
+            type="text"
+            placeholder="Search by user principal..."
+            value={tradesSearchTerm}
+            onChange={(e) => {
+              setTradesSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
           <label style={{ color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             Start Date:
             <DateInput
@@ -549,9 +622,14 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
               }}
             />
           </label>
-          {(startDate || endDate) && (
-            <Button onClick={() => { setStartDate(''); setEndDate(''); setCurrentPage(1); }}>
-              Clear Dates
+          {(startDate || endDate || tradesSearchTerm) && (
+            <Button onClick={() => { 
+              setStartDate(''); 
+              setEndDate(''); 
+              setTradesSearchTerm('');
+              setCurrentPage(1); 
+            }}>
+              Clear Filters
             </Button>
           )}
           <Button onClick={fetchAllData} disabled={isLoading}>
