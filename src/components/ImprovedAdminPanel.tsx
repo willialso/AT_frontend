@@ -451,7 +451,7 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
         <Table>
           <thead>
             <tr>
-              <TableHeader>User ID</TableHeader>
+              <TableHeader>User Principal (Click to Copy)</TableHeader>
               <TableHeader>Total Trades</TableHeader>
               <TableHeader>Calls</TableHeader>
               <TableHeader>Puts</TableHeader>
@@ -465,7 +465,24 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
           <tbody>
             {filteredUsers.map((user, idx) => (
               <TableRow key={idx}>
-                <TableCell title={user.userPrincipal}>{user.userId}</TableCell>
+                <TableCell 
+                  title="Click to copy full principal"
+                  style={{ 
+                    cursor: 'pointer', 
+                    fontFamily: 'monospace', 
+                    fontSize: '0.75rem',
+                    maxWidth: '200px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(user.userPrincipal);
+                    alert(`Copied: ${user.userPrincipal}`);
+                  }}
+                >
+                  {user.userPrincipal}
+                </TableCell>
                 <TableCell>{user.totalTrades}</TableCell>
                 <TableCell>{user.callCount}</TableCell>
                 <TableCell>{user.putCount}</TableCell>
@@ -636,7 +653,24 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
             {paginatedBets.map((bet) => (
               <TableRow key={bet.tradeId}>
                 <TableCell>{bet.tradeId}</TableCell>
-                <TableCell title={bet.userId}>{bet.userId.substring(0, 8)}...</TableCell>
+                <TableCell 
+                  title="Click to copy full principal"
+                  style={{ 
+                    cursor: 'pointer', 
+                    fontFamily: 'monospace', 
+                    fontSize: '0.7rem',
+                    maxWidth: '150px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(bet.userId);
+                    alert(`Copied: ${bet.userId}`);
+                  }}
+                >
+                  {bet.userId}
+                </TableCell>
                 <TableCell>{new Date(bet.timestamp).toLocaleString()}</TableCell>
                 <TableCell>{bet.betType}</TableCell>
                 <TableCell>${bet.strikePrice.toFixed(2)}</TableCell>
