@@ -376,7 +376,7 @@ export class AtticusService {
           expiry: result.ok.expiry,
           size: Number(result.ok.size),
           status: result.ok.status.Active ? 'Active' : 'Settled',
-          openedAt: Number(result.ok.opened_at)
+          openedAt: Number(result.ok.opened_at) / 1_000_000
         };
       } else {
         throw new Error(result.err);
@@ -402,7 +402,7 @@ export class AtticusService {
         expiry: pos.expiry,
         size: Number(pos.size),
         status: pos.status.Active ? 'Active' : 'Settled',
-        openedAt: Number(pos.opened_at)
+        openedAt: Number(pos.opened_at) / 1_000_000
       }));
     } catch (error) {
       console.error('❌ Error getting user positions:', error);
@@ -449,8 +449,8 @@ export class AtticusService {
         currentValue: Number(pos.current_value),
         pnl: Number(pos.pnl),
         status: pos.status.Active ? 'active' : 'settled',
-        openedAt: Number(pos.opened_at),
-        settledAt: pos.settled_at ? Number(pos.settled_at[0]) : null,
+        openedAt: Number(pos.opened_at) / 1_000_000,
+        settledAt: pos.settled_at ? Number(pos.settled_at[0]) / 1_000_000 : null,
         settlementPrice: pos.settlement_price ? Number(pos.settlement_price[0]) : undefined
       }));
     } catch (error) {

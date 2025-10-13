@@ -250,11 +250,13 @@ export class AdminAnalyticsService {
   }
   
   private getStrikeOffsetBucket(dollarDiff: number): string {
-    // Group into dollar ranges for better display
-    if (dollarDiff < 3750) return '$0-$3,750';
-    if (dollarDiff < 7500) return '$3,750-$7,500';
-    if (dollarDiff < 12500) return '$7,500-$12,500';
-    return '$12,500+';
+    // Match standard strike offsets: $2.50, $5.00, $10.00, $15.00
+    // Round to nearest standard offset with tolerance
+    if (Math.abs(dollarDiff - 2.50) < 1.25) return '$2.50';
+    if (Math.abs(dollarDiff - 5.00) < 2.50) return '$5.00';
+    if (Math.abs(dollarDiff - 10.00) < 2.50) return '$10.00';
+    if (Math.abs(dollarDiff - 15.00) < 5.00) return '$15.00';
+    return 'Other';
   }
 
   private determineOutcome(pos: Position): 'win' | 'loss' | 'active' {

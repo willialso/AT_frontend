@@ -773,7 +773,10 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
                   $positive={bet.atticusGainLoss > 0}
                   $negative={bet.atticusGainLoss < 0}
                 >
-                  ${bet.atticusGainLoss.toFixed(2)}
+                  {bet.atticusGainLoss > 0 ? '+' : ''}${bet.atticusGainLoss.toFixed(2)}
+                  <span style={{ fontSize: '0.7rem', marginLeft: '0.25rem', opacity: 0.8 }}>
+                    {bet.atticusGainLoss > 0 ? '(Gain)' : '(Loss)'}
+                  </span>
                 </TableCell>
               </TableRow>
             ))}
@@ -901,13 +904,13 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
               <TableRow>
                 <TableCell><strong>Total Winning Trades (Platform gains)</strong></TableCell>
                 <TableCell $positive={true}>
-                  ${Number(platformLedger.totalWinningTrades).toFixed(2)}
+                  +${Number(platformLedger.totalWinningTrades).toFixed(2)}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell><strong>Total Losing Trades (Platform losses)</strong></TableCell>
                 <TableCell $negative={true}>
-                  ${Number(platformLedger.totalLosingTrades).toFixed(2)}
+                  -${Number(platformLedger.totalLosingTrades).toFixed(2)}
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -917,12 +920,8 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
                   $negative={Number(platformLedger.netPnl) < 0}
                   style={{ fontWeight: 'bold', fontSize: '1.1rem' }}
                 >
-                  ${Number(platformLedger.netPnl).toFixed(2)}
+                  {Number(platformLedger.netPnl) > 0 ? '+' : ''}${Number(platformLedger.netPnl).toFixed(2)}
                 </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell><strong>Total Trades</strong></TableCell>
-                <TableCell>{platformLedger.totalTrades}</TableCell>
               </TableRow>
             </tbody>
           </Table>
