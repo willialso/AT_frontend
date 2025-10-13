@@ -273,6 +273,13 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   
+  // Credit user state
+  const [creditPrincipal, setCreditPrincipal] = useState('');
+  const [creditAmount, setCreditAmount] = useState('');
+  const [creditLoading, setCreditLoading] = useState(false);
+  const [creditError, setCreditError] = useState<string | null>(null);
+  const [creditSuccess, setCreditSuccess] = useState<string | null>(null);
+  
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
@@ -389,6 +396,61 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
       fetchPlatformMetrics();
     }
   }, [isConnected, atticusService, startDate, endDate]);
+
+  // ============================================================================
+  // CREDIT USER FUNCTION
+  // ============================================================================
+
+  const handleCreditUser = async () => {
+    if (!creditPrincipal.trim() || !creditAmount.trim() || !atticusService) {
+      setCreditError('Please enter both principal and amount');
+      return;
+    }
+
+    try {
+      const amount = parseFloat(creditAmount);
+      if (isNaN(amount) || amount <= 0) {
+        setCreditError('Please enter a valid amount greater than 0');
+        return;
+      }
+
+      // Confirmation dialog
+      const confirmed = window.confirm(
+        `Are you sure you want to credit ${amount} BTC to user:\n\n${creditPrincipal}\n\nThis action cannot be undone.`
+      );
+      
+      if (!confirmed) {
+        return;
+      }
+
+      setCreditLoading(true);
+      setCreditError(null);
+      setCreditSuccess(null);
+
+      console.log(`🔄 Crediting ${amount} BTC to user ${creditPrincipal}`);
+      
+      const resultMessage = await atticusService.adminCreditUserBalance(
+        creditPrincipal.trim(), 
+        amount
+      );
+      
+      setCreditSuccess(`✅ ${resultMessage}`);
+      console.log('✅ Credit successful');
+      
+      // Refresh all data to show updated balance
+      await fetchAllData();
+      
+      // Clear form on success
+      setCreditPrincipal('');
+      setCreditAmount('');
+      
+    } catch (err) {
+      console.error('❌ Credit operation failed:', err);
+      setCreditError(err instanceof Error ? err.message : 'Credit operation failed');
+    } finally {
+      setCreditLoading(false);
+    }
+  };
 
   // ============================================================================
   // EXPORT FUNCTIONS
@@ -561,6 +623,86 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
         {filteredUsers.length === 0 && (
           <LoadingText>No users found</LoadingText>
         )}
+
+        {/* Credit User Balance Section */}
+        <div style={{ 
+          background: 'var(--bg-panel)', 
+          border: '2px solid var(--accent)', 
+          borderRadius: '8px', 
+          padding: '1.5rem', 
+          marginTop: '2rem' 
+        }}>
+          <h3 style={{ color: 'var(--accent)', marginTop: 0, marginBottom: '1rem' }}>
+            💰 Credit User Balance
+          </h3>
+          
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <SearchInput
+              type="text"
+              placeholder="User Principal"
+              value={creditPrincipal}
+              onChange={(e) => {
+                setCreditPrincipal(e.target.value);
+                setCreditError(null);
+                setCreditSuccess(null);
+              }}
+              style={{ minWidth: '400px', flex: '1' }}
+            />
+            <SearchInput
+              type="number"
+              placeholder="Amount (BTC)"
+              value={creditAmount}
+              onChange={(e) => {
+                setCreditAmount(e.target.value);
+                setCreditError(null);
+                setCreditSuccess(null);
+              }}
+              style={{ minWidth: '180px' }}
+              step="0.00000001"
+              min="0"
+            />
+            <Button 
+              onClick={handleCreditUser} 
+              disabled={creditLoading || !creditPrincipal.trim() || !creditAmount.trim()}
+              style={{ 
+                background: 'var(--green)', 
+                minWidth: '140px',
+                opacity: (!creditPrincipal.trim() || !creditAmount.trim()) ? 0.5 : 1
+              }}
+            >
+              {creditLoading ? '⏳ Processing...' : '💳 Credit User'}
+            </Button>
+          </div>
+          
+          {creditError && <ErrorText>{creditError}</ErrorText>}
+          {creditSuccess && (
+            <div style={{ 
+              color: 'var(--green)', 
+              textAlign: 'center', 
+              padding: '1rem', 
+              background: 'rgba(0, 212, 170, 0.1)', 
+              borderRadius: '4px',
+              marginBottom: '1rem',
+              fontWeight: 600
+            }}>
+              {creditSuccess}
+            </div>
+          )}
+          
+          <div style={{ 
+            fontSize: '0.85rem', 
+            color: 'var(--text-dim)', 
+            padding: '0.75rem',
+            background: 'rgba(244, 208, 63, 0.1)',
+            borderRadius: '4px',
+            border: '1px solid rgba(244, 208, 63, 0.3)',
+            lineHeight: '1.5'
+          }}>
+            <strong style={{ color: 'var(--accent)' }}>⚠️ Admin Use Only:</strong> Use this to manually credit user accounts for 
+            verified deposits, corrections, or bonuses. All credits are logged on-chain and update both user balance 
+            and platform wallet balance.
+          </div>
+        </div>
       </>
     );
   };
