@@ -718,11 +718,11 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
               <TableHeader>User</TableHeader>
               <TableHeader>Time</TableHeader>
               <TableHeader>Type</TableHeader>
-              <TableHeader>Strike Price</TableHeader>
-              <TableHeader>Expiry</TableHeader>
               <TableHeader>Entry Price</TableHeader>
+              <TableHeader>Strike Price</TableHeader>
               <TableHeader>Settlement Price</TableHeader>
               <TableHeader>Price Δ</TableHeader>
+              <TableHeader>Expiry</TableHeader>
               <TableHeader>Outcome</TableHeader>
               <TableHeader>Atticus G/L</TableHeader>
             </tr>
@@ -751,9 +751,8 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
                 </TableCell>
                 <TableCell>{new Date(bet.timestamp).toLocaleString()}</TableCell>
                 <TableCell>{bet.betType}</TableCell>
-                <TableCell>${bet.strikePrice.toFixed(2)}</TableCell>
-                <TableCell>{bet.expiry}</TableCell>
                 <TableCell>${bet.entryPrice.toFixed(2)}</TableCell>
+                <TableCell>${bet.strikePrice.toFixed(2)}</TableCell>
                 <TableCell>
                   {bet.settlementPrice ? `$${bet.settlementPrice.toFixed(2)}` : '-'}
                 </TableCell>
@@ -763,6 +762,7 @@ export const ImprovedAdminPanel: React.FC<{ onLogout?: () => Promise<void> }> = 
                 >
                   {bet.priceDelta !== null ? `$${bet.priceDelta.toFixed(2)}` : '-'}
                 </TableCell>
+                <TableCell>{bet.expiry}</TableCell>
                 <TableCell 
                   $positive={bet.outcome === 'win'}
                   $negative={bet.outcome === 'loss'}

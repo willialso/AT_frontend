@@ -300,10 +300,10 @@ export class AdminAnalyticsService {
       const payoutReceived = outcome === 'win' ? currentValue : 0;
       const profit = normalized.pnl;
       
-      // Platform perspective: premium collected - payout given
+      // Platform perspective: profit the premium, lose the payout
       const atticusGainLoss = outcome === 'win' 
-        ? -(payoutReceived - premiumPaid) // Platform pays out (negative)
-        : premiumPaid; // Platform keeps premium (positive)
+        ? -payoutReceived      // Platform LOSES the full payout amount
+        : premiumPaid;         // Platform GAINS the full premium amount
 
       return {
         tradeId: normalized.id,
