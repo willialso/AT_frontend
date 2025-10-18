@@ -400,8 +400,21 @@ persistent actor AtticusCore {
         option_type: Text,
         outcome: Text
     ) : async () {
-        // Create unique key for this combination
-        let key = expiry # "_" # Float.toText(strike_offset) # "_" # option_type;
+        // ✅ FIX: Normalize strike offset to match frontend format (remove trailing zeros)
+        let strike_str = if (strike_offset == 2.5) {
+            "2.5"
+        } else if (strike_offset == 5.0) {
+            "5"
+        } else if (strike_offset == 10.0) {
+            "10"
+        } else if (strike_offset == 15.0) {
+            "15"
+        } else {
+            Float.toText(strike_offset)
+        };
+        
+        // Create unique key for this combination (matches frontend format)
+        let key = expiry # "_" # strike_str # "_" # option_type;
         
         // Find existing entry
         let existing = Array.find<(Text, TradeStats)>(
@@ -477,6 +490,44 @@ persistent actor AtticusCore {
     // ✅ BEST ODDS: Get trade statistics (query function)
     public query func get_trade_statistics() : async [(Text, TradeStats)] {
         trade_statistics
+    };
+    
+    // ✅ MIGRATION: Convert old float keys to new normalized format
+    public func migrate_trade_statistics_keys() : async Text {
+        var migrated_count = 0;
+        var new_stats: [(Text, TradeStats)] = [];
+        
+        for ((old_key, stats) in trade_statistics.vals()) {
+            // Normalize the key
+            let strike_str = if (stats.strike_offset == 2.5) {
+                "2.5"
+            } else if (stats.strike_offset == 5.0) {
+                "5"
+            } else if (stats.strike_offset == 10.0) {
+                "10"
+            } else if (stats.strike_offset == 15.0) {
+                "15"
+            } else {
+                Float.toText(stats.strike_offset)
+            };
+            
+            let new_key = stats.expiry # "_" # strike_str # "_" # stats.option_type;
+            
+            // Only migrate if key format changed
+            if (old_key != new_key) {
+                migrated_count += 1;
+                new_stats := Array.append(new_stats, [(new_key, stats)]);
+            } else {
+                new_stats := Array.append(new_stats, [(old_key, stats)]);
+            };
+        };
+        
+        // Replace old statistics with migrated ones
+        trade_statistics := new_stats;
+        
+        let message = "Migrated " # Nat.toText(migrated_count) # " trade statistics to new key format";
+        admin_logs := Array.append(admin_logs, [message]);
+        message
     };
 
     // ✅ ADMIN RESET PLATFORM DATA

@@ -202,7 +202,8 @@ export class AtticusService {
             win_rate: IDL.Float64,
             last_updated: IDL.Int
           })))], ['query']),
-          update_trade_statistics: IDL.Func([IDL.Text, IDL.Float64, IDL.Text, IDL.Text], [], [])
+          update_trade_statistics: IDL.Func([IDL.Text, IDL.Float64, IDL.Text, IDL.Text], [], []),
+          migrate_trade_statistics_keys: IDL.Func([], [IDL.Text], [])
         });
       };
 
@@ -590,6 +591,20 @@ export class AtticusService {
       console.log('✅ Updated trade statistics');
     } catch (error) {
       console.error('❌ Error updating trade statistics:', error);
+      throw error;
+    }
+  }
+
+  // ✅ MIGRATE TRADE STATISTICS KEYS (One-time migration from old float format to new format)
+  public async migrate_trade_statistics_keys(): Promise<string> {
+    if (!this.isInitialized) throw new Error('Service not initialized');
+    
+    try {
+      const result = await this.coreCanister.migrate_trade_statistics_keys();
+      console.log('✅ Migration result:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Error migrating trade statistics keys:', error);
       throw error;
     }
   }
