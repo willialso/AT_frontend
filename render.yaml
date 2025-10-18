@@ -21,7 +21,7 @@ services:
       - key: RENDER
         value: true
       - key: FORCE_REBUILD
-        value: "1760770395"
+        value: "1760771396"
       - key: VITE_GOOGLE_CLIENT_ID
         value: 255794166358-poj0rbu2bqtd663m9nsu6hfam6hd0661.apps.googleusercontent.com
       - key: VITE_TWITTER_CLIENT_ID
