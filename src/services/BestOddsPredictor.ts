@@ -236,10 +236,12 @@ export class EnhancedBestOddsPredictor {
           last_updated: Number(stat.last_updated)
         };
         this.realStatistics.set(key, tradeStats);
+        console.log(`📊 Stored stat: "${key}" → ${tradeStats.total_trades} trades, ${(tradeStats.win_rate * 100).toFixed(1)}% win rate`);
       }
       
       this.lastStatsFetch = now;
       console.log('✅ Fetched', stats.length, 'trade statistics entries');
+      console.log('📋 All keys in cache:', Array.from(this.realStatistics.keys()));
     } catch (error) {
       console.warn('⚠️ Failed to fetch statistics, using defaults:', error);
     }
@@ -252,16 +254,26 @@ export class EnhancedBestOddsPredictor {
   private getWinRate(expiry: string, strike: number, type: 'call' | 'put'): { rate: number; sampleSize: number } {
     const key = `${expiry}_${strike}_${type}`;
     const realStat = this.realStatistics.get(key);
+    
+    console.log(`🔍 Looking up: "${key}" → Found:`, realStat ? `${realStat.total_trades} trades` : 'NOT FOUND');
 
     if (realStat && realStat.total_trades >= 20) {
       // Use real data if we have enough trades
+      console.log(`✅ Using REAL data for ${key}: ${realStat.total_trades} trades, ${(realStat.win_rate * 100).toFixed(1)}% win rate`);
       return { rate: realStat.win_rate, sampleSize: realStat.total_trades };
     } else if (realStat && realStat.total_trades >= 5) {
       // Use Laplace smoothing for small samples
       const smoothed = (realStat.wins + 1) / (realStat.wins + realStat.losses + 2);
+      console.log(`⚠️ Using SMOOTHED data for ${key}: ${realStat.total_trades} trades, ${(smoothed * 100).toFixed(1)}% smoothed rate`);
       return { rate: smoothed, sampleSize: realStat.total_trades };
+    } else if (realStat && realStat.total_trades > 0) {
+      // Less than 5 trades but has some data
+      console.log(`📊 Has ${realStat.total_trades} trades but < 5, using defaults with 0 sample`);
+      const defaultRate = this.DEFAULT_WIN_RATES[expiry as keyof typeof this.DEFAULT_WIN_RATES]?.[strike] || 0.5;
+      return { rate: defaultRate, sampleSize: 0 };
     } else {
       // Fall back to improved defaults
+      console.log(`❌ NO data for ${key}, using defaults`);
       const defaultRate = this.DEFAULT_WIN_RATES[expiry as keyof typeof this.DEFAULT_WIN_RATES]?.[strike] || 0.5;
       return { rate: defaultRate, sampleSize: 0 };
     }
