@@ -1292,6 +1292,10 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
       {showRecommendation && currentRecommendation && (
         <ModalOverlay onClick={handleCloseRecommendation}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
+            {/* ✅ DIAGNOSTIC: Log what modal receives */}
+            {console.log('🖼️ MODAL RENDERING - currentRecommendation.sampleSize:', currentRecommendation.sampleSize)}
+            {console.log('🖼️ MODAL RENDERING - currentRecommendation.dataSource:', currentRecommendation.dataSource)}
+            
             <ModalHeader>
               <ModalTitle>🧠 Smart Trade Recommendation</ModalTitle>
             </ModalHeader>
