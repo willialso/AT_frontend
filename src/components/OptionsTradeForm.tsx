@@ -913,9 +913,16 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
     setIsAnalyzing(true);
     try {
       const recommendation = await bestOddsPredictor.getBestRecommendation();
+      
+      // ✅ DIAGNOSTIC: Log full recommendation details
+      console.log('✅ Best Odds recommendation:', recommendation);
+      console.log('📊 Sample Size:', recommendation.sampleSize);
+      console.log('📊 Data Source:', recommendation.dataSource);
+      console.log('📊 Breakdown:', recommendation.breakdown);
+      console.log('📊 Market Conditions:', recommendation.marketConditions);
+      
       setCurrentRecommendation(recommendation);
       setShowRecommendation(true);
-      console.log('✅ Best Odds recommendation:', recommendation);
     } catch (error) {
       console.error('❌ Best odds analysis failed:', error);
     } finally {

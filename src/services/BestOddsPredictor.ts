@@ -431,6 +431,8 @@ export class EnhancedBestOddsPredictor {
             ? `Based on ${sampleSize} real trades (${(baseRate * 100).toFixed(1)}% win rate)`
             : sampleSize >= 5
             ? `Based on ${sampleSize} trades with smoothing`
+            : sampleSize > 0
+            ? `${sampleSize} trades recorded (using improved defaults until 5+ trades)`
             : `Using improved defaults`;
           
           if (trend.direction !== 'neutral') {
@@ -438,6 +440,9 @@ export class EnhancedBestOddsPredictor {
           }
           
           reasoning += ` + Volatility: ${trend.volatility.toFixed(1)}%`;
+          
+          // ✅ DIAGNOSTIC: Log what we're setting
+          console.log(`🎯 Setting best option: ${expiry} ${strike} ${optionType}, sampleSize=${sampleSize}, score=${score.toFixed(3)}`);
 
           bestOption = {
             optionType,
