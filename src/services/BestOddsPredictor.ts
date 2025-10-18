@@ -2,6 +2,9 @@
  * ✅ ENHANCED BEST ODDS PREDICTOR - Hybrid Optimized Approach
  * Combines real backend statistics with live market analysis
  * Uses simplified but effective mathematical techniques
+ * 
+ * VERSION: 2.0.0 - Real backend statistics integration
+ * LAST UPDATED: 2025-01-18
  */
 
 export interface TradeRecommendation {
@@ -65,6 +68,7 @@ interface TradeStats {
 }
 
 export class EnhancedBestOddsPredictor {
+  private readonly VERSION = '2.0.0'; // Track version for cache busting
   private priceHistory: PricePoint[] = [];
   private readonly MAX_HISTORY = 200; // Increased from 50 to 200
   private volatilityEWMA: number = 0;
@@ -75,6 +79,10 @@ export class EnhancedBestOddsPredictor {
   private realStatistics: Map<string, TradeStats> = new Map();
   private lastStatsFetch: number = 0;
   private readonly STATS_CACHE_TIME = 30000; // 30 seconds cache
+  
+  constructor() {
+    console.log(`🎯 BestOddsPredictor v${this.VERSION} initialized`);
+  }
   
   // ✅ REALISTIC default win rates (based on binary options baseline ~50%)
   private readonly DEFAULT_WIN_RATES = {
