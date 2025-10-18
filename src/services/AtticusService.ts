@@ -188,7 +188,21 @@ export class AtticusService {
           })], ['query']),
           
           // Admin ledger functions
-          admin_credit_user_balance: IDL.Func([IDL.Principal, IDL.Float64], [IDL.Variant({ ok: IDL.Text, err: IDL.Text })], [])
+          admin_credit_user_balance: IDL.Func([IDL.Principal, IDL.Float64], [IDL.Variant({ ok: IDL.Text, err: IDL.Text })], []),
+          
+          // ✅ BEST ODDS: Trade statistics functions
+          get_trade_statistics: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Record({
+            expiry: IDL.Text,
+            strike_offset: IDL.Float64,
+            option_type: IDL.Text,
+            total_trades: IDL.Nat,
+            wins: IDL.Nat,
+            losses: IDL.Nat,
+            ties: IDL.Nat,
+            win_rate: IDL.Float64,
+            last_updated: IDL.Int
+          })))], ['query']),
+          update_trade_statistics: IDL.Func([IDL.Text, IDL.Float64, IDL.Text, IDL.Text], [], [])
         });
       };
 
@@ -549,6 +563,33 @@ export class AtticusService {
       }
     } catch (error) {
       console.error('❌ Error crediting user balance:', error);
+      throw error;
+    }
+  }
+
+  // ✅ GET TRADE STATISTICS (Best Odds Predictor)
+  public async get_trade_statistics(): Promise<Array<[string, any]>> {
+    if (!this.isInitialized) throw new Error('Service not initialized');
+    
+    try {
+      const result = await this.coreCanister.get_trade_statistics();
+      console.log('✅ Fetched trade statistics:', result.length, 'entries');
+      return result;
+    } catch (error) {
+      console.error('❌ Error getting trade statistics:', error);
+      throw error;
+    }
+  }
+
+  // ✅ UPDATE TRADE STATISTICS (Best Odds Predictor - called automatically by backend)
+  public async update_trade_statistics(expiry: string, strikeOffset: number, optionType: string, outcome: string): Promise<void> {
+    if (!this.isInitialized) throw new Error('Service not initialized');
+    
+    try {
+      await this.coreCanister.update_trade_statistics(expiry, strikeOffset, optionType, outcome);
+      console.log('✅ Updated trade statistics');
+    } catch (error) {
+      console.error('❌ Error updating trade statistics:', error);
       throw error;
     }
   }
