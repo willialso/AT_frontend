@@ -429,16 +429,16 @@ export class EnhancedBestOddsPredictor {
           sampleSize
         );
 
-        // Calculate composite score with HEAVY bias for real data
+        // Calculate composite score with EXTREME bias for real data
         let dataQualityMultiplier = 1.0;
         if (sampleSize >= 20) {
-          dataQualityMultiplier = 3.0; // ✅ 3x multiplier for real data (20+ trades)
+          dataQualityMultiplier = 20.0; // ✅ 20x multiplier for real data (20+ trades) - ALWAYS prefer
         } else if (sampleSize >= 5) {
-          dataQualityMultiplier = 2.0; // ✅ 2x multiplier for smoothed data (5-19 trades)
+          dataQualityMultiplier = 10.0; // ✅ 10x multiplier for smoothed data (5-19 trades)
         } else if (sampleSize > 0) {
-          dataQualityMultiplier = 1.5; // ✅ 1.5x multiplier for some data (1-4 trades)
+          dataQualityMultiplier = 5.0; // ✅ 5x multiplier for some data (1-4 trades)
         } else {
-          dataQualityMultiplier = 1.0; // ✅ No multiplier for defaults
+          dataQualityMultiplier = 1.0; // ✅ No multiplier for defaults (heavily penalized)
         }
         
         const confidenceMultiplier = confidence === 'high' ? 1.2 : confidence === 'medium' ? 1.0 : 0.8;
