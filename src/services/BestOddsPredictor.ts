@@ -429,8 +429,22 @@ export class EnhancedBestOddsPredictor {
           sampleSize
         );
 
-        // Calculate composite score
-        const score = adjustedRate * (confidence === 'high' ? 1.2 : confidence === 'medium' ? 1.0 : 0.8);
+        // Calculate composite score with HEAVY bias for real data
+        let dataQualityMultiplier = 1.0;
+        if (sampleSize >= 20) {
+          dataQualityMultiplier = 3.0; // ✅ 3x multiplier for real data (20+ trades)
+        } else if (sampleSize >= 5) {
+          dataQualityMultiplier = 2.0; // ✅ 2x multiplier for smoothed data (5-19 trades)
+        } else if (sampleSize > 0) {
+          dataQualityMultiplier = 1.5; // ✅ 1.5x multiplier for some data (1-4 trades)
+        } else {
+          dataQualityMultiplier = 1.0; // ✅ No multiplier for defaults
+        }
+        
+        const confidenceMultiplier = confidence === 'high' ? 1.2 : confidence === 'medium' ? 1.0 : 0.8;
+        const score = adjustedRate * confidenceMultiplier * dataQualityMultiplier;
+        
+        console.log(`📊 Score for ${expiry} ${strike} ${optionType}: ${score.toFixed(3)} (rate=${adjustedRate.toFixed(3)}, data=${sampleSize} trades, quality=${dataQualityMultiplier}x)`);
         
         if (score > bestScore) {
           bestScore = score;
