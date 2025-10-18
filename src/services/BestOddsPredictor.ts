@@ -267,10 +267,10 @@ export class EnhancedBestOddsPredictor {
       console.log(`⚠️ Using SMOOTHED data for ${key}: ${realStat.total_trades} trades, ${(smoothed * 100).toFixed(1)}% smoothed rate`);
       return { rate: smoothed, sampleSize: realStat.total_trades };
     } else if (realStat && realStat.total_trades > 0) {
-      // Less than 5 trades but has some data
-      console.log(`📊 Has ${realStat.total_trades} trades but < 5, using defaults with 0 sample`);
+      // Less than 5 trades but has some data - SHOW real count but use defaults
+      console.log(`📊 Has ${realStat.total_trades} trades but < 5, showing count but using defaults`);
       const defaultRate = this.DEFAULT_WIN_RATES[expiry as keyof typeof this.DEFAULT_WIN_RATES]?.[strike] || 0.5;
-      return { rate: defaultRate, sampleSize: 0 };
+      return { rate: defaultRate, sampleSize: realStat.total_trades }; // ✅ SHOW real count
     } else {
       // Fall back to improved defaults
       console.log(`❌ NO data for ${key}, using defaults`);

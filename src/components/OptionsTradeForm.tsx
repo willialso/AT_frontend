@@ -1323,8 +1323,28 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
                 </DetailValue>
               </DetailRow>
               <DetailRow>
-                <DetailLabel>Data Sample:</DetailLabel>
-                <DetailValue>{currentRecommendation.sampleSize || 0} trades</DetailValue>
+                <DetailLabel>
+                  Data Sample:
+                  <Tooltip content={
+                    (currentRecommendation.sampleSize || 0) >= 20 
+                      ? "Using actual win rates from these trades"
+                      : (currentRecommendation.sampleSize || 0) >= 5
+                      ? "Using Laplace smoothing on these trades"
+                      : (currentRecommendation.sampleSize || 0) > 0
+                      ? "Trades recorded but using model defaults (need 5+ for real rates)"
+                      : "No trades yet for this combination"
+                  } position="top">
+                    <TooltipIcon>ℹ️</TooltipIcon>
+                  </Tooltip>
+                </DetailLabel>
+                <DetailValue>
+                  {currentRecommendation.sampleSize || 0} trades
+                  {(currentRecommendation.sampleSize || 0) > 0 && (currentRecommendation.sampleSize || 0) < 5 && (
+                    <span style={{ fontSize: '0.75rem', color: '#ffc107', marginLeft: '0.25rem' }}>
+                      (need {5 - (currentRecommendation.sampleSize || 0)} more)
+                    </span>
+                  )}
+                </DetailValue>
               </DetailRow>
               
               {/* ✅ NEW: Data Source Info */}
@@ -1332,7 +1352,7 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
                 <DetailRow>
                   <DetailLabel>
                     Data Source:
-                    <Tooltip content="Real Data (20+ trades) = High confidence from actual platform trades. Smoothed Data (5-19 trades) = Real trades with Laplace smoothing. Model Default (<5 trades) = Statistical baseline with 15% penalty." position="top">
+                    <Tooltip content="Real Data (20+ trades) = Uses actual win rates from platform trades. Smoothed Data (5-19 trades) = Real trades with Laplace smoothing. Model Default (<5 trades) = Uses statistical baseline, but real trade count is shown for transparency." position="top">
                       <TooltipIcon>ℹ️</TooltipIcon>
                     </Tooltip>
                   </DetailLabel>
@@ -1371,7 +1391,7 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
                     <BreakdownRow>
                       <span>
                         Base Win Rate:
-                        <Tooltip content={`From ${currentRecommendation.dataSource?.type === 'real' ? 'real platform trades' : currentRecommendation.dataSource?.type === 'smoothed' ? 'smoothed trade data' : 'statistical model'}`} position="top">
+                        <Tooltip content={`From ${currentRecommendation.dataSource?.type === 'real' ? 'real platform trades (20+ trades)' : currentRecommendation.dataSource?.type === 'smoothed' ? 'smoothed trade data (5-19 trades)' : 'statistical model (<5 trades, uses baseline rates)'}`} position="top">
                           <TooltipIcon>ℹ️</TooltipIcon>
                         </Tooltip>
                       </span>
