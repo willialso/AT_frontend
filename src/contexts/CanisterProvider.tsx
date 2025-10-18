@@ -59,6 +59,16 @@ export const CanisterProvider: React.FC<{ children: ReactNode }> = React.memo(({
         setAgent(httpAgent);
         setIsConnected(true);
 
+        // ✅ DIAGNOSTIC: Expose services for browser console testing
+        if (typeof window !== 'undefined') {
+          (window as any).atticusService = atticusService;
+          (window as any).treasuryService = treasuryService;
+          (window as any).pricingEngine = pricingEngine;
+          console.log('🔧 Services exposed to window for testing:');
+          console.log('  - window.atticusService.testTradeStatistics()');
+          console.log('  - window.atticusService.get_trade_statistics()');
+        }
+
         console.log('✅ Atticus Service initialized successfully (Single Canister Architecture)!');
 
       } catch (error) {

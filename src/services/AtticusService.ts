@@ -608,6 +608,34 @@ export class AtticusService {
       throw error;
     }
   }
+
+  // ✅ DIAGNOSTIC: Test if trade statistics method is accessible
+  public async testTradeStatistics(): Promise<void> {
+    console.log('🔍 DIAGNOSTIC: Testing trade statistics connection...');
+    console.log('Service initialized:', this.isInitialized);
+    console.log('Core canister exists:', !!this.coreCanister);
+    console.log('Method exists:', typeof this.coreCanister?.get_trade_statistics);
+    
+    if (!this.isInitialized) {
+      console.error('❌ Service not initialized!');
+      return;
+    }
+    
+    try {
+      console.log('🔄 Calling get_trade_statistics()...');
+      const stats = await this.coreCanister.get_trade_statistics();
+      console.log('✅ SUCCESS! Fetched', stats.length, 'statistics');
+      console.log('📊 Statistics data:', stats);
+      
+      // Log each entry
+      for (const [key, stat] of stats) {
+        console.log(`  - "${key}": ${stat.total_trades} trades, ${(stat.win_rate * 100).toFixed(1)}% win rate`);
+      }
+    } catch (error) {
+      console.error('❌ FAILED to fetch statistics:', error);
+      console.error('Error details:', error);
+    }
+  }
 }
 
 // ✅ SINGLETON INSTANCE
