@@ -12,6 +12,32 @@ export interface TradeRecommendation {
   confidence: 'high' | 'medium' | 'low';
   reasoning: string;
   sampleSize?: number; // Number of real trades used
+  
+  // ✅ NEW: Calculation breakdown for transparency
+  breakdown?: {
+    baseRate: number;              // Original win rate before adjustments
+    volatilityAdjustment: number;  // Adjustment from volatility (can be + or -)
+    trendBonus: number;            // Bonus from trend strength
+    defaultPenalty: number;        // Penalty when using defaults (0 if real data)
+    finalRate: number;             // Final calculated rate (before cap)
+    cappedRate: number;            // Final rate after 72% cap
+  };
+  
+  // ✅ NEW: Market conditions at time of recommendation
+  marketConditions?: {
+    volatility: number;            // Current market volatility %
+    volatilityStatus: 'low' | 'medium' | 'high';
+    trendDirection: 'up' | 'down' | 'neutral';
+    trendStrength: number;         // 0-1 scale
+    trendConfidence: number;       // 0-1 scale
+  };
+  
+  // ✅ NEW: Data source information
+  dataSource?: {
+    type: 'real' | 'smoothed' | 'default';
+    lastUpdated?: number;          // Timestamp of last stats fetch
+    cacheAge?: number;             // Age of cached data in ms
+  };
 }
 
 export interface PricePoint {
@@ -250,7 +276,17 @@ export class EnhancedBestOddsPredictor {
     trendStrength: number,
     volatility: number,
     sampleSize: number
-  ): { adjustedRate: number; confidence: 'high' | 'medium' | 'low' } {
+  ): { 
+    adjustedRate: number; 
+    confidence: 'high' | 'medium' | 'low';
+    breakdown: {
+      volatilityAdjustment: number;
+      trendBonus: number;
+      defaultPenalty: number;
+      finalRate: number;
+      cappedRate: number;
+    };
+  } {
     
     // Sample size penalty for small datasets
     const samplePenalty = Math.min(1.0, sampleSize / 50); // Full confidence at 50+ trades
@@ -274,6 +310,9 @@ export class EnhancedBestOddsPredictor {
     // Combined adjustment
     let adjustedRate = baseRate * volatilityMultiplier * trendBonus * defaultPenalty;
     
+    // Store pre-cap rate
+    const finalRate = adjustedRate;
+    
     // ✅ ADJUSTED: Lower cap to more realistic maximum (reduced from 85% to 72%)
     adjustedRate = Math.min(adjustedRate, 0.72); // Max 72% win rate
 
@@ -284,7 +323,18 @@ export class EnhancedBestOddsPredictor {
     if (confidenceScore >= 0.7 && sampleSize >= 20) confidence = 'high';
     else confidence = 'medium'; // ✅ FIX: Minimum confidence is medium for smart trades
 
-    return { adjustedRate, confidence };
+    // ✅ NEW: Return breakdown for transparency
+    return { 
+      adjustedRate, 
+      confidence,
+      breakdown: {
+        volatilityAdjustment: (volatilityMultiplier - 1.0) * baseRate, // Absolute adjustment
+        trendBonus: (trendBonus - 1.0) * baseRate, // Absolute bonus
+        defaultPenalty: sampleSize > 0 ? 0 : (0.85 - 1.0) * baseRate, // Absolute penalty
+        finalRate,
+        cappedRate: adjustedRate
+      }
+    };
   }
 
   /**
@@ -293,14 +343,35 @@ export class EnhancedBestOddsPredictor {
    */
   public async getBestRecommendation(): Promise<TradeRecommendation> {
     if (this.priceHistory.length < 10) {
+      const volatility = this.getVolatility();
       return {
         optionType: 'call',
         expiry: '15s',
         strikeOffset: 2.5,
         winRate: 0.70,
-        confidence: 'medium', // ✅ FIX: No low confidence for smart trades
+        confidence: 'medium',
         reasoning: 'Insufficient price data - using conservative defaults',
-        sampleSize: 0
+        sampleSize: 0,
+        breakdown: {
+          baseRate: 0.70,
+          volatilityAdjustment: 0,
+          trendBonus: 0,
+          defaultPenalty: 0,
+          finalRate: 0.70,
+          cappedRate: 0.70
+        },
+        marketConditions: {
+          volatility,
+          volatilityStatus: volatility < 0.3 ? 'low' : volatility > 0.6 ? 'high' : 'medium',
+          trendDirection: 'neutral',
+          trendStrength: 0,
+          trendConfidence: 0
+        },
+        dataSource: {
+          type: 'default',
+          lastUpdated: this.lastStatsFetch,
+          cacheAge: Date.now() - this.lastStatsFetch
+        }
       };
     }
 
@@ -331,7 +402,7 @@ export class EnhancedBestOddsPredictor {
         const { rate: baseRate, sampleSize } = this.getWinRate(expiry, strike, optionType);
         
         // ✅ FIXED: Apply volatility and trend adjustments (trend applied once inside function)
-        const { adjustedRate, confidence } = this.calculateVolatilityAdjustedWinRate(
+        const { adjustedRate, confidence, breakdown } = this.calculateVolatilityAdjustedWinRate(
           baseRate,  // No trendBonus multiplication here
           trend.strength,
           trend.volatility,
@@ -363,7 +434,30 @@ export class EnhancedBestOddsPredictor {
             winRate: adjustedRate,
             confidence,
             reasoning,
-            sampleSize
+            sampleSize,
+            // ✅ NEW: Add calculation breakdown
+            breakdown: {
+              baseRate,
+              volatilityAdjustment: breakdown.volatilityAdjustment,
+              trendBonus: breakdown.trendBonus,
+              defaultPenalty: breakdown.defaultPenalty,
+              finalRate: breakdown.finalRate,
+              cappedRate: breakdown.cappedRate
+            },
+            // ✅ NEW: Add market conditions
+            marketConditions: {
+              volatility: trend.volatility,
+              volatilityStatus: trend.volatility < 0.3 ? 'low' : trend.volatility > 0.6 ? 'high' : 'medium',
+              trendDirection: trend.direction,
+              trendStrength: trend.strength,
+              trendConfidence: trend.confidence
+            },
+            // ✅ NEW: Add data source info
+            dataSource: {
+              type: sampleSize >= 20 ? 'real' : sampleSize >= 5 ? 'smoothed' : 'default',
+              lastUpdated: this.lastStatsFetch,
+              cacheAge: Date.now() - this.lastStatsFetch
+            }
           };
         }
       }
@@ -377,6 +471,7 @@ export class EnhancedBestOddsPredictor {
    * Fallback when no better option is found
    */
   private getConservativeDefault(): TradeRecommendation {
+    const volatility = this.getVolatility();
     return {
       optionType: 'call',
       expiry: '15s',
@@ -384,7 +479,27 @@ export class EnhancedBestOddsPredictor {
       winRate: 0.70,
       confidence: 'medium',
       reasoning: 'Conservative default - longer expiry, small strike offset',
-      sampleSize: 0
+      sampleSize: 0,
+      breakdown: {
+        baseRate: 0.70,
+        volatilityAdjustment: 0,
+        trendBonus: 0,
+        defaultPenalty: 0,
+        finalRate: 0.70,
+        cappedRate: 0.70
+      },
+      marketConditions: {
+        volatility,
+        volatilityStatus: volatility < 0.3 ? 'low' : volatility > 0.6 ? 'high' : 'medium',
+        trendDirection: 'neutral',
+        trendStrength: 0,
+        trendConfidence: 0
+      },
+      dataSource: {
+        type: 'default',
+        lastUpdated: this.lastStatsFetch,
+        cacheAge: Date.now() - this.lastStatsFetch
+      }
     };
   }
 

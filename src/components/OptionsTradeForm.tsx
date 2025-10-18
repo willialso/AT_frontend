@@ -21,6 +21,52 @@ const formatNumberCSV = (num: number): string => {
   });
 };
 
+// ✅ NEW: Helper function to format data source type
+const getDataSourceLabel = (type: 'real' | 'smoothed' | 'default'): { label: string; icon: string; color: string } => {
+  switch (type) {
+    case 'real':
+      return { label: 'Real Data', icon: '✅', color: '#28a745' };
+    case 'smoothed':
+      return { label: 'Smoothed Data', icon: '⚠️', color: '#ffc107' };
+    case 'default':
+      return { label: 'Model Default', icon: '📊', color: '#6c757d' };
+  }
+};
+
+// ✅ NEW: Helper function to format volatility status
+const getVolatilityLabel = (status: 'low' | 'medium' | 'high'): { label: string; icon: string; color: string } => {
+  switch (status) {
+    case 'low':
+      return { label: 'Low', icon: '🟢', color: '#28a745' };
+    case 'medium':
+      return { label: 'Medium', icon: '🟡', color: '#ffc107' };
+    case 'high':
+      return { label: 'High', icon: '🔴', color: '#dc3545' };
+  }
+};
+
+// ✅ NEW: Helper function to format trend direction
+const getTrendLabel = (direction: 'up' | 'down' | 'neutral'): { label: string; icon: string; color: string } => {
+  switch (direction) {
+    case 'up':
+      return { label: 'Uptrend', icon: '📈', color: '#28a745' };
+    case 'down':
+      return { label: 'Downtrend', icon: '📉', color: '#dc3545' };
+    case 'neutral':
+      return { label: 'Neutral', icon: '➡️', color: '#6c757d' };
+  }
+};
+
+// ✅ NEW: Helper function to format time since
+const getTimeSince = (timestamp: number): string => {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
+  return `${Math.floor(seconds / 86400)}d`;
+};
+
 // ✅ FIX 2: Scrollable form container
 const TradeFormContainer = styled.div`
   position: relative;
@@ -530,6 +576,155 @@ const ModalButton = styled.button<{ variant?: 'primary' | 'secondary' }>`
   `}
 `;
 
+// ✅ NEW: Breakdown Section Styles
+const BreakdownSection = styled.div`
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+`;
+
+const BreakdownHeader = styled.div`
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const BreakdownRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.25rem 0;
+  
+  &:last-child {
+    margin-bottom: 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-weight: bold;
+  }
+  
+  span:first-child {
+    color: #666;
+  }
+  
+  span:last-child {
+    color: #333;
+    font-weight: 600;
+  }
+`;
+
+const TooltipIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: #e0e0e0;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  color: #666;
+  cursor: help;
+  margin-left: 0.25rem;
+  
+  &:hover {
+    background: #d0d0d0;
+  }
+`;
+
+const MarketConditionsSection = styled.div`
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+`;
+
+const ConditionRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const ConditionLabel = styled.div`
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+const ConditionValue = styled.div`
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+`;
+
+const ReasoningBox = styled.div`
+  background: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+`;
+
+const ReasoningTitle = styled.div`
+  font-weight: bold;
+  color: #0056b3;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const ReasoningText = styled.div`
+  font-size: 0.85rem;
+  color: #333;
+  line-height: 1.5;
+`;
+
+const ExpandableHeader = styled.div<{ $expanded: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin: 1rem 0;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #e9ecef;
+  }
+  
+  &::after {
+    content: '${props => props.$expanded ? '▲' : '▼'}';
+    font-size: 0.8rem;
+    color: #666;
+  }
+`;
+
+const ExpandableContent = styled.div<{ $expanded: boolean }>`
+  max-height: ${props => props.$expanded ? '500px' : '0'};
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+`;
+
 interface OptionsTradeFormProps {
   currentPrice: number;
   optionType?: 'call' | 'put' | null;
@@ -600,6 +795,9 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
   const [showRecommendation, setShowRecommendation] = useState(false);
   const [currentRecommendation, setCurrentRecommendation] = useState<TradeRecommendation | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  // ✅ NEW: Expandable breakdown state
+  const [isBreakdownExpanded, setIsBreakdownExpanded] = useState(false);
 
   useEffect(() => {
     setLocalFormData({
@@ -1109,21 +1307,171 @@ export const OptionsTradeForm: React.FC<OptionsTradeFormProps> = ({
                 <DetailValue>${currentRecommendation.strikeOffset.toFixed(2)}</DetailValue>
               </DetailRow>
               <DetailRow>
-                <DetailLabel>Confidence:</DetailLabel>
+                <DetailLabel>
+                  Confidence:
+                  <Tooltip content="High = 20+ real trades + favorable conditions. Medium = 5-19 trades OR model defaults. Based on data quality and market stability." position="top">
+                    <TooltipIcon>ℹ️</TooltipIcon>
+                  </Tooltip>
+                </DetailLabel>
                 <DetailValue style={{ 
                   color: currentRecommendation.confidence === 'high' ? '#28a745' : 
                          currentRecommendation.confidence === 'medium' ? '#ffc107' : '#dc3545'
                 }}>
                   {currentRecommendation.confidence.toUpperCase()}
+                  {currentRecommendation.confidence === 'high' && ' ✅'}
+                  {currentRecommendation.confidence === 'medium' && ' ⚠️'}
                 </DetailValue>
               </DetailRow>
-              {currentRecommendation.sampleSize !== undefined && currentRecommendation.sampleSize > 0 && (
+              <DetailRow>
+                <DetailLabel>Data Sample:</DetailLabel>
+                <DetailValue>{currentRecommendation.sampleSize || 0} trades</DetailValue>
+              </DetailRow>
+              
+              {/* ✅ NEW: Data Source Info */}
+              {currentRecommendation.dataSource && (
                 <DetailRow>
-                  <DetailLabel>Data Sample:</DetailLabel>
-                  <DetailValue>{currentRecommendation.sampleSize} trades</DetailValue>
+                  <DetailLabel>
+                    Data Source:
+                    <Tooltip content="Real Data (20+ trades) = High confidence from actual platform trades. Smoothed Data (5-19 trades) = Real trades with Laplace smoothing. Model Default (<5 trades) = Statistical baseline with 15% penalty." position="top">
+                      <TooltipIcon>ℹ️</TooltipIcon>
+                    </Tooltip>
+                  </DetailLabel>
+                  <DetailValue style={{ color: getDataSourceLabel(currentRecommendation.dataSource.type).color }}>
+                    {getDataSourceLabel(currentRecommendation.dataSource.type).icon} {getDataSourceLabel(currentRecommendation.dataSource.type).label}
+                  </DetailValue>
+                </DetailRow>
+              )}
+              
+              {/* ✅ NEW: Last Updated */}
+              {currentRecommendation.dataSource && currentRecommendation.dataSource.lastUpdated > 0 && (
+                <DetailRow>
+                  <DetailLabel>
+                    Stats Updated:
+                    <Tooltip content="Trade statistics are cached for 30 seconds to optimize performance." position="top">
+                      <TooltipIcon>ℹ️</TooltipIcon>
+                    </Tooltip>
+                  </DetailLabel>
+                  <DetailValue>{getTimeSince(currentRecommendation.dataSource.lastUpdated)} ago</DetailValue>
                 </DetailRow>
               )}
             </RecommendationDetails>
+            
+            {/* ✅ NEW: Win Rate Breakdown (Expandable) */}
+            {currentRecommendation.breakdown && (
+              <>
+                <ExpandableHeader 
+                  $expanded={isBreakdownExpanded}
+                  onClick={() => setIsBreakdownExpanded(!isBreakdownExpanded)}
+                >
+                  <span style={{ fontWeight: 'bold', color: '#333' }}>📈 Win Rate Calculation</span>
+                </ExpandableHeader>
+                
+                <ExpandableContent $expanded={isBreakdownExpanded}>
+                  <BreakdownSection>
+                    <BreakdownRow>
+                      <span>
+                        Base Win Rate:
+                        <Tooltip content={`From ${currentRecommendation.dataSource?.type === 'real' ? 'real platform trades' : currentRecommendation.dataSource?.type === 'smoothed' ? 'smoothed trade data' : 'statistical model'}`} position="top">
+                          <TooltipIcon>ℹ️</TooltipIcon>
+                        </Tooltip>
+                      </span>
+                      <span>{(currentRecommendation.breakdown.baseRate * 100).toFixed(1)}%</span>
+                    </BreakdownRow>
+                    
+                    {currentRecommendation.breakdown.volatilityAdjustment !== 0 && (
+                      <BreakdownRow>
+                        <span>
+                          Volatility Adjustment:
+                          <Tooltip content="Low volatility = more predictable (+boost). High volatility = less predictable (-penalty)." position="top">
+                            <TooltipIcon>ℹ️</TooltipIcon>
+                          </Tooltip>
+                        </span>
+                        <span style={{ color: currentRecommendation.breakdown.volatilityAdjustment > 0 ? '#28a745' : '#dc3545' }}>
+                          {currentRecommendation.breakdown.volatilityAdjustment > 0 ? '+' : ''}{(currentRecommendation.breakdown.volatilityAdjustment * 100).toFixed(1)}%
+                        </span>
+                      </BreakdownRow>
+                    )}
+                    
+                    {currentRecommendation.breakdown.trendBonus > 0 && (
+                      <BreakdownRow>
+                        <span>
+                          Trend Bonus:
+                          <Tooltip content="Strong market trend detected - increases prediction confidence." position="top">
+                            <TooltipIcon>ℹ️</TooltipIcon>
+                          </Tooltip>
+                        </span>
+                        <span style={{ color: '#28a745' }}>
+                          +{(currentRecommendation.breakdown.trendBonus * 100).toFixed(1)}%
+                        </span>
+                      </BreakdownRow>
+                    )}
+                    
+                    {currentRecommendation.breakdown.defaultPenalty < 0 && (
+                      <BreakdownRow>
+                        <span>
+                          Default Penalty:
+                          <Tooltip content="Using model defaults (no real trades yet)." position="top">
+                            <TooltipIcon>ℹ️</TooltipIcon>
+                          </Tooltip>
+                        </span>
+                        <span style={{ color: '#dc3545' }}>
+                          {(currentRecommendation.breakdown.defaultPenalty * 100).toFixed(1)}%
+                        </span>
+                      </BreakdownRow>
+                    )}
+                    
+                    <BreakdownRow>
+                      <span>Final Win Rate:</span>
+                      <span>{(currentRecommendation.breakdown.cappedRate * 100).toFixed(1)}%</span>
+                    </BreakdownRow>
+                  </BreakdownSection>
+                </ExpandableContent>
+              </>
+            )}
+            
+            {/* ✅ NEW: Market Conditions */}
+            {currentRecommendation.marketConditions && (
+              <MarketConditionsSection>
+                <BreakdownHeader>🌡️ Market Conditions</BreakdownHeader>
+                
+                <ConditionRow>
+                  <ConditionLabel>
+                    Volatility:
+                    <Tooltip content="Current market volatility using EWMA calculation. Low (<0.3%) = Stable, predictable. Medium (0.3-0.6%) = Normal. High (>0.6%) = Unpredictable." position="top">
+                      <TooltipIcon>ℹ️</TooltipIcon>
+                    </Tooltip>
+                  </ConditionLabel>
+                  <ConditionValue style={{ color: getVolatilityLabel(currentRecommendation.marketConditions.volatilityStatus).color }}>
+                    {currentRecommendation.marketConditions.volatility.toFixed(2)}% {getVolatilityLabel(currentRecommendation.marketConditions.volatilityStatus).icon} {getVolatilityLabel(currentRecommendation.marketConditions.volatilityStatus).label}
+                  </ConditionValue>
+                </ConditionRow>
+                
+                <ConditionRow>
+                  <ConditionLabel>
+                    Trend:
+                    <Tooltip content="Detected using weighted moving average of last 15 prices. Shows market momentum direction and strength." position="top">
+                      <TooltipIcon>ℹ️</TooltipIcon>
+                    </Tooltip>
+                  </ConditionLabel>
+                  <ConditionValue style={{ color: getTrendLabel(currentRecommendation.marketConditions.trendDirection).color }}>
+                    {getTrendLabel(currentRecommendation.marketConditions.trendDirection).icon} {getTrendLabel(currentRecommendation.marketConditions.trendDirection).label} ({(currentRecommendation.marketConditions.trendStrength * 100).toFixed(0)}% strength)
+                  </ConditionValue>
+                </ConditionRow>
+              </MarketConditionsSection>
+            )}
+            
+            {/* ✅ NEW: Reasoning Box */}
+            {currentRecommendation.reasoning && (
+              <ReasoningBox>
+                <ReasoningTitle>
+                  Why This Trade?
+                  <Tooltip content="This explains how the recommendation was generated using real data, market trends, and volatility analysis." position="top">
+                    <TooltipIcon>ℹ️</TooltipIcon>
+                  </Tooltip>
+                </ReasoningTitle>
+                <ReasoningText>{currentRecommendation.reasoning}</ReasoningText>
+              </ReasoningBox>
+            )}
             
             <div style={{ 
               fontSize: '0.8rem', 
